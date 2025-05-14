@@ -4,7 +4,7 @@ import copy
 import json
 import requests
 import html # Pour html.escape()
-import streamlit_ext as stx # Pour streamlit-extras (copy_to_clipboard)
+from streamlit_extras.text_utils import copy_to_clipboard # NOUVELLE LIGNE CORRECTE
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="Générateur & Bibliothèque de Prompts IA")
