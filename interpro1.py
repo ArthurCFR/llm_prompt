@@ -8,6 +8,19 @@ import html # Pour html.escape()
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="Générateur & Bibliothèque de Prompts IA")
 
+# --- Injection CSS pour améliorer le retour à la ligne dans st.code ---
+st.markdown("""
+<style>
+/* Cible les éléments <pre> à l'intérieur des blocs générés par st.code */
+/* Streamlit peut utiliser des divs avec des classes spécifiques, essayons de cibler la balise pre */
+div[data-testid="stCodeBlock"] pre {
+    white-space: pre-wrap !important;    /* Conserve les espaces, retours à la ligne, et va à la ligne */
+    overflow-wrap: break-word !important; /* Coupe les mots longs pour éviter le débordement */
+    word-break: break-word !important;    /* Alternative pour couper les mots */
+}
+</style>
+""", unsafe_allow_html=True)
+
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = 2025 
 INITIAL_PROMPT_TEMPLATES = {
@@ -570,17 +583,13 @@ elif st.session_state.view_mode == "edit" and \
                         gen_form_values[var_info["name"]] = st.text_area(var_info["label"], value=str(field_default or ""), height=var_info.get("height",100), key=widget_key)
         if st.form_submit_button("Générer Prompt"):
             final_vals_for_prompt = {k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None}
+# ... (dans votre logique de génération de prompt) ...
             try:
                 class SafeFormatter(dict):
                     def __missing__(self, key): return f"{{{key}}}"
                 generated_prompt = current_prompt_config["template"].format_map(SafeFormatter(final_vals_for_prompt))
                 st.subheader("✅ Prompt Généré:")
-                # La ligne suivante est celle qui utilise votre fonction personnalisée :
-                # display_prompt_with_wrapping(generated_prompt) # ANCIENNE LIGNE (pas de bouton copie)
-                
-                # REMPLACEZ-LA PAR CELLE-CI pour retrouver le bouton de copie :
-                st.code(generated_prompt, language=None) # NOUVELLE LIGNE (avec bouton copie)
-                
+                st.code(generated_prompt, language=None) # VOUS UTILISEZ DÉJÀ CECI, C'EST PARFAIT
                 st.success("Prompt généré!")
                 st.balloons()
             except Exception as e: st.error(f"Erreur génération prompt: {e}")
