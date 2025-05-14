@@ -337,7 +337,7 @@ if final_selected_family and final_selected_use_case and \
         # Edit Template
         st.subheader("Template du Prompt")
         tpl_key = f"tpl_{final_selected_family}_{final_selected_use_case}"
-        new_tpl = st.text_area("Template:", value=current_prompt_config['template'], height=150, key=tpl_key)
+        new_tpl = st.text_area("Template:", value=current_prompt_config['template'], height=350, key=tpl_key)
         if st.button("Sauvegarder Template", key=f"save_tpl_{tpl_key}"):
             st.session_state.editable_prompts[final_selected_family][final_selected_use_case]['template'] = new_tpl
             save_editable_prompts_to_gist()
