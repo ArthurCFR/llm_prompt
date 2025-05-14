@@ -3,7 +3,6 @@ from datetime import datetime, date
 import copy
 import json
 import requests
-import html # Pour html.escape()
 # streamlit_extras et st_copy_to_clipboard ne sont plus nécessaires pour cette version simplifiée du bouton copie
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
@@ -50,21 +49,6 @@ INITIAL_PROMPT_TEMPLATES = {
 GIST_DATA_FILENAME = "prompt_templates_data.json"
 
 # --- Utility Functions ---
-def display_prompt_with_wrapping(text_content): # Conservée pour la bibliothèque
-    escaped_text = html.escape(text_content)
-    style = (
-        "white-space: pre-wrap; "
-        "word-wrap: break-word; "
-        "overflow-wrap: break-word; "
-        "background-color: #f0f2f6; "
-        "padding: 0.75em; "
-        "border-radius: 0.25rem; "
-        "font-family: monospace; "
-        "display: block; "
-        "border: 1px solid #e6e6e6;"
-        "margin-bottom: 0.5rem;" 
-    )
-    st.markdown(f"<pre style='{style}'>{escaped_text}</pre>", unsafe_allow_html=True)
 
 def parse_default_value(value_str, var_type):
     if not value_str:
@@ -394,7 +378,7 @@ if st.session_state.view_mode == "library" and library_family_to_display:
             template_display = prompt_config_display.get("template", "_Template non défini._")
             with st.expander(f"{use_case_name_display}", expanded=False):
                 st.markdown(f"##### Template pour : {use_case_name_display}")
-                display_prompt_with_wrapping(template_display) # Utilisation de la fonction de wrapping
+                st.code(template_display, language=None) # Utilisation de st.code()
                 variables_display = prompt_config_display.get("variables", [])
                 if variables_display:
                     st.markdown("**Variables associées:**")
