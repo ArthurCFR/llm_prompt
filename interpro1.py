@@ -6,7 +6,7 @@ import requests
 # streamlit_extras et st_copy_to_clipboard ne sont plus nécessaires pour cette version simplifiée du bouton copie
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
-st.set_page_config(layout="wide", page_title="Générateur & Bibliothèque de Prompts IA")
+st.set_page_config(layout="wide", page_title="🦸🏻Générateur & Bibliothèque de Prompts IA")
 
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = 2025 
@@ -215,7 +215,7 @@ if 'confirming_delete_details' not in st.session_state:
 
 
 # --- Main App UI ---
-st.title("Générateur & Bibliothèque de Prompts IA")
+st.title("🦸🏻Générateur & Bibliothèque de Prompts IA")
 
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
