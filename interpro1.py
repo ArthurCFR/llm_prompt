@@ -98,7 +98,7 @@ def get_gist_content(gist_id, github_pat):
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur Gist (get): Impossible de récupérer les données du Gist: {e}")
         return None
-    except KeyError: # Should be caught by the check above, but as a safeguard
+    except KeyError: 
         st.error(f"Erreur Gist (get): Structure de Gist inattendue ou fichier '{GIST_DATA_FILENAME}' non trouvé.")
         return None
 
@@ -154,7 +154,7 @@ def load_editable_prompts_from_gist():
             loaded_data = json.loads(raw_content)
             if not loaded_data: 
                 raise ValueError("Contenu du Gist vide ou non structuré. Initialisation.")
-            st.success("Modèles chargés depuis Gist.")
+            # st.success("Modèles chargés depuis Gist.") # Peut-être un peu verbeux à chaque chargement
             return _postprocess_after_loading(loaded_data)
         except (json.JSONDecodeError, TypeError, ValueError) as e:
             st.info(f"Erreur/non-conformité lors du chargement depuis Gist ({e}). Utilisation des modèles par défaut et tentative d'initialisation du Gist.")
@@ -174,7 +174,6 @@ def load_editable_prompts_from_gist():
         return copy.deepcopy(INITIAL_PROMPT_TEMPLATES)
 
 # --- Initialisation de l'état de session ---
-# This block is now safe as st.set_page_config() has been called.
 if 'editable_prompts' not in st.session_state:
     st.session_state.editable_prompts = load_editable_prompts_from_gist()
 if 'editing_variable_info' not in st.session_state:
@@ -183,6 +182,8 @@ if 'show_create_new_use_case_form' not in st.session_state:
     st.session_state.show_create_new_use_case_form = False
 if 'force_select_use_case_name' not in st.session_state:
     st.session_state.force_select_use_case_name = None
+if 'confirming_delete_use_case_name' not in st.session_state: # NOUVELLE VARIABLE D'ÉTAT
+    st.session_state.confirming_delete_use_case_name = None
 
 
 # --- Interface Streamlit (Main app layout starts here) ---
@@ -191,25 +192,26 @@ st.markdown("Bienvenue ! Sélectionnez un cas d'usage, remplissez les informatio
 
 # --- Barre Latérale ---
 st.sidebar.header("Navigation")
-use_case_options = list(st.session_state.editable_prompts.keys()) # Ensure this is dynamic
+use_case_options = list(st.session_state.editable_prompts.keys()) 
 
 current_selection_index = 0
-if st.session_state.force_select_use_case_name and st.session_state.force_select_use_case_name in use_case_options:
-    current_selection_index = use_case_options.index(st.session_state.force_select_use_case_name)
-    st.session_state.force_select_use_case_name = None
-elif 'main_use_case_selector' in st.session_state and st.session_state.main_use_case_selector in use_case_options:
-    current_selection_index = use_case_options.index(st.session_state.main_use_case_selector)
-elif use_case_options: # Default to first if exists
-    current_selection_index = 0
+if use_case_options: # S'assurer qu'il y a des options avant de calculer l'index
+    if st.session_state.force_select_use_case_name and st.session_state.force_select_use_case_name in use_case_options:
+        current_selection_index = use_case_options.index(st.session_state.force_select_use_case_name)
+        st.session_state.force_select_use_case_name = None
+    elif 'main_use_case_selector' in st.session_state and st.session_state.main_use_case_selector in use_case_options:
+        current_selection_index = use_case_options.index(st.session_state.main_use_case_selector)
+    else: # Défaut au premier si la sélection précédente n'est plus valide ou non définie
+        st.session_state.main_use_case_selector = use_case_options[0]
+        current_selection_index = 0
 
 
 if not use_case_options and not st.session_state.show_create_new_use_case_form :
     st.sidebar.warning("Aucun modèle de prompt disponible. Créez-en un !")
-    if not st.session_state.show_create_new_use_case_form: # Avoid redundant rerun if already true
+    if not st.session_state.show_create_new_use_case_form: 
         st.session_state.show_create_new_use_case_form = True
-        st.rerun() # Rerun to show the form if no use cases
+        st.rerun() 
 elif use_case_options:
-    # This variable will be defined if use_case_options is not empty
     selected_use_case_name = st.sidebar.radio(
         "Choisissez un cas d'usage existant :",
         options=use_case_options,
@@ -221,8 +223,7 @@ st.sidebar.markdown("---")
 
 if st.sidebar.button("➕ Créer un nouveau cas d'usage", key="toggle_create_form_btn"):
     st.session_state.show_create_new_use_case_form = not st.session_state.show_create_new_use_case_form
-    # No rerun here, let the block below handle display. If form is closed, rerun can be triggered elsewhere if needed.
-    if st.session_state.show_create_new_use_case_form == False: # if we just closed it
+    if not st.session_state.show_create_new_use_case_form: 
         st.rerun()
 
 
@@ -245,24 +246,47 @@ if st.session_state.show_create_new_use_case_form:
                     }
                     save_editable_prompts_to_gist()
                     st.success(f"Cas d'usage '{new_uc_name}' créé avec succès ! Vous pouvez maintenant l'éditer pour ajouter des variables.")
-                    st.session_state.show_create_new_use_case_form = False # Close form
-                    st.session_state.force_select_use_case_name = new_uc_name # Select the new one
+                    st.session_state.show_create_new_use_case_form = False 
+                    st.session_state.force_select_use_case_name = new_uc_name 
                     st.rerun()
 
 # --- Affichage Principal ---
-# Check if 'selected_use_case_name' is defined, which happens if use_case_options is not empty
 if use_case_options and 'selected_use_case_name' in locals() and selected_use_case_name in st.session_state.editable_prompts:
     current_prompt_config = st.session_state.editable_prompts[selected_use_case_name]
 
     st.header(f"Cas d'usage : {selected_use_case_name}")
 
+    # --- LOGIQUE DE CONFIRMATION DE SUPPRESSION ---
+    if st.session_state.confirming_delete_use_case_name == selected_use_case_name:
+        st.warning(f"Êtes-vous sûr de vouloir supprimer définitivement le cas d'usage '{selected_use_case_name}' ? Cette action est irréversible et toutes les variables associées seront perdues.")
+        col_confirm, col_cancel, _ = st.columns([1,1,3]) 
+        with col_confirm:
+            if st.button("Oui, supprimer définitivement", key=f"confirm_delete_yes_{selected_use_case_name}", type="primary"):
+                deleted_uc_name = st.session_state.confirming_delete_use_case_name
+                del st.session_state.editable_prompts[deleted_uc_name]
+                save_editable_prompts_to_gist()
+                st.success(f"Le cas d'usage '{deleted_uc_name}' a été supprimé.")
+                
+                st.session_state.confirming_delete_use_case_name = None
+                if st.session_state.main_use_case_selector == deleted_uc_name:
+                    st.session_state.main_use_case_selector = None 
+                
+                if st.session_state.editing_variable_info and st.session_state.editing_variable_info.get('use_case') == deleted_uc_name:
+                    st.session_state.editing_variable_info = None
+                st.rerun()
+        with col_cancel:
+            if st.button("Non, annuler", key=f"confirm_delete_no_{selected_use_case_name}"):
+                st.session_state.confirming_delete_use_case_name = None
+                st.rerun()
+        st.markdown("---") 
+    # --- FIN DE LA LOGIQUE DE CONFIRMATION DE SUPPRESSION ---
+
     with st.expander("⚙️ Modifier ce modèle de prompt", expanded=False):
         st.subheader("Template du Prompt Actuel")
-        # Create unique keys for text_area and button to avoid issues when switching use cases
         template_editor_key = f"template_edit_{selected_use_case_name.replace(' ', '_').replace('{', '').replace('}', '')}"
         new_template_str = st.text_area(
             "Éditez le template (utilisez {nom_variable} pour les placeholders) :",
-            value=current_prompt_config['template'], # Use current value from session state
+            value=current_prompt_config['template'], 
             height=150,
             key=template_editor_key
         )
@@ -271,15 +295,14 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
             st.session_state.editable_prompts[selected_use_case_name]['template'] = new_template_str
             save_editable_prompts_to_gist()
             st.success("Template du prompt mis à jour !")
-            st.rerun() # Rerun to reflect changes immediately if needed, or remove if behavior is fine
+            st.rerun() 
 
         st.markdown("---")
         st.subheader("Variables du Prompt")
         if not current_prompt_config['variables']:
             st.info("Aucune variable définie pour ce modèle. Ajoutez-en ci-dessous.")
 
-        # Iterate over a copy if modifications during iteration are complex, or manage indices carefully
-        for idx, var_data in enumerate(list(current_prompt_config['variables'])): # list() for a copy if needed
+        for idx, var_data in enumerate(list(current_prompt_config['variables'])): 
             var_key_suffix = f"var_{selected_use_case_name.replace(' ', '_').replace('{', '').replace('}', '')}_{idx}"
             col1, col2, col3 = st.columns([4,1,1])
             with col1:
@@ -289,19 +312,17 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
                     st.session_state.editing_variable_info = {
                         "use_case": selected_use_case_name, "index": idx, "data": copy.deepcopy(var_data)
                     }
-                    st.rerun() # Rerun to show the edit form
+                    st.rerun() 
             with col3:
                 if st.button("Suppr.", key=f"remove_btn_{var_key_suffix}"):
-                    # Ensure index is still valid before popping
                     if idx < len(st.session_state.editable_prompts[selected_use_case_name]['variables']):
                         st.session_state.editable_prompts[selected_use_case_name]['variables'].pop(idx)
-                        # If the deleted variable was being edited, clear editing_variable_info
                         if st.session_state.editing_variable_info and \
                            st.session_state.editing_variable_info['use_case'] == selected_use_case_name and \
                            st.session_state.editing_variable_info['index'] == idx:
                             st.session_state.editing_variable_info = None
                         save_editable_prompts_to_gist()
-                        st.rerun() # Rerun to update the list
+                        st.rerun() 
         
         st.markdown("---")
         is_editing_mode = False
@@ -314,7 +335,7 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
             edit_idx = st.session_state.editing_variable_info['index']
             if edit_idx < len(st.session_state.editable_prompts[selected_use_case_name]['variables']):
                 is_editing_mode = True
-                form_key = f"edit_{form_key_base}_{edit_idx}" # Unique key for editing form
+                form_key = f"edit_{form_key_base}_{edit_idx}" 
                 submit_label = "Sauvegarder les Modifications"
                 editing_data = st.session_state.editing_variable_info['data']
                 form_header = f"Modifier la Variable : {editing_data.get('name', '')}"
@@ -323,13 +344,13 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
                 raw_default = editing_data.get("default")
                 if isinstance(raw_default, date): default_form_values["default"] = raw_default.strftime("%Y-%m-%d")
                 else: default_form_values["default"] = str(raw_default) if raw_default is not None else ""
-            else: # Index out of bounds, reset editing mode
+            else: 
                 st.session_state.editing_variable_info = None
-                form_key = f"add_{form_key_base}" # Fallback to add key
+                form_key = f"add_{form_key_base}" 
         else:
-            form_key = f"add_{form_key_base}" # Unique key for adding form
+            form_key = f"add_{form_key_base}" 
 
-        with st.form(key=form_key, clear_on_submit=not is_editing_mode): # Clear add form, not edit form
+        with st.form(key=form_key, clear_on_submit=not is_editing_mode): 
             st.subheader(form_header)
             var_name = st.text_input("Nom de la variable (unique, ex: `nom_produit`)", value=default_form_values["name"], key=f"{form_key}_name")
             var_label = st.text_input("Label pour l'utilisateur (ex: 'Quel produit ?')", value=default_form_values["label"], key=f"{form_key}_label")
@@ -337,7 +358,7 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
             var_type_default_index = var_type_options.index(default_form_values["type"]) if default_form_values["type"] in var_type_options else 0
             var_type = st.selectbox("Type de variable", var_type_options, index=var_type_default_index, key=f"{form_key}_type")
             
-            var_options_str = "" # Define it outside to ensure it's always available
+            var_options_str = "" 
             if var_type == "selectbox":
                 var_options_str = st.text_input("Options (pour selectbox, séparées par virgule)", value=default_form_values["options"], key=f"{form_key}_options")
             
@@ -353,8 +374,6 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
                     if var_type == "selectbox":
                         new_var_data["options"] = [opt.strip() for opt in var_options_str.split(',') if opt.strip()]
                     
-                    # Process default value
-                    # Use the new var_type for parsing
                     actual_default_value = parse_default_value(var_default_str, var_type)
                     if var_type == "selectbox" and new_var_data.get("options"):
                         if actual_default_value not in new_var_data["options"]:
@@ -362,38 +381,46 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
                             new_var_data["default"] = new_var_data["options"][0]
                         else:
                             new_var_data["default"] = actual_default_value
-                    elif var_type == "selectbox": # No options but selectbox
+                    elif var_type == "selectbox": 
                          new_var_data["default"] = None
-                    else: # For other types
+                    else: 
                         new_var_data["default"] = actual_default_value
-
 
                     if is_editing_mode and st.session_state.editing_variable_info:
                         edit_idx_val = st.session_state.editing_variable_info['index']
-                        # Double check index validity
                         if edit_idx_val < len(st.session_state.editable_prompts[selected_use_case_name]['variables']):
                             st.session_state.editable_prompts[selected_use_case_name]['variables'][edit_idx_val] = new_var_data
                             st.success(f"Variable '{var_name}' mise à jour !")
                         else:
                              st.error("Erreur: La variable à modifier n'a pas été trouvée (peut-être supprimée).")
-                        st.session_state.editing_variable_info = None # Clear editing state
-                    else: # Adding new variable
+                        st.session_state.editing_variable_info = None 
+                    else: 
                         st.session_state.editable_prompts[selected_use_case_name]['variables'].append(new_var_data)
                         st.success(f"Variable '{var_name}' ajoutée !")
                     
                     save_editable_prompts_to_gist()
-                    st.rerun() # Rerun to reflect changes and clear form if 'add' mode
+                    st.rerun() 
         
-        if is_editing_mode and st.session_state.editing_variable_info : # Show cancel only in edit mode
+        if is_editing_mode and st.session_state.editing_variable_info : 
             if st.button("Annuler la Modification", key=f"cancel_edit_var_{form_key_base}"):
                 st.session_state.editing_variable_info = None
-                st.rerun() # Rerun to hide edit form
+                st.rerun() 
+
+        st.markdown("---") # AJOUT DU BOUTON DE SUPPRESSION DU CAS D'USAGE
+        st.subheader("Supprimer ce cas d'usage")
+        delete_button_key = f"delete_uc_btn_{selected_use_case_name.replace(' ', '_').replace('{', '').replace('}', '')}"
+        disable_delete_button = (st.session_state.confirming_delete_use_case_name == selected_use_case_name)
+        
+        if st.button("🗑️ Supprimer ce cas d'usage", key=delete_button_key, type="secondary", disabled=disable_delete_button, help="Supprime définitivement ce cas d'usage."):
+            st.session_state.confirming_delete_use_case_name = selected_use_case_name
+            st.rerun()
+    # FIN DE L'EXPANDER "Modifier ce modèle de prompt"
 
     st.markdown("---")
     st.header(f"Paramètres pour générer le prompt : {selected_use_case_name}")
     st.markdown("Veuillez remplir les champs ci-dessous.")
     
-    form_values = {} # To store user inputs for prompt generation
+    form_values = {} 
     main_form_key = f"prompt_fill_form_{selected_use_case_name.replace(' ', '_').replace('{', '').replace('}', '')}"
     with st.form(key=main_form_key):
         num_variables = len(current_prompt_config["variables"])
@@ -408,7 +435,6 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
             for i, var_info in enumerate(chunk):
                 with cols[i]:
                     widget_key = f"form_input_{selected_use_case_name.replace(' ', '_').replace('{', '').replace('}', '')}_{var_info['name']}"
-                    # Default value for the form field, should be correctly typed from session state
                     default_val_for_field = var_info.get("default") 
                     label = var_info["label"]
 
@@ -419,11 +445,10 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
                         idx = 0
                         if default_val_for_field is not None and default_val_for_field in options:
                             idx = options.index(default_val_for_field)
-                        elif options: # Default to first option if current default_val_for_field not in options
+                        elif options: 
                             idx = 0
                         form_values[var_info["name"]] = st.selectbox(label, options=options, index=idx, key=widget_key)
                     elif var_info["type"] == "date_input":
-                        # Ensure default_val_for_field is a date object; if not, provide a fallback
                         val_date = default_val_for_field if isinstance(default_val_for_field, date) else datetime.now().date()
                         form_values[var_info["name"]] = st.date_input(label, value=val_date, key=widget_key)
                     elif var_info["type"] == "number_input":
@@ -441,23 +466,23 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
         submit_button_main_form = st.form_submit_button("Générer le Prompt")
 
     if submit_button_main_form:
-        final_form_values = {} # For formatting the prompt string
+        final_form_values = {} 
         for name, value in form_values.items():
             if isinstance(value, date): 
-                final_form_values[name] = value.strftime("%d/%m/%Y") # Specific date format for prompt
+                final_form_values[name] = value.strftime("%d/%m/%Y") 
             else: 
                 final_form_values[name] = value
         
         try:
             template_to_format = current_prompt_config["template"]
-            class SafeFormatter(dict): # To handle missing keys gracefully
+            class SafeFormatter(dict): 
                 def __missing__(self, key):
                     return f"{{{key}}}" 
 
             final_prompt = template_to_format.format_map(SafeFormatter(final_form_values))
 
             st.subheader("✅ Prompt Généré :")
-            st.code(final_prompt, language=None) # Using None for plain text
+            st.code(final_prompt, language=None) 
             st.success("Prompt généré avec succès ! Utilisez l'icône de copie ci-dessus.")
             st.balloons()
 
@@ -468,17 +493,10 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
             st.error("Vérifiez que toutes les variables de votre template (ex: {ma_variable}) correspondent bien aux variables définies et remplies dans les formulaires.")
 
 elif not use_case_options and st.session_state.show_create_new_use_case_form:
-    # This state is when the form is explicitly shown, but no use cases exist yet.
-    # The form itself is handled in the sidebar.
     st.info("Veuillez créer votre premier cas d'usage en utilisant le formulaire dans la barre latérale.")
 elif not use_case_options:
-    # This state means no use cases, and the create form is not explicitly toggled to be shown (initial state or after closing form without creating)
-    # The sidebar logic should already have triggered a rerun to show the form if this is the initial load with no data.
     st.info("Commencez par créer un nouveau cas d'usage en utilisant le bouton '➕ Créer un nouveau cas d'usage' dans la barre latérale.")
 else: 
-    # This case means use_case_options exist, but 'selected_use_case_name' might not be in locals()
-    # This typically happens if the radio button isn't rendered yet or some logic flow error.
-    # Usually, if use_case_options exists, selected_use_case_name will be set by the radio button.
     st.info("Veuillez sélectionner un cas d'usage dans la barre latérale pour commencer.")
 
 st.sidebar.markdown("---")
