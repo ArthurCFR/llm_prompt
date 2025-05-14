@@ -45,6 +45,7 @@ INITIAL_PROMPT_TEMPLATES = {
     "RH": {},
     "Finance": {},
     "Comptabilité": {}
+    "Direction Juridique": {}
 }
 GIST_DATA_FILENAME = "prompt_templates_data.json"
 
