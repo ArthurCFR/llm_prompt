@@ -187,7 +187,7 @@ if 'confirming_delete_details' not in st.session_state:
 
 
 # --- Main App UI ---
-st.title("Generateur Avancé de Prompts IA")
+st.title("📩 Generateur Avancé de Prompts IA pour les fonctions support du groupe La Poste")
 
 # --- Sidebar Navigation ---
 st.sidebar.header("Navigation")
