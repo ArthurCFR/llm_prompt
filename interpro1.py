@@ -577,21 +577,25 @@ elif st.session_state.view_mode == "edit" and \
                         gen_form_values[var_info["name"]] = st.text_area(var_info["label"], value=str(field_default or ""), height=var_info.get("height",100), key=widget_key)
         if st.form_submit_button("Générer Prompt"):
             final_vals_for_prompt = {k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None}
+# ... (dans la logique de la fonction st.form_submit_button("Générer Prompt"))
             try:
                 class SafeFormatter(dict):
                     def __missing__(self, key): return f"{{{key}}}"
                 generated_prompt = current_prompt_config["template"].format_map(SafeFormatter(final_vals_for_prompt))
+                
                 st.subheader("✅ Prompt Généré:")
-                display_prompt_with_wrapping(generated_prompt) # Utilisation de la fonction de wrapping
+                display_prompt_with_wrapping(generated_prompt) # Utilisation de votre fonction pour le wrapping
 
-                if generated_prompt: # Bouton de copie
-                    # Utiliser une clé unique pour le bouton de copie pour éviter les conflits de state si la page ne se recharge pas complètement
+                if generated_prompt: # S'assurer qu'il y a quelque chose à copier
                     copy_key = f"copybtn_generated_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                    st_copy_to_clipboard(generated_prompt, label="📋 Copier le Prompt", key=copy_key)
-
-                st.success("Prompt généré!")
+                    
+                    # MODIFICATION ICI : Suppression de l'argument 'label'
+                    st_copy_to_clipboard(generated_prompt, key=copy_key) 
+                
+                st.success("Prompt généré!") 
                 st.balloons()
-            except Exception as e: st.error(f"Erreur génération prompt: {e}")
+            except Exception as e: 
+                st.error(f"Erreur génération prompt: {e}")
 
 else: 
     # Message par défaut si aucune vue spécifique (édition ou bibliothèque) n'est active
