@@ -498,7 +498,8 @@ if final_selected_family and final_selected_use_case and \
                 generated_prompt = current_prompt_config["template"].format_map(SafeFormatter(final_vals_for_prompt))
                 st.subheader("✅ Prompt Généré:")
                 st.code(generated_prompt, language=None)
-                st.success("Prompt généré! ATTENTION : copiez le maintenant, il disparaîtra à la fermeture de cette session.")
+                st.success("Prompt généré!")
+                st.info("ATTENTION : copiez le maintenant, il disparaîtra à la fermeture de cette session.")
                 st.balloons()
             except Exception as e:
                 st.error(f"Erreur génération prompt: {e}")
