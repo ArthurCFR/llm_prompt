@@ -219,7 +219,7 @@ st.title("Générateur & Bibliothèque de Prompts IA")
 
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
-tab_edition, tab_bibliotheque = st.sidebar.tabs(["✍️ Édition & Génération", "📚 Bibliothèque"])
+tab_bibliotheque, tab_edition = st.sidebar.tabs(["📚 Bibliothèque", "✍️ Édition & Génération"])
 
 with tab_edition:
     st.subheader("Explorateur et Création")
