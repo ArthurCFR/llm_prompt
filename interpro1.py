@@ -575,7 +575,12 @@ elif st.session_state.view_mode == "edit" and \
                     def __missing__(self, key): return f"{{{key}}}"
                 generated_prompt = current_prompt_config["template"].format_map(SafeFormatter(final_vals_for_prompt))
                 st.subheader("✅ Prompt Généré:")
-                display_prompt_with_wrapping(generated_prompt) # Utilisation de la fonction de wrapping
+                # La ligne suivante est celle qui utilise votre fonction personnalisée :
+                # display_prompt_with_wrapping(generated_prompt) # ANCIENNE LIGNE (pas de bouton copie)
+                
+                # REMPLACEZ-LA PAR CELLE-CI pour retrouver le bouton de copie :
+                st.code(generated_prompt, language=None) # NOUVELLE LIGNE (avec bouton copie)
+                
                 st.success("Prompt généré!")
                 st.balloons()
             except Exception as e: st.error(f"Erreur génération prompt: {e}")
