@@ -10,7 +10,7 @@ from st_copy_to_clipboard import st_copy_to_clipboard # Pour le bouton de copie
 st.set_page_config(layout="wide", page_title="Générateur & Bibliothèque de Prompts IA")
 
 # --- Initial Data Structure & Constants ---
-CURRENT_YEAR = 2025 
+CURRENT_YEAR = 2024 
 INITIAL_PROMPT_TEMPLATES = {
     "Achat": {
         "Recherche de Fournisseurs": {
