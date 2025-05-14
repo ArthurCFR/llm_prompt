@@ -585,4 +585,4 @@ else:
 
 # --- Sidebar Footer ---
 st.sidebar.markdown("---")
-st.sidebar.info(f"Générateur v2.5 - © {CURRENT_YEAR} Votre Organisation")
+st.sidebar.info(f"Générateur v2.5 - © {CURRENT_YEAR} La Poste")
