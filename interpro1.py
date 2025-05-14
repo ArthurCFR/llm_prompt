@@ -257,28 +257,37 @@ if use_case_options and 'selected_use_case_name' in locals() and selected_use_ca
     st.header(f"Cas d'usage : {selected_use_case_name}")
 
     # --- LOGIQUE DE CONFIRMATION DE SUPPRESSION ---
+    # --- LOGIQUE DE CONFIRMATION DE SUPPRESSION ---
     if st.session_state.confirming_delete_use_case_name == selected_use_case_name:
         st.warning(f"Êtes-vous sûr de vouloir supprimer définitivement le cas d'usage '{selected_use_case_name}' ? Cette action est irréversible et toutes les variables associées seront perdues.")
         col_confirm, col_cancel, _ = st.columns([1,1,3]) 
         with col_confirm:
             if st.button("Oui, supprimer définitivement", key=f"confirm_delete_yes_{selected_use_case_name}", type="primary"):
                 deleted_uc_name = st.session_state.confirming_delete_use_case_name
-                del st.session_state.editable_prompts[deleted_uc_name]
+                
+                # Supprimer le cas d'usage du dictionnaire principal
+                if deleted_uc_name in st.session_state.editable_prompts:
+                    del st.session_state.editable_prompts[deleted_uc_name]
+                
                 save_editable_prompts_to_gist()
                 st.success(f"Le cas d'usage '{deleted_uc_name}' a été supprimé.")
                 
                 st.session_state.confirming_delete_use_case_name = None
-                if st.session_state.main_use_case_selector == deleted_uc_name:
-                    st.session_state.main_use_case_selector = None 
                 
+                # LIGNE SUPPRIMÉE CI-DESSOUS :
+                # if st.session_state.main_use_case_selector == deleted_uc_name:
+                #     st.session_state.main_use_case_selector = None # CETTE LIGNE CAUSAIT L'ERREUR ET EST REDONDANTE
+
+                # Si la variable en cours d'édition appartenait au cas d'usage supprimé, la nettoyer
                 if st.session_state.editing_variable_info and st.session_state.editing_variable_info.get('use_case') == deleted_uc_name:
                     st.session_state.editing_variable_info = None
-                st.rerun()
+                
+                st.rerun() # Le rerun va déclencher la logique de la sidebar pour mettre à jour la sélection
         with col_cancel:
             if st.button("Non, annuler", key=f"confirm_delete_no_{selected_use_case_name}"):
                 st.session_state.confirming_delete_use_case_name = None
                 st.rerun()
-        st.markdown("---") 
+        st.markdown("---")
     # --- FIN DE LA LOGIQUE DE CONFIRMATION DE SUPPRESSION ---
 
     with st.expander("⚙️ Modifier ce modèle de prompt", expanded=False):
