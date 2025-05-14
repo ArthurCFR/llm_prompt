@@ -581,22 +581,31 @@ elif st.session_state.view_mode == "edit" and \
                         gen_form_values[var_info["name"]] = st.text_area(var_info["label"], value=str(field_default or ""), height=var_info.get("height",100), key=widget_key)
         if st.form_submit_button("Générer Prompt"):
             final_vals_for_prompt = {k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None}
+            # ... (dans la logique de la fonction st.form_submit_button("Générer Prompt"))
             try:
                 class SafeFormatter(dict):
                     def __missing__(self, key): return f"{{{key}}}"
                 generated_prompt = current_prompt_config["template"].format_map(SafeFormatter(final_vals_for_prompt))
+                
                 st.subheader("✅ Prompt Généré:")
-                display_prompt_with_wrapping(generated_prompt) 
+                display_prompt_with_wrapping(generated_prompt) # Votre fonction pour l'affichage avec retour à la ligne
 
                 if generated_prompt: 
-                    copy_key = f"copybtn_generated_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                    if st.button("📋 Copier le Prompt Généré", key=copy_key): # Utilisation de st.button et stx
+                    # Ajout du texte avant le bouton
+                    st.caption("Cliquez sur le bouton ci-dessous pour copier le prompt :") 
+                    
+                    copy_key = f"actual_copy_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    
+                    # Bouton de copie avec un label plus court et l'icône
+                    if st.button("📋 Copier", key=copy_key): 
                         copied = stx.copy_to_clipboard(generated_prompt, success_message="Prompt copié dans le presse-papiers !", error_message="La copie a échoué.")
-                        # copy_to_clipboard de streamlit_extras gère son propre toast.
-
+                        # La notification (toast) est gérée par stx.copy_to_clipboard
+                
+                # Le message de succès pour la génération du prompt
                 st.success("Prompt généré!") 
                 st.balloons()
-            except Exception as e: st.error(f"Erreur génération prompt: {e}")
+            except Exception as e: 
+                st.error(f"Erreur génération prompt: {e}")
 
 else: 
     available_families_main = list(st.session_state.editable_prompts.keys()) 
