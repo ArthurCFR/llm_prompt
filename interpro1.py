@@ -3,6 +3,7 @@ from datetime import datetime, date
 import copy
 import json
 import requests
+import html # Pour html.escape()
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="Générateur & Bibliothèque de Prompts IA")
@@ -48,6 +49,21 @@ INITIAL_PROMPT_TEMPLATES = {
 GIST_DATA_FILENAME = "prompt_templates_data.json"
 
 # --- Utility Functions ---
+def display_prompt_with_wrapping(text_content):
+    escaped_text = html.escape(text_content)
+    style = (
+        "white-space: pre-wrap; "
+        "word-wrap: break-word; "
+        "overflow-wrap: break-word; "
+        "background-color: #f0f2f6; "
+        "padding: 0.75em; "
+        "border-radius: 0.25rem; "
+        "font-family: monospace; "
+        "display: block; "
+        "border: 1px solid #e6e6e6;"
+    )
+    st.markdown(f"<pre style='{style}'>{escaped_text}</pre>", unsafe_allow_html=True)
+
 def parse_default_value(value_str, var_type):
     if not value_str:
         if var_type == "number_input": return 0
@@ -121,7 +137,7 @@ def get_gist_content(gist_id, github_pat):
         if GIST_DATA_FILENAME in gist_data["files"]:
             return gist_data["files"][GIST_DATA_FILENAME]["content"]
         else:
-            st.info(f"Le fichier '{GIST_DATA_FILENAME}' n'existe pas dans le Gist. Il sera initialisé.")
+            st.info(f"Fichier '{GIST_DATA_FILENAME}' non trouvé dans Gist. Initialisation.")
             return "{}" 
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur Gist (get): {e}")
@@ -145,7 +161,7 @@ def save_editable_prompts_to_gist():
     GIST_ID = st.secrets.get("GIST_ID")
     GITHUB_PAT = st.secrets.get("GITHUB_PAT")
     if not GIST_ID or not GITHUB_PAT:
-        st.error("Secrets Gist manquants (GIST_ID/GITHUB_PAT). Sauvegarde impossible.")
+        st.error("Secrets Gist manquants. Sauvegarde impossible.")
         return
     if 'editable_prompts' in st.session_state:
         data_to_save = _preprocess_for_saving(st.session_state.editable_prompts)
@@ -189,32 +205,27 @@ def load_editable_prompts_from_gist():
 if 'editable_prompts' not in st.session_state:
     st.session_state.editable_prompts = load_editable_prompts_from_gist()
 
-# For "Édition & Génération" tab
 if 'family_selector_edition' not in st.session_state:
     families_on_load = list(st.session_state.editable_prompts.keys())
     st.session_state.family_selector_edition = families_on_load[0] if families_on_load else None
 if 'use_case_selector_edition' not in st.session_state:
     st.session_state.use_case_selector_edition = None 
 
-# For "Bibliothèque" tab display
 if 'library_selected_family_for_display' not in st.session_state:
     st.session_state.library_selected_family_for_display = None
-
-# General app mode
 if 'view_mode' not in st.session_state:
-    st.session_state.view_mode = "edit" # Default to edit view
+    st.session_state.view_mode = "edit" 
 
 if 'editing_variable_info' not in st.session_state:
     st.session_state.editing_variable_info = None
 if 'show_create_new_use_case_form' not in st.session_state:
     st.session_state.show_create_new_use_case_form = False
-if 'force_select_family_name' not in st.session_state: # Used by edit tab
+if 'force_select_family_name' not in st.session_state:
     st.session_state.force_select_family_name = None
-if 'force_select_use_case_name' not in st.session_state: # Used by edit tab
+if 'force_select_use_case_name' not in st.session_state:
     st.session_state.force_select_use_case_name = None
 if 'confirming_delete_details' not in st.session_state:
     st.session_state.confirming_delete_details = None
-
 
 # --- Main App UI ---
 st.title("Générateur & Bibliothèque de Prompts IA")
@@ -227,35 +238,40 @@ with tab_edition:
     st.subheader("Explorateur et Création")
     available_families = list(st.session_state.editable_prompts.keys())
     
-    # Family Selection for Edition
     default_family_idx_edit = 0
+    current_family_for_edit = st.session_state.get('family_selector_edition')
+
     if st.session_state.force_select_family_name and st.session_state.force_select_family_name in available_families:
         default_family_idx_edit = available_families.index(st.session_state.force_select_family_name)
-    elif st.session_state.family_selector_edition and st.session_state.family_selector_edition in available_families:
-        default_family_idx_edit = available_families.index(st.session_state.family_selector_edition)
+        current_family_for_edit = st.session_state.force_select_family_name # Ensure it's set
+    elif current_family_for_edit and current_family_for_edit in available_families:
+        default_family_idx_edit = available_families.index(current_family_for_edit)
     elif available_families:
         default_family_idx_edit = 0 
-        st.session_state.family_selector_edition = available_families[0]
+        current_family_for_edit = available_families[0] # Default to first
+    
+    st.session_state.family_selector_edition = current_family_for_edit # Keep session state updated
 
     if not available_families:
-        st.warning("Aucune famille de cas d'usage configurée.") # Changed from st.sidebar.warning
-        st.session_state.family_selector_edition = None
+        st.warning("Aucune famille de cas d'usage configurée.")
     else:
-        prev_family_selection_edit = st.session_state.get('family_selector_edition')
+        prev_family_selection_edit = current_family_for_edit
         selected_family_ui_edit = st.selectbox(
             "Famille (pour édition):",
             options=available_families,
             index=default_family_idx_edit,
-            key='family_selector_edition'
+            key='family_selectbox_widget_edit' # Using a distinct key for the widget itself
         )
+        # Update session_state based on widget's new value
+        st.session_state.family_selector_edition = selected_family_ui_edit
+
         if prev_family_selection_edit != selected_family_ui_edit:
             st.session_state.use_case_selector_edition = None 
             st.session_state.force_select_use_case_name = None 
             st.session_state.force_select_family_name = None 
-            st.session_state.view_mode = "edit" # Explicitly set view mode
+            st.session_state.view_mode = "edit"
             st.rerun()
 
-    # Use Case Selection for Edition
     current_selected_family_for_edit_logic = st.session_state.get('family_selector_edition')
     use_cases_in_current_family_edit_options = []
     if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in st.session_state.editable_prompts:
@@ -263,24 +279,31 @@ with tab_edition:
 
     if use_cases_in_current_family_edit_options:
         default_uc_idx_edit = 0
+        current_uc_for_edit = st.session_state.get('use_case_selector_edition')
+
         if st.session_state.force_select_use_case_name and st.session_state.force_select_use_case_name in use_cases_in_current_family_edit_options:
             default_uc_idx_edit = use_cases_in_current_family_edit_options.index(st.session_state.force_select_use_case_name)
-        elif st.session_state.use_case_selector_edition and st.session_state.use_case_selector_edition in use_cases_in_current_family_edit_options:
-            default_uc_idx_edit = use_cases_in_current_family_edit_options.index(st.session_state.use_case_selector_edition)
+            current_uc_for_edit = st.session_state.force_select_use_case_name
+        elif current_uc_for_edit and current_uc_for_edit in use_cases_in_current_family_edit_options:
+            default_uc_idx_edit = use_cases_in_current_family_edit_options.index(current_uc_for_edit)
         elif use_cases_in_current_family_edit_options:
-            st.session_state.use_case_selector_edition = use_cases_in_current_family_edit_options[0]
+            current_uc_for_edit = use_cases_in_current_family_edit_options[0]
             default_uc_idx_edit = 0
         
-        prev_uc_selection_edit = st.session_state.get('use_case_selector_edition')
+        st.session_state.use_case_selector_edition = current_uc_for_edit # Keep session state updated
+
+        prev_uc_selection_edit = current_uc_for_edit
         selected_use_case_ui_edit = st.radio(
             "Cas d'usage (pour édition):",
             options=use_cases_in_current_family_edit_options,
             index=default_uc_idx_edit,
-            key='use_case_selector_edition'
+            key='use_case_radio_widget_edit' # Distinct key for the widget
         )
+        st.session_state.use_case_selector_edition = selected_use_case_ui_edit # Update session state
+
         if prev_uc_selection_edit != selected_use_case_ui_edit:
             st.session_state.force_select_use_case_name = None 
-            st.session_state.view_mode = "edit" # Explicitly set view mode
+            st.session_state.view_mode = "edit"
             st.rerun()
             
     elif current_selected_family_for_edit_logic:
@@ -292,36 +315,40 @@ with tab_edition:
 
     st.markdown("---")
     if available_families:
-        if st.button("➕ Créer un Cas d'Usage", key="toggle_create_form_btn_tab_edition"): # Unique key
+        if st.button("➕ Créer un Cas d'Usage", key="toggle_create_form_btn_tab_edition"):
             st.session_state.show_create_new_use_case_form = not st.session_state.show_create_new_use_case_form
-            if not st.session_state.show_create_new_use_case_form: st.rerun()
+            if not st.session_state.show_create_new_use_case_form: 
+                st.session_state.view_mode = "edit" # Ensure mode is edit
+                st.rerun()
 
     if st.session_state.show_create_new_use_case_form and available_families:
         with st.expander("Nouveau Cas d'Usage", expanded=True):
-            with st.form("new_use_case_form_tab_edition", clear_on_submit=True): # Unique key
+            with st.form("new_use_case_form_tab_edition", clear_on_submit=True):
                 default_create_family_idx_tab = available_families.index(current_selected_family_for_edit_logic) if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in available_families else 0
-                uc_parent_family = st.selectbox("Famille Parente:", options=available_families, index=default_create_family_idx_tab, key="new_uc_parent_family_tab_edition")
-                uc_name = st.text_input("Nom du Cas d'Usage:", key="new_uc_name_tab_edition")
-                uc_template = st.text_area("Template Initial:", height=100, key="new_uc_template_tab_edition")
+                uc_parent_family = st.selectbox("Famille Parente:", options=available_families, index=default_create_family_idx_tab, key="new_uc_parent_family_widget")
+                uc_name = st.text_input("Nom du Cas d'Usage:", key="new_uc_name_widget")
+                uc_template = st.text_area("Template Initial:", height=100, key="new_uc_template_widget")
                 submitted_new_uc = st.form_submit_button("Créer Cas d'Usage")
 
                 if submitted_new_uc:
-                    parent_family_val = st.session_state.new_uc_parent_family_tab_edition
-                    if not uc_name.strip(): st.error("Nom du cas d'usage requis.")
-                    elif uc_name in st.session_state.editable_prompts.get(parent_family_val, {}):
-                        st.error(f"'{uc_name}' existe déjà dans '{parent_family_val}'.")
+                    parent_family_val = st.session_state.new_uc_parent_family_widget
+                    uc_name_val = st.session_state.new_uc_name_widget # Get value from widget state
+                    uc_template_val = st.session_state.new_uc_template_widget
+
+                    if not uc_name_val.strip(): st.error("Nom du cas d'usage requis.")
+                    elif uc_name_val in st.session_state.editable_prompts.get(parent_family_val, {}):
+                        st.error(f"'{uc_name_val}' existe déjà dans '{parent_family_val}'.")
                     else:
                         if parent_family_val not in st.session_state.editable_prompts:
                              st.session_state.editable_prompts[parent_family_val] = {}
-                        st.session_state.editable_prompts[parent_family_val][uc_name] = {"template": uc_template or "Nouveau prompt...", "variables": []}
+                        st.session_state.editable_prompts[parent_family_val][uc_name_val] = {"template": uc_template_val or "Nouveau prompt...", "variables": []}
                         save_editable_prompts_to_gist()
-                        st.success(f"'{uc_name}' créé dans '{parent_family_val}'.")
+                        st.success(f"'{uc_name_val}' créé dans '{parent_family_val}'.")
                         st.session_state.show_create_new_use_case_form = False
                         st.session_state.force_select_family_name = parent_family_val
-                        st.session_state.force_select_use_case_name = uc_name
-                        st.session_state.view_mode = "edit" # Ensure edit mode after creation
+                        st.session_state.force_select_use_case_name = uc_name_val
+                        st.session_state.view_mode = "edit"
                         st.rerun()
-
 with tab_bibliotheque:
     st.subheader("Consulter par Famille")
     if not st.session_state.editable_prompts or not any(st.session_state.editable_prompts.values()):
@@ -329,19 +356,24 @@ with tab_bibliotheque:
     else:
         sorted_families_bib = sorted(list(st.session_state.editable_prompts.keys()))
         for family_name_bib in sorted_families_bib:
-            button_key = f"lib_family_btn_{family_name_bib.replace(' ', '_')}" # Unique key
+            button_key = f"lib_family_btn_{family_name_bib.replace(' ', '_').replace('&', '_')}" # Sanitize key
             if st.button(family_name_bib, key=button_key, use_container_width=True):
                 st.session_state.view_mode = "library"
                 st.session_state.library_selected_family_for_display = family_name_bib
-                # No st.rerun() here, main page will update based on new state in next cycle
+                st.rerun() # Rerun to make main page update
 
-# --- Final selections for main page logic (driven by edit tab or library click) ---
+# --- Final selections from session state for main page logic ---
 final_selected_family_edition = st.session_state.get('family_selector_edition')
 final_selected_use_case_edition = st.session_state.get('use_case_selector_edition')
 library_family_to_display = st.session_state.get('library_selected_family_for_display')
 
 
 # --- Main Display Area ---
+# Initialize view_mode if it's not already set (e.g., on first run)
+if 'view_mode' not in st.session_state:
+    st.session_state.view_mode = "edit"
+
+# Main display logic based on view_mode
 if st.session_state.view_mode == "library" and library_family_to_display:
     st.header(f"Bibliothèque - Famille : {library_family_to_display}")
     st.markdown("---")
@@ -355,7 +387,7 @@ if st.session_state.view_mode == "library" and library_family_to_display:
             template_display = prompt_config_display.get("template", "_Template non défini._")
             with st.expander(f"{use_case_name_display}", expanded=False):
                 st.markdown(f"##### Template pour : {use_case_name_display}")
-                st.code(template_display, language=None)
+                display_prompt_with_wrapping(template_display) # Utilisation de la fonction de wrapping
                 variables_display = prompt_config_display.get("variables", [])
                 if variables_display:
                     st.markdown("**Variables associées:**")
@@ -389,11 +421,11 @@ elif st.session_state.view_mode == "edit" and \
                st.session_state.editing_variable_info.get("family") == details["family"] and \
                st.session_state.editing_variable_info.get("use_case") == details["use_case"]:
                 st.session_state.editing_variable_info = None
-            st.session_state.view_mode = "edit" # Rester en mode édition
+            st.session_state.view_mode = "edit"
             st.rerun()
         if c2.button("Non, annuler", key=f"del_no_{details['family']}_{details['use_case']}"):
             st.session_state.confirming_delete_details = None
-            st.session_state.view_mode = "edit" # Rester en mode édition
+            st.session_state.view_mode = "edit"
             st.rerun()
         st.markdown("---")
 
@@ -543,18 +575,17 @@ elif st.session_state.view_mode == "edit" and \
                     def __missing__(self, key): return f"{{{key}}}"
                 generated_prompt = current_prompt_config["template"].format_map(SafeFormatter(final_vals_for_prompt))
                 st.subheader("✅ Prompt Généré:")
-                st.code(generated_prompt, language=None)
+                display_prompt_with_wrapping(generated_prompt) # Utilisation de la fonction de wrapping
                 st.success("Prompt généré!")
                 st.balloons()
             except Exception as e: st.error(f"Erreur génération prompt: {e}")
 
 else: 
-    # Default view when no specific edit context is active and not in library view
-    # Or if library_selected_family_for_display is None but view_mode is "library" (should not happen with current logic)
     st.info("Bienvenue ! Sélectionnez une option dans la barre latérale pour commencer.")
-    if not available_families and st.session_state.view_mode == "edit": # Check if from sidebar context
+    available_families_main = list(st.session_state.editable_prompts.keys()) # Renommer pour éviter conflit
+    if not available_families_main and st.session_state.view_mode == "edit":
         st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en définir dans le code source (`INITIAL_PROMPT_TEMPLATES`).")
 
 # --- Sidebar Footer ---
 st.sidebar.markdown("---")
-st.sidebar.info(f"Générateur v2.1 - © {CURRENT_YEAR} Votre Organisation")
+st.sidebar.info(f"Générateur v2.2 - © {CURRENT_YEAR} Votre Organisation")
