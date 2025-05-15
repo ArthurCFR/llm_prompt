@@ -191,11 +191,42 @@ def load_editable_prompts_from_gist():
 if 'editable_prompts' not in st.session_state:
     st.session_state.editable_prompts = load_editable_prompts_from_gist()
 
+# Déterminer la vue initiale (page d'accueil)
+if 'view_mode' not in st.session_state: # S'exécute seulement à la première exécution de la session
+    st.session_state.view_mode = "library" # Définir le mode bibliothèque par défaut
+    
+    default_library_family_on_start = "Achat" # Votre famille par défaut souhaitée
+    available_families_on_load = list(st.session_state.editable_prompts.keys())
+    
+    if default_library_family_on_start in available_families_on_load:
+        st.session_state.library_selected_family_for_display = default_library_family_on_start
+    elif available_families_on_load: # Si "Achat" n'existe pas, prendre la première famille disponible
+        st.session_state.library_selected_family_for_display = available_families_on_load[0]
+    else: # Si aucune famille n'existe, la bibliothèque sera vide, ce qui est géré par la logique d'affichage
+        st.session_state.library_selected_family_for_display = None
+        # Si aucune famille, le mode library affichera un message. On pourrait aussi forcer "edit" ici.
+        # st.session_state.view_mode = "edit" 
+else:
+    # Pour les exécutions suivantes dans la même session, view_mode est conservé ou modifié par les actions de l'utilisateur
+    pass
+
+# Initialisation des sélecteurs pour l'onglet "Édition & Génération"
+# Ces initialisations ne devraient pas écraser la vue par défaut si elle est différente.
 if 'family_selector_edition' not in st.session_state:
-    families_on_load = list(st.session_state.editable_prompts.keys())
-    st.session_state.family_selector_edition = families_on_load[0] if families_on_load else None
+    families_for_edit_init = list(st.session_state.editable_prompts.keys())
+    st.session_state.family_selector_edition = families_for_edit_init[0] if families_for_edit_init else None
+
 if 'use_case_selector_edition' not in st.session_state:
     st.session_state.use_case_selector_edition = None 
+    # Pré-sélectionner le premier cas d'usage si une famille est déjà sélectionnée pour l'édition
+    if st.session_state.family_selector_edition and \
+       st.session_state.family_selector_edition in st.session_state.editable_prompts and \
+       st.session_state.editable_prompts[st.session_state.family_selector_edition]:
+        try:
+            first_uc_in_family = list(st.session_state.editable_prompts[st.session_state.family_selector_edition].keys())[0]
+            st.session_state.use_case_selector_edition = first_uc_in_family
+        except IndexError:
+            pass # La famille est vide
 
 if 'library_selected_family_for_display' not in st.session_state:
     st.session_state.library_selected_family_for_display = None
@@ -420,7 +451,7 @@ elif st.session_state.view_mode == "edit" and \
             st.rerun()
         st.markdown("---")
 
-    with st.expander("⚙️ Gérer le modèle de prompt", expanded=True):
+    with st.expander("⚙️ Gérer le modèle de prompt", expanded=False):
         st.subheader("Template du Prompt")
         tpl_key = f"tpl_{final_selected_family_edition}_{final_selected_use_case_edition}"
         new_tpl = st.text_area("Template:", value=current_prompt_config['template'], height=300, key=tpl_key)
