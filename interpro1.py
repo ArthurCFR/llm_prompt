@@ -828,40 +828,82 @@ elif st.session_state.view_mode == "edit" and \
             st.subheader(var_form_header)
             var_name = st.text_input("Nom technique de la variable (unique, sans espaces ni caractères spéciaux)", value=var_defaults["name"], key=f"{form_var_key_base}_name")
             var_label = st.text_input("Label pour l'utilisateur (description)", value=var_defaults["label"], key=f"{form_var_key_base}_label")
-            var_type_opts = ["text_input", "selectbox", "date_input", "number_input", "text_area"]
+var_type_opts = ["text_input", "selectbox", "date_input", "number_input", "text_area"]
             var_type_idx = var_type_opts.index(var_defaults["type"]) if var_defaults["type"] in var_type_opts else 0
-            var_type = st.selectbox("Type de variable", var_type_opts, index=var_type_idx, key=f"{form_var_key_base}_type")
             
-            var_options_val_str = var_defaults.get("options", "") 
+            var_type_key = f"{form_var_key_base}_type"
+            var_options_key = f"{form_var_key_base}_options" # Définir la clé pour le champ options
+
+            var_type = st.selectbox(
+                "Type de variable", 
+                var_type_opts, 
+                index=var_type_idx, 
+                key=var_type_key
+            )
+            
+            # Créer un placeholder pour le champ des options
+            options_placeholder = st.empty()
+
+            # Logique pour afficher le champ options dans le placeholder
             if var_type == "selectbox":
-                var_options_val_str = st.text_input("Options (séparées par virgule)", value=var_defaults["options"], key=f"{form_var_key_base}_options")
-            
-            var_default_val_str = st.text_input("Valeur par défaut (optionnel, format YYYY-MM-DD pour dates)", value=var_defaults["default"], key=f"{form_var_key_base}_default")
+                with options_placeholder.container(): # Utiliser le container du placeholder
+                    st.text_input( # Pas besoin d'assigner à une variable ici, on lira via la clé
+                        "Options (séparées par virgule)", 
+                        value=var_defaults.get("options", ""), # Utiliser var_defaults pour préremplir
+                        key=var_options_key
+                    )
+            # else: # Optionnel: si on veut explicitement vider quand ce n'est pas selectbox
+            # options_placeholder.empty() 
+            # En pratique, si la condition n'est pas remplie, le placeholder ne sera pas rempli à ce tour.
+            # Si le type changeait d'un selectbox à autre chose, il faut s'assurer qu'il est vidé.
+            # Le simple fait de ne pas appeler .container().text_input() devrait suffire à le laisser vide.
+
+            var_default_val_str = st.text_input(
+                "Valeur par défaut (optionnel, format finalList-MM-DD pour dates)", 
+                value=var_defaults["default"], 
+                key=f"{form_var_key_base}_default"
+            )
 
             if st.form_submit_button(var_submit_label):
+                # Récupérer la valeur des options directement depuis st.session_state en utilisant sa clé,
+                # UNIQUEMENT si le type est selectbox (car le champ n'existera que dans ce cas)
+                actual_options_val_str = ""
+                if var_type == "selectbox":
+                    # Vérifier si la clé existe dans session_state (elle devrait si le champ a été affiché)
+                    if var_options_key in st.session_state:
+                        actual_options_val_str = st.session_state[var_options_key]
+                    # else: # Le champ n'a pas été affiché, donc pas d'options. actual_options_val_str reste "".
+                        # Ce cas ne devrait pas poser de problème si la validation ci-dessous est correcte.
+                
                 if not var_name.strip() or not var_label.strip(): 
                     st.error("Le nom technique et le label de la variable sont requis.")
                 elif not var_name.strip().isidentifier(): 
                     st.error("Le nom technique de la variable ne doit contenir que des lettres, chiffres et underscores, et ne pas commencer par un chiffre.")
+                elif var_type == "selectbox" and not [opt.strip() for opt in actual_options_val_str.split(',') if opt.strip()]:
+                    st.error("Pour un type 'selectbox', veuillez fournir les options (séparées par des virgules). Le champ ne peut pas être vide.")
                 else:
                     new_var_data = {"name": var_name.strip(), "label": var_label.strip(), "type": var_type}
                     if var_type == "selectbox":
-                        new_var_data["options"] = [opt.strip() for opt in var_options_val_str.split(',') if opt.strip()]
+                        new_var_data["options"] = [opt.strip() for opt in actual_options_val_str.split(',') if opt.strip()]
                     
+                    # La valeur par défaut est récupérée du widget var_default_val_str,
+                    # qui est toujours affiché.
                     parsed_def = parse_default_value(var_default_val_str.strip(), var_type)
                     
-                    if var_type == "selectbox" and new_var_data.get("options"):
-                        if parsed_def not in new_var_data["options"]:
-                            st.warning(f"La valeur par défaut '{parsed_def}' n'est pas dans les options fournies. La première option sera utilisée comme défaut.")
-                            new_var_data["default"] = new_var_data["options"][0] if new_var_data["options"] else None
-                        else:
-                            new_var_data["default"] = parsed_def
-                    elif var_type == "selectbox" and not new_var_data.get("options"):
-                         st.warning("Un Selectbox sans options n'est pas utilisable. La valeur par défaut sera vide.")
-                         new_var_data["default"] = None
+                    if var_type == "selectbox": # Re-vérifier car new_var_data["options"] est maintenant peuplé
+                        if new_var_data.get("options"): # S'assurer qu'il y a des options
+                            if parsed_def not in new_var_data["options"]:
+                                st.warning(f"La valeur par défaut '{parsed_def}' n'est pas dans les options fournies. La première option ('{new_var_data['options'][0]}') sera utilisée comme défaut.")
+                                new_var_data["default"] = new_var_data["options"][0]
+                            else:
+                                new_var_data["default"] = parsed_def
+                        # else: # Cas où il n'y a pas d'options, déjà géré par la validation plus haut.
+                        #    st.error("Un Selectbox sans options n'est pas valide.")
+                        #    return
                     else: 
                         new_var_data["default"] = parsed_def
 
+                    # ... (reste de la logique de sauvegarde inchangée) ...
                     if is_editing_var:
                         idx_to_edit = st.session_state.editing_variable_info["index"]
                         st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]['variables'][idx_to_edit] = new_var_data
@@ -871,13 +913,14 @@ elif st.session_state.view_mode == "edit" and \
                         existing_var_names = [v['name'] for v in current_prompt_config.get('variables', [])]
                         if new_var_data['name'] in existing_var_names:
                             st.error(f"Une variable nommée '{new_var_data['name']}' existe déjà pour ce prompt.")
+                            return 
                         else:
                             st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]['variables'].append(new_var_data)
                             st.success("Variable ajoutée.")
                     
                     current_prompt_config["updated_at"] = datetime.now().isoformat() 
                     save_editable_prompts_to_gist()
-                    st.session_state.view_mode = "edit"
+                    st.session_state.view_mode = "edit" 
                     st.rerun()
         
         if is_editing_var and st.session_state.editing_variable_info: 
