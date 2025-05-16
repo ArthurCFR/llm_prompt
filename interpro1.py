@@ -836,7 +836,7 @@ elif st.session_state.view_mode == "edit" and \
             if var_type == "selectbox":
                 var_options_val_str = st.text_input("Options (séparées par virgule)", value=var_defaults["options"], key=f"{form_var_key_base}_options")
             
-            var_default_val_str = st.text_input("Valeur par défaut (optionnel, format ஆண்டில்-MM-DD pour dates)", value=var_defaults["default"], key=f"{form_var_key_base}_default")
+            var_default_val_str = st.text_input("Valeur par défaut (optionnel, format YYYY-MM-DD pour dates)", value=var_defaults["default"], key=f"{form_var_key_base}_default")
 
             if st.form_submit_button(var_submit_label):
                 if not var_name.strip() or not var_label.strip(): 
