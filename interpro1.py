@@ -881,7 +881,6 @@ elif st.session_state.view_mode == "edit" and \
                 st.rerun()
 
         with action_cols[1]:
-            st.subheader("Supprimer ce Cas d'Usage")
             del_uc_key = f"del_uc_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"
             disable_del_uc_button = bool(st.session_state.confirming_delete_details and \
                                     st.session_state.confirming_delete_details["family"] == final_selected_family_edition and \
