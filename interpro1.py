@@ -789,7 +789,8 @@ elif st.session_state.view_mode == "edit" and \
                 var_form_header = f"Modifier Variable: {st.session_state.editing_variable_info['data'].get('name', '')}"
                 var_submit_label = "Sauvegarder Modifications"
                 var_defaults.update(st.session_state.editing_variable_info['data']) 
-                var_defaults["options"] = ", ".join(st.session_state.editing_variable_info['data'].get("options", []))
+                options_list = st.session_state.editing_variable_info['data'].get("options", [])
+                var_defaults["options"] = ", ".join(map(str, options_list))
                 raw_def = st.session_state.editing_variable_info['data'].get("default")
                 var_defaults["default"] = raw_def.strftime("%Y-%m-%d") if isinstance(raw_def, date) else str(raw_def or "")
                 form_var_key_base += f"_edit_{edit_var_idx}" 
