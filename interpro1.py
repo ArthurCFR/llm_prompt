@@ -523,13 +523,9 @@ with tab_bibliotheque:
             st.session_state.library_selected_family_for_display = sorted_families_bib[0] if sorted_families_bib else None
 
         st.write("Sélectionner une famille à afficher :")
-        num_cols_lib = 4
-        family_buttons_cols_lib = st.columns(num_cols_lib)
-        col_idx_lib = 0
         for family_name_bib in sorted_families_bib:
             button_key = f"lib_family_btn_{family_name_bib.replace(' ', '_').replace('&', '_')}"
             is_selected_family = (st.session_state.library_selected_family_for_display == family_name_bib)
-            with family_buttons_cols_lib[col_idx_lib % num_cols_lib]:
                 if st.button(
                     family_name_bib,
                     key=button_key,
@@ -539,7 +535,6 @@ with tab_bibliotheque:
                     st.session_state.view_mode = "library"
                     st.session_state.library_selected_family_for_display = family_name_bib
                     st.rerun()
-            col_idx_lib += 1
         st.markdown("---")
 
 # --- Main Display Area ---
