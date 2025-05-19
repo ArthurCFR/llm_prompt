@@ -3,6 +3,7 @@ from datetime import datetime, date
 import copy
 import json
 import requests
+from streamlit_clipboard import st_clipboard
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🦸🏻Générateur & Bibliothèque de Prompts IA v3.3") 
@@ -667,6 +668,27 @@ elif st.session_state.view_mode == "edit" and \
                 st.subheader("✅ Prompt Généré:") 
                 st.code(generated_prompt, language=None) 
                 st.success("Prompt généré avec succès!")
+                # --- AJOUT DU BOUTON COPIER ICI ---
+                try:
+                    from streamlit_clipboard import st_clipboard # Importation dynamique
+                    if generated_prompt: # S'assurer qu'il y a du texte à copier
+                        # Utiliser une clé unique pour le composant, dérivée du contexte
+                        clipboard_key = f"clipboard_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"
+                        st_clipboard(
+                            generated_prompt,
+                            label="📋 Copier le texte du Prompt Généré",
+                            success_message="✅ Prompt copié dans le presse-papiers !",
+                            key=clipboard_key
+                        )
+                except ImportError:
+                    # Message affiché si streamlit-clipboard n'est pas installé
+                    st.caption("Pour un bouton de copie directe, installez `streamlit-clipboard`: `pip install streamlit-clipboard`")
+                    st.info("En attendant, vous pouvez copier le prompt en utilisant l'icône de copie (en haut à droite du bloc de code ci-dessus).")
+                except Exception as e_clip:
+                    # Gérer d'autres erreurs potentielles du composant de copie
+                    st.warning(f"Le bouton de copie a rencontré un problème : {e_clip}")
+                    st.caption("Vous pouvez toujours copier le prompt en utilisant l'icône de copie (en haut à droite du bloc de code ci-dessus).")
+                # --- FIN DE L'AJOUT DU BOUTON COPIER ---
                 st.balloons()
                 
                 current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
