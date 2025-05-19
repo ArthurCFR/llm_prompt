@@ -3,7 +3,7 @@ from datetime import datetime, date
 import copy
 import json
 import requests
-import st_clipboard
+from streamlit_clipboard import st_clipboard
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🦸🏻Générateur & Bibliothèque de Prompts IA v3.3") 
