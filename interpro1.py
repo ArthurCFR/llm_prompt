@@ -683,25 +683,22 @@ elif st.session_state.view_mode == "edit" and \
     # Affichage du prompt généré (éditable) - Gardé de la modification précédente
     if st.session_state.active_generated_prompt:
         st.subheader("✅ Prompt Généré (éditable):")
-        col_text, col_btn = st.columns([0.9, 0.1]) 
-        with col_text:
-            edited_prompt_value = st.text_area(
-                "Prompt:",
-                value=st.session_state.active_generated_prompt,
-                height=200,
-                key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}",
-                label_visibility="collapsed"
-            )
-        with col_btn:
-            st.write("") 
-            if st.button("📋", key=f"copy_icon_btn_{final_selected_family_edition}_{final_selected_use_case_edition}", help="Copier le prompt (utilise la zone de copie dédiée ci-dessous)"):
-                st.toast("Utilisez le bouton de copie sur la zone dédiée plus bas.", icon="👇")
+        # La création de colonnes est supprimée car le bouton n'est plus là.
+        # La zone de texte prendra maintenant toute la largeur disponible.
+        edited_prompt_value = st.text_area(
+            "Prompt:",
+            value=st.session_state.active_generated_prompt,
+            height=200,
+            key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}",
+            label_visibility="collapsed"
+        )
 
         if edited_prompt_value != st.session_state.active_generated_prompt:
             st.session_state.active_generated_prompt = edited_prompt_value
         
-        st.caption("Pour une copie facile et fiable, utilisez le bouton de la zone ci-dessous :")
-        st.code(st.session_state.active_generated_prompt, language=None)
+        # La légende est ajustée car il n'y a plus de bouton spécifique auquel se référer.
+        st.caption("Prompt généré (pour relecture et copie manuelle) :")
+        st.code(st.session_state.active_generated_prompt, language=None) # La zone de code reste pour la visualisation et la copie manuelle
     st.markdown("---")
 
 
