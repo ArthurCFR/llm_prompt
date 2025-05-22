@@ -953,7 +953,6 @@ elif st.session_state.view_mode == "edit":
                         st.session_state.editing_variable_info = None
                         st.session_state.variable_type_to_create = None
                         st.rerun()
-                st.markdown("---") # Ajoute un séparateur visuel entre les variables pour la clarté
             
             st.markdown("---")
             st.subheader("Ajouter ou Modifier une Variable")
