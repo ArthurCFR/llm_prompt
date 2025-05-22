@@ -308,7 +308,7 @@ if 'go_to_config_section' not in st.session_state:
 
 
 # --- Main App UI ---
-st.title(f"🦸🏻Générateur & Bibliothèque de Prompts IA La Poste")
+st.title(f"🦸🏻 Le laboratoire de prompt IA")
 
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
