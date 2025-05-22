@@ -813,21 +813,20 @@ elif st.session_state.view_mode == "edit":
             new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=template_text_area_key)
             st.markdown("""
                 <style>
-                .compact-code-block .stCodeBlock > div { /* Cible le conteneur interne du st.code */
-                    padding-top: 0.15rem !important;
-                    padding-bottom: 0.15rem !important;
+                /* Cible les blocs de code à l'intérieur d'un expander */
+                div[data-testid="stExpander"] div[data-testid="stCodeBlock"] {
+                    margin-top: 0.1rem !important;    /* Petite marge en haut */
+                    margin-bottom: 0.15rem !important; /* TRÈS PETITE marge en bas - C'est la clé pour réduire l'espace entre les lignes */
+                    padding-top: 0.1rem !important;   /* Padding interne du bloc st.code */
+                    padding-bottom: 0.1rem !important;
                 }
-                .compact-code-block .stCodeBlock > div > pre { /* Cible le tag <pre> pour le texte */
-                    padding-top: 0.25rem !important; /* Léger padding interne pour le texte */
-                    padding-bottom: 0.25rem !important;
-                    line-height: 1.2 !important; /* Réduit l'espacement si le texte passait sur 2 lignes */
-                    font-size: 0.85em !important; /* Réduit légèrement la taille de la police */
-                    margin-bottom: 0px !important; /* Enlève la marge en bas du <pre> si présente */
-                }
-                /* Optionnel: réduire la marge en bas de chaque bloc de code lui-même */
-                .compact-code-block {
-                    margin-bottom: -2 rem; /* Valeur négative pour rapprocher les lignes verticalement */
-                                          /* ou une petite valeur positive comme 0.1rem si c'est trop serré */
+                /* Cible le tag <pre> à l'intérieur de ces blocs de code */
+                div[data-testid="stExpander"] div[data-testid="stCodeBlock"] pre {
+                    padding-top: 0.2rem !important;   /* Padding pour le texte à l'intérieur de <pre> */
+                    padding-bottom: 0.2rem !important;
+                    line-height: 1.1 !important;      /* Hauteur de ligne pour le texte */
+                    font-size: 0.85em !important;     /* Taille de police légèrement réduite */
+                    margin: 0 !important;             /* S'assurer que <pre> n'a pas de marges propres */
                 }
                 </style>
             """, unsafe_allow_html=True)
