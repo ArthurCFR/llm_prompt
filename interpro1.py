@@ -839,7 +839,7 @@ elif st.session_state.view_mode == "edit" and \
                 st.rerun()
         
         st.markdown("---")
-        st.subheader("Ajouter ou Modifier une Variable")
+        st.subheader("Ajouter une Variable")
 
         is_editing_var = False
         variable_data_for_form = {"name": "", "label": "", "type": "", "options": "", "default": ""}
