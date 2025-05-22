@@ -16,57 +16,7 @@ def get_default_dates():
     return now_iso, now_iso
 
 created_at_initial, updated_at_initial = get_default_dates()
-INITIAL_PROMPT_TEMPLATES = {
-    "Achat": {
-        "Recherche de Fournisseurs": {
-            "template": "Recherche dans la base de données quels sont les fournisseurs de {legume} les {critere_prix} entre l'année {annee_debut} et l'année {annee_fin}.",
-            "variables": [
-                {"name": "legume", "label": "Quel légume/produit recherchez-vous ?", "type": "text_input", "default": "tomates"},
-                {"name": "critere_prix", "label": "Quel critère de prix ?", "type": "selectbox", "options": ["moins chers", "plus chers", "mieux notés"], "default": "moins chers"},
-                {"name": "annee_debut", "label": "Année de début", "type": "selectbox", "options": list(range(CURRENT_YEAR - 5, CURRENT_YEAR + 1)), "default": CURRENT_YEAR -1 },
-                {"name": "annee_fin", "label": "Année de fin", "type": "selectbox", "options": list(range(CURRENT_YEAR - 5, CURRENT_YEAR + 2)), "default": CURRENT_YEAR},
-            ],
-            "tags": ["recherche", "fournisseur", "interne"],
-            "usage_count": 0,
-            "created_at": created_at_initial,
-            "updated_at": updated_at_initial
-        },
-        "Génération d'Email de Suivi Client": {
-            "template": "Rédige un email de suivi pour {nom_client} concernant sa commande {num_commande} passée le {date_commande}. L'email doit avoir un ton {ton_email} et mentionner que nous attendons son retour sur {point_feedback}.",
-            "variables": [
-                {"name": "nom_client", "label": "Nom du client", "type": "text_input", "default": "M. Dupont"},
-                {"name": "num_commande", "label": "Numéro de commande", "type": "text_input", "default": f"CMD{CURRENT_YEAR}00123"},
-                {"name": "date_commande", "label": "Date de la commande", "type": "date_input", "default": date(CURRENT_YEAR, 1, 15)},
-                {"name": "ton_email", "label": "Ton de l'email", "type": "selectbox", "options": ["professionnel", "amical", "formel", "enthousiaste"], "default": "professionnel"},
-                {"name": "point_feedback", "label": "Point pour feedback", "type": "text_input", "default": "son expérience avec notre nouveau service"},
-            ],
-            "tags": ["email", "client", "communication"],
-            "previous_template": "",
-            "usage_count": 0,
-            "created_at": created_at_initial,
-            "updated_at": updated_at_initial
-        },
-        "Résumé de Document": { # MODIFIÉ pour la cohérence des types number_input
-            "template": "Résume le document suivant en {nombre_points} points clés pour un public de {public_cible}. Le résumé doit se concentrer sur les aspects de {focus_resume}. Le style de résumé doit être {style_resume}. Voici le texte à résumer : \n\n{texte_document}",
-            "variables": [
-                {"name": "nombre_points", "label": "Nombre de points clés", "type": "number_input", 
-                 "default": 3.0, "min_value":1.0, "max_value":10.0, "step":1.0}, # MODIFIÉ en float
-                {"name": "public_cible", "label": "Public cible", "type": "selectbox", "options": ["direction", "équipe technique", "clients", "partenaires", "grand public"], "default": "direction"},
-                {"name": "focus_resume", "label": "Focus principal", "type": "selectbox", "options": ["aspects techniques", "impacts financiers", "prochaines étapes", "conclusions principales", "avantages concurrentiels"], "default": "conclusions principales"},
-                {"name": "style_resume", "label": "Style du résumé", "type": "selectbox", "options": ["concis et direct", "détaillé", "orienté action", "informatif neutre"], "default": "concis et direct"},
-                {"name": "texte_document", "label": "Texte à résumer", "type": "text_area", "height": 200, "default": "Collez le texte ici..."},
-            ],
-            "tags": ["résumé", "analyse", "document"],
-            "previous_template": "",
-            "usage_count": 0,
-            "created_at": created_at_initial,
-            "updated_at": updated_at_initial
-        }
-    },
-    "RH": {},
-    "Finance": {},
-    "Comptabilité": {}
-}
+
 for family, use_cases in INITIAL_PROMPT_TEMPLATES.items():
     if isinstance(use_cases, dict):
         for uc_name, uc_config in use_cases.items():
