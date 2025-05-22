@@ -848,10 +848,7 @@ elif st.session_state.view_mode == "edit":
                         target_column = col1 if i % 2 == 0 else col2
                         
                         with target_column:
-                            # Envelopper st.code() dans un markdown avec la classe CSS
-                            st.markdown('<div class="compact-code-block">', unsafe_allow_html=True)
-                            st.code(variable_string_to_display, language=None)
-                            st.markdown('</div>', unsafe_allow_html=True)
+                                st.code(variable_string_to_display, language=None)
                 
                 st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
 
