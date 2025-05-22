@@ -910,7 +910,7 @@ elif st.session_state.view_mode == "edit" and \
                     )
 
                 var_default_val_str_form = st.text_input(
-                    f"Valeur par défaut (format YYYY-MM-DD pour dates)", 
+                    f"Valeur par défaut", 
                     value=variable_data_for_form.get("default", ""), 
                     key=f"{form_var_specific_key}_default"
                 )
