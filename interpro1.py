@@ -5,7 +5,7 @@ import json
 import requests
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
-st.set_page_config(layout="wide", page_title="🦸🏻Générateur & Bibliothèque de Prompts LaPoste - Fonctions Support")
+st.set_page_config(layout="wide", page_title="🧬Générateur & Bibliothèque de Prompts LaPoste - Fonctions Support")
 
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = datetime.now().year
@@ -308,7 +308,7 @@ if 'go_to_config_section' not in st.session_state:
 
 
 # --- Main App UI ---
-st.title(f"🦸🏻 Le laboratoire de prompt IA")
+st.title(f"🧬 Le laboratoire de prompt IA")
 
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
