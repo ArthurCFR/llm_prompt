@@ -27,7 +27,6 @@ INITIAL_PROMPT_TEMPLATES = {
                 {"name": "annee_fin", "label": "Année de fin", "type": "selectbox", "options": list(range(CURRENT_YEAR - 5, CURRENT_YEAR + 2)), "default": CURRENT_YEAR},
             ],
             "tags": ["recherche", "fournisseur", "interne"],
-            "previous_template": "",
             "usage_count": 0,
             "created_at": created_at_initial,
             "updated_at": updated_at_initial
@@ -124,7 +123,6 @@ def _preprocess_for_saving(data_to_save):
 
 
             config.setdefault("tags", [])
-            config.setdefault("previous_template", "")
             if "is_favorite" in config:
                 del config["is_favorite"]
             config.setdefault("usage_count", 0)
@@ -173,7 +171,6 @@ def _postprocess_after_loading(loaded_data):
 
 
             config.setdefault("tags", [])
-            config.setdefault("previous_template", "")
             if "is_favorite" in config:
                 del config["is_favorite"]
             config.setdefault("usage_count", 0)
@@ -538,8 +535,8 @@ with tab_edition_generation:
                         else:
                             now_iso_create, now_iso_update = get_default_dates()
                             st.session_state.editable_prompts[parent_family_val][uc_name_val] = {
-                                "template": uc_template_val or "Nouveau prompt...", # Ensure not empty
-                                "variables": [], "tags": [], "previous_template": "",
+                                "template": uc_template_val or "Nouveau prompt...",
+                                "variables": [], "tags": [], # "previous_template": "" a été supprimé de cette ligne
                                 "usage_count": 0, "created_at": now_iso_create, "updated_at": now_iso_update
                             }
                             save_editable_prompts_to_gist()
@@ -856,25 +853,11 @@ elif st.session_state.view_mode == "edit":
                 st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
 
             if st.button("Sauvegarder Template", key=f"save_tpl_{tpl_key}"):
-                if new_tpl != current_prompt_config.get('template', ''): # Compare with existing or empty
-                    current_prompt_config['previous_template'] = current_prompt_config.get('template', '')
-                current_prompt_config['template'] = new_tpl
-                current_prompt_config["updated_at"] = datetime.now().isoformat()
-                save_editable_prompts_to_gist()
-                st.success("Template sauvegardé!")
-                # st.session_state.view_mode = "edit" # Already in this mode
-                st.rerun() # Rerun to reflect changes immediately
-
-            if current_prompt_config.get('previous_template'):
-                st.markdown("---")
-                st.subheader("Version Précédente du Template")
-                st.code(current_prompt_config['previous_template'], language=None)
-                if st.button("Restaurer la version précédente", key=f"restore_prev_tpl_{tpl_key}"):
-                    current_prompt_config['template'] = current_prompt_config['previous_template']
-                    # current_prompt_config['previous_template'] = "" # Optionally clear after restore
+                if st.button("Sauvegarder Template", key=f"save_tpl_{tpl_key}"):
+                    current_prompt_config['template'] = new_tpl
                     current_prompt_config["updated_at"] = datetime.now().isoformat()
                     save_editable_prompts_to_gist()
-                    st.success("Version précédente restaurée!")
+                    st.success("Template sauvegardé!")
                     st.rerun()
 
             st.markdown("---")
