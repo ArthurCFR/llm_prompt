@@ -16,7 +16,12 @@ def get_default_dates():
     return now_iso, now_iso
 
 created_at_initial, updated_at_initial = get_default_dates()
-
+INITIAL_PROMPT_TEMPLATES = {
+    "Achat": {},
+    "RH": {},
+    "Finance": {},
+    "Comptabilité": {}
+}
 for family, use_cases in INITIAL_PROMPT_TEMPLATES.items():
     if isinstance(use_cases, dict):
         for uc_name, uc_config in use_cases.items():
