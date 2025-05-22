@@ -423,20 +423,23 @@ with tab_edition_generation:
             st.write(f"Supprimer la famille : **{current_selected_family_for_edit_logic}**")
             if st.session_state.confirming_delete_family_name == current_selected_family_for_edit_logic:
                 st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
-                del_fam_col1_sb, del_fam_col2_sb, _ = st.columns([1,1,3])
-                if del_fam_col1_sb.button(f"Oui, supprimer définitivement", type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}"):
-                    deleted_fam_name = current_selected_family_for_edit_logic # Save for messages
+                
+                # --- MODIFICATION ICI : Affichage des boutons l'un au-dessus de l'autre ---
+                button_text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
+                if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
+                    deleted_fam_name = current_selected_family_for_edit_logic 
                     del st.session_state.editable_prompts[current_selected_family_for_edit_logic]
                     save_editable_prompts_to_gist()
                     st.success(f"Famille '{deleted_fam_name}' supprimée.")
                     st.session_state.confirming_delete_family_name = None
-                    st.session_state.family_selector_edition = None # Reset selection
+                    st.session_state.family_selector_edition = None 
                     st.session_state.use_case_selector_edition = None
                     if st.session_state.library_selected_family_for_display == deleted_fam_name:
                         st.session_state.library_selected_family_for_display = None
                     st.session_state.view_mode = "edit"
                     st.rerun()
-                if del_fam_col2_sb.button("Non, annuler la suppression", key=f"cancel_del_fam_sb_{current_selected_family_for_edit_logic}"):
+                
+                if st.button("Non, annuler la suppression", key=f"cancel_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     st.session_state.confirming_delete_family_name = None
                     st.session_state.view_mode = "edit"
                     st.rerun()
