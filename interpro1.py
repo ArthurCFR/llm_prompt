@@ -811,7 +811,22 @@ elif st.session_state.view_mode == "edit":
             # Clé unique et sanétisée pour le st.text_area du template
             template_text_area_key = f"template_text_area_{safe_family_key_part}_{safe_uc_key_part}"
             new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=template_text_area_key)
-            
+            st.markdown("##### Variables disponibles à insérer :")
+
+            variables_config = current_prompt_config.get('variables', [])
+            if not variables_config:
+                st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
+            else:
+                for var_info in variables_config:
+                    if 'name' in var_info:  # S'assurer que la variable a un nom
+                        variable_string_to_display = f"{{{var_info['name']}}}"
+                        
+                        # Affichez simplement la variable avec st.code()
+                        # Streamlit ajoutera l'icône de copie native.
+                        st.code(variable_string_to_display, language=None) # 'None' pour pas de coloration syntaxique
+                
+                st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
+
             defined_vars_for_template = [f"{{{var_info['name']}}}" for var_info in current_prompt_config.get('variables', []) if 'name' in var_info]
             if defined_vars_for_template:
                 st.caption(f"Variables disponibles à insérer: {', '.join(defined_vars_for_template)}")
