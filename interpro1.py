@@ -826,7 +826,7 @@ elif st.session_state.view_mode == "edit":
                 }
                 /* Optionnel: réduire la marge en bas de chaque bloc de code lui-même */
                 .compact-code-block {
-                    margin-bottom: -0.5rem; /* Valeur négative pour rapprocher les lignes verticalement */
+                    margin-bottom: -2 rem; /* Valeur négative pour rapprocher les lignes verticalement */
                                           /* ou une petite valeur positive comme 0.1rem si c'est trop serré */
                 }
                 </style>
