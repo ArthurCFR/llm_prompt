@@ -877,28 +877,79 @@ elif st.session_state.view_mode == "edit":
             st.markdown("---")
             st.subheader("Variables du Prompt")
             current_variables_list = current_prompt_config.get('variables', [])
-            if not current_variables_list: st.info("Aucune variable définie.")
-            
+            if not current_variables_list: 
+                st.info("Aucune variable définie.")
+            else:
+                # Afficher les en-têtes pour les colonnes d'action pour plus de clarté si souhaité
+                # _, col_actions_header = st.columns([6, 4]) # Exemple de ratio
+                # col_actions_header.caption("Actions")
+                pass # Ou pas d'en-tête spécifique, les icônes parlent d'elles-mêmes
+
             for idx, var_data in enumerate(list(current_variables_list)): 
-                var_disp_key_prefix = f"var_disp_{final_selected_family_edition}_{final_selected_use_case_edition}_{var_data.get('name', idx)}"
-                col1_var, col2_var, col3_var = st.columns([4,1,1])
-                col1_var.markdown(f"**{var_data.get('name', 'N/A')}** ({var_data.get('label', 'N/A')}) - Type: `{var_data.get('type', 'N/A')}`")
-                if col2_var.button("Modifier", key=f"edit_var_{var_disp_key_prefix}"):
-                    st.session_state.editing_variable_info = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition, "index": idx, "data": copy.deepcopy(var_data)}
-                    st.session_state.variable_type_to_create = var_data.get('type')
-                    st.rerun()
-                if col3_var.button("Suppr.", key=f"del_var_{var_disp_key_prefix}"):
-                    variable_name_to_delete = current_variables_list.pop(idx).get('name', 'N/A')
-                    current_prompt_config["updated_at"] = datetime.now().isoformat()
-                    if st.session_state.editing_variable_info and \
-                       st.session_state.editing_variable_info.get("family") == final_selected_family_edition and \
-                       st.session_state.editing_variable_info.get("use_case") == final_selected_use_case_edition and \
-                       st.session_state.editing_variable_info.get("index") == idx: # pragma: no cover
+                # Utiliser un identifiant unique pour les clés, basé sur le nom ou l'index
+                var_id_for_key = var_data.get('name', f"varidx{idx}").replace(" ", "_")
+                action_key_prefix = f"var_action_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_{var_id_for_key}"
+
+                # Définition des colonnes: Info Variable | Monter | Descendre | Modifier | Supprimer
+                col_info, col_up, col_down, col_edit, col_delete = st.columns([3, 0.5, 0.5, 0.8, 0.8])
+
+                with col_info:
+                    # Afficher l'index (ordre) de la variable
+                    st.markdown(f"**{idx + 1}. {var_data.get('name', 'N/A')}** ({var_data.get('label', 'N/A')})\nType: `{var_data.get('type', 'N/A')}`")
+
+                # Bouton Monter
+                with col_up:
+                    disable_up_button = (idx == 0)
+                    if st.button("↑", key=f"{action_key_prefix}_up", help="Monter cette variable", disabled=disable_up_button, use_container_width=True):
+                        # Échanger avec l'élément précédent
+                        current_variables_list[idx], current_variables_list[idx-1] = current_variables_list[idx-1], current_variables_list[idx]
+                        current_prompt_config["variables"] = current_variables_list # Mettre à jour la liste dans la config
+                        current_prompt_config["updated_at"] = datetime.now().isoformat()
+                        save_editable_prompts_to_gist()
+                        # Réinitialiser l'état d'édition car les index ont changé
                         st.session_state.editing_variable_info = None
-                        st.session_state.variable_type_to_create = None 
-                    save_editable_prompts_to_gist()
-                    st.success(f"Variable '{variable_name_to_delete}' supprimée.")
-                    st.rerun()
+                        st.session_state.variable_type_to_create = None
+                        st.rerun()
+
+                # Bouton Descendre
+                with col_down:
+                    disable_down_button = (idx == len(current_variables_list) - 1)
+                    if st.button("↓", key=f"{action_key_prefix}_down", help="Descendre cette variable", disabled=disable_down_button, use_container_width=True):
+                        # Échanger avec l'élément suivant
+                        current_variables_list[idx], current_variables_list[idx+1] = current_variables_list[idx+1], current_variables_list[idx]
+                        current_prompt_config["variables"] = current_variables_list # Mettre à jour la liste
+                        current_prompt_config["updated_at"] = datetime.now().isoformat()
+                        save_editable_prompts_to_gist()
+                        # Réinitialiser l'état d'édition car les index ont changé
+                        st.session_state.editing_variable_info = None
+                        st.session_state.variable_type_to_create = None
+                        st.rerun()
+                
+                # Bouton Modifier
+                with col_edit:
+                    if st.button("Modifier", key=f"{action_key_prefix}_edit", use_container_width=True):
+                        st.session_state.editing_variable_info = {
+                            "family": final_selected_family_edition, 
+                            "use_case": final_selected_use_case_edition, 
+                            "index": idx, # L'index est correct au moment du clic
+                            "data": copy.deepcopy(var_data)
+                        }
+                        st.session_state.variable_type_to_create = var_data.get('type')
+                        st.rerun()
+                
+                # Bouton Supprimer
+                with col_delete:
+                    if st.button("Suppr.", key=f"{action_key_prefix}_delete", type="secondary", use_container_width=True):
+                        variable_name_to_delete = current_variables_list.pop(idx).get('name', 'Variable inconnue')
+                        current_prompt_config["variables"] = current_variables_list # Mettre à jour la liste
+                        current_prompt_config["updated_at"] = datetime.now().isoformat()
+                        save_editable_prompts_to_gist()
+                        st.success(f"Variable '{variable_name_to_delete}' supprimée.")
+                        # Réinitialiser l'état d'édition car la liste a changé
+                        st.session_state.editing_variable_info = None
+                        st.session_state.variable_type_to_create = None
+                        st.rerun()
+                st.markdown("---") # Ajoute un séparateur visuel entre les variables pour la clarté
             
             st.markdown("---")
             st.subheader("Ajouter ou Modifier une Variable")
