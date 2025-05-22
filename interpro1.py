@@ -899,7 +899,7 @@ elif st.session_state.view_mode == "edit":
 
                 with col_info:
                     # Afficher l'index (ordre) de la variable
-                    st.markdown(f"**{idx + 1}. {var_data.get('name', 'N/A')}** ({var_data.get('label', 'N/A')})\n*: `{var_data.get('type', 'N/A')}`*")
+                    st.markdown(f"**{idx + 1}. {var_data.get('name', 'N/A')}** ({var_data.get('label', 'N/A')})\n*Type: `{var_data.get('type', 'N/A')}`*")
 
                 # Bouton Monter
                 with col_up:
