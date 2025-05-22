@@ -768,6 +768,11 @@ elif st.session_state.view_mode == "edit":
                             min_val_gen = float(min_val_config_gen) if min_val_config_gen is not None else None
                             max_val_gen = float(max_val_config_gen) if max_val_config_gen is not None else None
                             step_val_gen = float(step_config_gen) if step_config_gen is not None else 1.0
+
+                            if min_val_gen is not None and val_num_gen < min_val_gen:
+                                val_num_gen = min_val_gen # Ajuste la valeur pour qu'elle soit au moins min_value
+                            if max_val_gen is not None and val_num_gen > max_val_gen:
+                                val_num_gen = max_val_gen # Ajuste la valeur pour qu'elle ne dépasse pas max_value
                             
                             gen_form_values[var_info["name"]] = st.number_input(
                                 var_info["label"], value=val_num_gen, min_value=min_val_gen,
