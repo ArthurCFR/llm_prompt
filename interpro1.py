@@ -1030,7 +1030,7 @@ elif st.session_state.view_mode == "edit":
                 with st.form(key=form_var_specific_key, clear_on_submit=(not is_editing_var)): # Don't clear on submit when editing
                     st.subheader(form_title)
                     var_name_input_form = st.text_input(
-                        "Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux (espaces, crochets {},virgules, etc.)", 
+                        "Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux -espaces, crochets {},virgules, etc.-)", 
                         value=variable_data_for_form.get("name", ""), 
                         key=f"{form_var_specific_key}_name",
                         # Disable name editing for existing variables to simplify logic (renaming is complex)
