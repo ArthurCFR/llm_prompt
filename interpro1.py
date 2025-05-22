@@ -844,21 +844,30 @@ elif st.session_state.view_mode == "edit":
         should_expand_config = st.session_state.get('go_to_config_section', False)
         with st.expander(f"⚙️ Paramétrage du Prompt: {final_selected_use_case_edition}", expanded=should_expand_config):
             st.subheader("Template du Prompt")
-            tpl_key = f"tpl_{final_selected_family_edition}_{final_selected_use_case_edition}"
-            new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=tpl_key)
+
+            # Sanétiser les noms de famille et de cas d'usage pour les utiliser dans les clés
+            # Remplacer les espaces et autres caractères qui pourraient causer des problèmes dans les clés
+            safe_family_key_part = str(final_selected_family_edition).replace(' ', '_').replace('.', '_').replace('{', '_').replace('}', '_').replace('(', '_').replace(')', '_')
+            safe_uc_key_part = str(final_selected_use_case_edition).replace(' ', '_').replace('.', '_').replace('{', '_').replace('}', '_').replace('(', '_').replace(')', '_')
+
+            # Clé unique et sanétisée pour le st.text_area du template
+            template_text_area_key = f"template_text_area_{safe_family_key_part}_{safe_uc_key_part}"
+            new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=template_text_area_key)
+            
             defined_vars_for_template = [f"{{{var_info['name']}}}" for var_info in current_prompt_config.get('variables', []) if 'name' in var_info]
             if defined_vars_for_template:
                 st.caption(f"Variables disponibles à insérer: {', '.join(defined_vars_for_template)}")
             else:
                 st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
 
-            if st.button("Sauvegarder Template", key=f"save_tpl_{tpl_key}"):
-                if st.button("Sauvegarder Template", key=f"save_tpl_{tpl_key}"):
-                    current_prompt_config['template'] = new_tpl
-                    current_prompt_config["updated_at"] = datetime.now().isoformat()
-                    save_editable_prompts_to_gist()
-                    st.success("Template sauvegardé!")
-                    st.rerun()
+            # Clé unique et sanétisée pour le bouton "Sauvegarder Template"
+            save_template_button_key = f"save_template_button_{safe_family_key_part}_{safe_uc_key_part}"
+            if st.button("Sauvegarder Template", key=save_template_button_key): # Cette ligne correspondra à la ligne 856 après modification
+                current_prompt_config['template'] = new_tpl
+                current_prompt_config["updated_at"] = datetime.now().isoformat()
+                save_editable_prompts_to_gist()
+                st.success("Template sauvegardé!")
+                st.rerun()
 
             st.markdown("---")
             st.subheader("🏷️ Tags")
