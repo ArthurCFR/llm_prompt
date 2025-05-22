@@ -548,6 +548,7 @@ with tab_edition_generation:
                             st.session_state.force_select_family_name = parent_family_val
                             st.session_state.force_select_use_case_name = uc_name_val
                             st.session_state.view_mode = "edit"
+                            st.session_state.active_generated_prompt = "" # Réinitialiser le prompt affiché
                             st.rerun()
 
 
@@ -986,7 +987,7 @@ elif st.session_state.view_mode == "edit":
                 with st.form(key=form_var_specific_key, clear_on_submit=(not is_editing_var)): # Don't clear on submit when editing
                     st.subheader(form_title)
                     var_name_input_form = st.text_input(
-                        "Nom technique (terme à employer au sein du prompt pour utiliser cette variable)", 
+                        "Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux (espace, crochets {},virgules, etc.)", 
                         value=variable_data_for_form.get("name", ""), 
                         key=f"{form_var_specific_key}_name",
                         # Disable name editing for existing variables to simplify logic (renaming is complex)
