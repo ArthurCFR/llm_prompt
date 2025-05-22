@@ -1142,9 +1142,11 @@ elif st.session_state.view_mode == "edit":
             with action_cols[1]:
                 del_uc_key_exp = f"del_uc_btn_exp_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
                 # Check if a delete confirmation is already for THIS use case
-                is_confirming_this_uc_delete = (st.session_state.confirming_delete_details and \
-                                                st.session_state.confirming_delete_details["family"] == final_selected_family_edition and \
-                                                st.session_state.confirming_delete_details["use_case"] == final_selected_use_case_edition)
+                is_confirming_this_uc_delete = bool(
+                    st.session_state.confirming_delete_details and
+                    st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and
+                    st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition
+                )
                 
                 if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete):
                     st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
