@@ -852,12 +852,6 @@ elif st.session_state.view_mode == "edit":
                 
                 st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
 
-            defined_vars_for_template = [f"{{{var_info['name']}}}" for var_info in current_prompt_config.get('variables', []) if 'name' in var_info]
-            if defined_vars_for_template:
-                st.caption(f"Variables disponibles à insérer: {', '.join(defined_vars_for_template)}")
-            else:
-                st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
-
             # Clé unique et sanétisée pour le bouton "Sauvegarder Template"
             save_template_button_key = f"save_template_button_{safe_family_key_part}_{safe_uc_key_part}"
             if st.button("Sauvegarder Template", key=save_template_button_key): # Cette ligne correspondra à la ligne 856 après modification
