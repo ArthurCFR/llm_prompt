@@ -811,19 +811,48 @@ elif st.session_state.view_mode == "edit":
             # Clé unique et sanétisée pour le st.text_area du template
             template_text_area_key = f"template_text_area_{safe_family_key_part}_{safe_uc_key_part}"
             new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=template_text_area_key)
+            st.markdown("""
+                <style>
+                .compact-code-block .stCodeBlock > div { /* Cible le conteneur interne du st.code */
+                    padding-top: 0.15rem !important;
+                    padding-bottom: 0.15rem !important;
+                }
+                .compact-code-block .stCodeBlock > div > pre { /* Cible le tag <pre> pour le texte */
+                    padding-top: 0.25rem !important; /* Léger padding interne pour le texte */
+                    padding-bottom: 0.25rem !important;
+                    line-height: 1.2 !important; /* Réduit l'espacement si le texte passait sur 2 lignes */
+                    font-size: 0.85em !important; /* Réduit légèrement la taille de la police */
+                    margin-bottom: 0px !important; /* Enlève la marge en bas du <pre> si présente */
+                }
+                /* Optionnel: réduire la marge en bas de chaque bloc de code lui-même */
+                .compact-code-block {
+                    margin-bottom: -0.5rem; /* Valeur négative pour rapprocher les lignes verticalement */
+                                          /* ou une petite valeur positive comme 0.1rem si c'est trop serré */
+                }
+                </style>
+            """, unsafe_allow_html=True)
+        
             st.markdown("##### Variables disponibles à insérer :")
-
+        
             variables_config = current_prompt_config.get('variables', [])
             if not variables_config:
                 st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
             else:
-                for var_info in variables_config:
-                    if 'name' in var_info:  # S'assurer que la variable a un nom
+                # Définir deux colonnes
+                col1, col2 = st.columns(2)
+                
+                for i, var_info in enumerate(variables_config):
+                    if 'name' in var_info:
                         variable_string_to_display = f"{{{var_info['name']}}}"
                         
-                        # Affichez simplement la variable avec st.code()
-                        # Streamlit ajoutera l'icône de copie native.
-                        st.code(variable_string_to_display, language=None) # 'None' pour pas de coloration syntaxique
+                        # Placer les variables alternativement dans les colonnes
+                        target_column = col1 if i % 2 == 0 else col2
+                        
+                        with target_column:
+                            # Envelopper st.code() dans un markdown avec la classe CSS
+                            st.markdown('<div class="compact-code-block">', unsafe_allow_html=True)
+                            st.code(variable_string_to_display, language=None)
+                            st.markdown('</div>', unsafe_allow_html=True)
                 
                 st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
 
