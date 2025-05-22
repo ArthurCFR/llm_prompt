@@ -872,7 +872,7 @@ elif st.session_state.view_mode == "edit" and \
 
         if not is_editing_var: 
             if st.session_state.variable_type_to_create is None:
-                st.markdown("##### 1. Choisissez le type de variable à créer :")
+                st.markdown("##### Choisissez le type de variable à créer :")
                 variable_types_map = {
                     "Zone de texte (courte)": "text_input", "Liste choix": "selectbox",
                     "Date": "date_input", "Nombre": "number_input", "Zone de texte (longue)": "text_area"
