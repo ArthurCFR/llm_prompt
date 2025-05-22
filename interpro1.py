@@ -749,7 +749,7 @@ elif st.session_state.view_mode == "edit":
                     prompt_template_content = current_prompt_config.get("template", "")
                     formatted_template_content = prompt_template_content.format_map(SafeFormatter(final_vals_for_prompt))
                     use_case_title = final_selected_use_case_edition 
-                    generated_prompt = f"{use_case_title}\n{formatted_template_content}"
+                    generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt
                     st.success("Prompt généré avec succès!")
                     st.balloons()
