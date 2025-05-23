@@ -1442,12 +1442,12 @@ else:
         st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.") # pragma: no cover
         st.session_state.use_case_selector_edition = None
     
-else:
-    if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
-    elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
-        st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
-        st.rerun()
+    else:
+        if not any(st.session_state.editable_prompts.values()): # pragma: no cover
+            st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
+        elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
+            st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
+            st.rerun()
 
 --- Sidebar Footer ---
 st.sidebar.markdown("---")
