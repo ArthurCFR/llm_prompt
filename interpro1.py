@@ -591,7 +591,7 @@ Le "Prompt Cible" que tu vas générer DOIT :
 # FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT)
 Tu dois fournir une réponse structurée **UNIQUEMENT EN JSON VALIDE**. Le JSON doit avoir les clés racine suivantes :
 - `"nom_cas_usage_suggere"`: (string) Un nom descriptif et concis pour ce cas d'usage, en snake_case (par exemple, "resume_texte_juridique_financier").
-- `"prompt_cible_template"`: (string) Le corps complet du "Prompt Cible" que tu as généré. Ce template doit utiliser des accolades `{}` pour indiquer où les variables seront insérées (par exemple, "Analyse le document de type `{type_document_source}`").
+- `"prompt_cible_template"`: (string) Le corps complet du "Prompt Cible" que tu as généré. Ce template doit utiliser des accolades `{{}}` pour indiquer où les variables seront insérées (par exemple, "Analyse le document de type `{{type_document_source}}`").
 - `"variables_prompt_cible"`: (array of objects) Une liste des variables paramétrables pour le "Prompt Cible". Chaque objet variable dans ce tableau DOIT contenir les clés suivantes :
     - `"name"`: (string) Le nom technique de la variable (strictement en snake_case, sans espaces ni caractères spéciaux, et correspondant aux placeholders dans `prompt_cible_template`. Exemple: `"nom_avocat"`).
     - `"label"`: (string) Le libellé descriptif de la variable qui sera affiché à l'utilisateur (exemple: "Nom de l'avocat en charge").
@@ -605,41 +605,41 @@ Assure-toi que le JSON est complet, correctement formaté et ne contient aucun c
 
 Voici un exemple de la structure JSON attendue :
 ```json
-{
+{{
   "nom_cas_usage_suggere": "analyse_financiere_document",
-  "prompt_cible_template": "Tu es un analyste financier expert. Ta mission est d'analyser le document fourni qui est un {type_document_source} pour en extraire les {elements_cles_financiers}. Produis un rapport au format {format_rapport_demande} destiné à {audience_cible}. L'année fiscale concernée est {annee_fiscale}.",
+  "prompt_cible_template": "Tu es un analyste financier expert. Ta mission est d'analyser le document fourni qui est un {{type_document_source}} pour en extraire les {{elements_cles_financiers}}. Produis un rapport au format {{format_rapport_demande}} destiné à {{audience_cible}}. L'année fiscale concernée est {{annee_fiscale}}.",
   "variables_prompt_cible": [
-    {
+    {{
       "name": "type_document_source",
       "label": "Type de document source (ex: rapport annuel, bilan)",
       "type": "text_input"
-    },
-    {
+    }},
+    {{
       "name": "elements_cles_financiers",
       "label": "Éléments financiers clés à identifier (ex: revenus, coûts, EBITDA)",
       "type": "text_area"
-    },
-    {
+    }},
+    {{
       "name": "format_rapport_demande",
       "label": "Format du rapport désiré",
       "type": "selectbox",
       "options": ["Résumé analytique", "Liste à puces", "Tableau comparatif"]
-    },
-    {
+    }},
+    {{
       "name": "audience_cible",
       "label": "Audience cible du rapport (ex: C-level, Managers, Investisseurs)",
       "type": "text_input"
-    },
-    {
+    }},
+    {{
       "name": "annee_fiscale",
       "label": "Année fiscale concernée",
       "type": "number_input",
       "min_value": 2000,
       "max_value": 2050,
       "step": 1
-    }
+    }}
   ]
-}
+}}
 """
 
 with tab_creation_rapide:
