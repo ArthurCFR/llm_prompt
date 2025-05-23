@@ -663,8 +663,8 @@ with tab_bibliotheque:
 # --- Tab: Injection (Sidebar content) ---
 with tab_injection:
     st.subheader("Injection & Assistant")
-    st.markdown("Utilisez l'assistant pour préparer un Méta Prompt ou injectez des cas d'usage en format JSON.")
-    if st.button("✨ Créer un Méta Prompt (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
+    st.markdown("Utilisez l'assistant pour préparer un prompt système ou injectez des cas d'usage en format JSON.")
+    if st.button("✨ Créer un prompt système (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
         st.session_state.view_mode = "assistant_creation" 
         st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
         st.session_state.generated_meta_prompt_for_llm = "" 
@@ -1008,8 +1008,8 @@ elif st.session_state.view_mode == "inject_manual":
         else: st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
 
 elif st.session_state.view_mode == "assistant_creation":
-    st.header("✨ Assistant de Création de Méta Prompt")
-    st.markdown("Répondez aux questions suivantes pour générer un \"Méta Prompt\". Vous pourrez ensuite utiliser ce Méta Prompt avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour obtenir la structure JSON finale à injecter via l'option \"Injecter JSON Manuellement\".")
+    st.header("✨ Assistant de Création de prompt système")
+    st.markdown("Répondez aux questions suivantes pour générer un \"prompt système\". Vous pourrez ensuite utiliser ce prompt système avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour obtenir la structure JSON finale à injecter via l'option \"Injecter JSON Manuellement\".")
 
     current_form_values = st.session_state.assistant_form_values 
     
@@ -1031,25 +1031,25 @@ elif st.session_state.view_mode == "assistant_creation":
                     min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
                     max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
                     step=float(var_info.get("step", 1.0)), key=field_key, format="%g" )
-        submitted_assistant_form = st.form_submit_button("📝 Générer le Méta Prompt")
+        submitted_assistant_form = st.form_submit_button("📝 Générer le prompt système")
 
         if submitted_assistant_form:
             st.session_state.assistant_form_values = form_inputs 
             try:
                 populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**form_inputs)
                 st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
-                st.success("Méta Prompt généré ! Vous pouvez le copier ci-dessous.")
+                st.success("prompt système généré ! Vous pouvez le copier ci-dessous.")
             except KeyError as e: # pragma: no cover
-                st.error(f"Erreur lors de la construction du Méta Prompt. Clé de formatage manquante : {e}.")
+                st.error(f"Erreur lors de la construction du prompt système. Clé de formatage manquante : {e}.")
             except Exception as e: # pragma: no cover
-                 st.error(f"Une erreur inattendue est survenue lors de la génération du Méta Prompt : {e}")
+                 st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
             # No rerun here, let the generated prompt display below
 
     if st.session_state.generated_meta_prompt_for_llm:
-        st.subheader("📋 Méta Prompt Généré (à copier dans votre LLM externe) :")
+        st.subheader("📋 prompt système Généré (à copier dans votre LLM externe) :")
         st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True) # MODIFIÉ ICI
         st.markdown("---")
-        st.info("Une fois que votre LLM externe a généré le JSON basé sur ce Méta Prompt, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
+        st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
 
 else: 
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
