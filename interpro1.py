@@ -1419,36 +1419,47 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
                 st.session_state.editing_variable_info = None    
                 st.rerun()
 
-        with action_cols[1]:
-            del_uc_key_exp = f"del_uc_btn_exp_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-            is_confirming_this_uc_delete = bool(
-                st.session_state.confirming_delete_details and
-                st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and
-                st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition
-            )
-            
-            if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete):
-                st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
-                st.rerun() 
+        # ... (code précédent à l'intérieur du 'with st.expander(...)')
+            # ... (à l'intérieur de 'with action_cols[0]: ...')
+            with action_cols[1]:
+                del_uc_key_exp = f"del_uc_btn_exp_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                is_confirming_this_uc_delete = bool(
+                    st.session_state.confirming_delete_details and
+                    st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and
+                    st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition
+                )
+                
+                if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete):
+                    st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
+                    st.rerun() 
+        # Fin du 'with st.expander(...)' <<-- CELA MARQUE LA FIN DU BLOC D'ÉDITION DE PROMPT DÉTAILLÉ
 
-    if st.session_state.get('go_to_config_section'): 
-        st.session_state.go_to_config_section = False 
-else: 
-    if not final_selected_family_edition:
-        st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) pour commencer.")
-    elif not final_selected_use_case_edition:
-        st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
+        # Toujours dans le bloc 'elif final_selected_family_edition in ... and ...' (le cas où le prompt est valide pour l'édition)
+        if st.session_state.get('go_to_config_section'): 
+            st.session_state.go_to_config_section = False 
+    # Ce 'else:' (ligne 1445 dans votre fichier) est le pendant du bloc
+    # 'elif final_selected_family_edition in st.session_state.editable_prompts and ...'
+    # Il doit donc avoir la même indentation que ce 'elif'.
     else: 
-        st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.") # pragma: no cover
-        st.session_state.use_case_selector_edition = None
-    
-    else:
-        if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-            st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
-        elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
-            st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
-            st.rerun()
+        # Contenu de ce 'else'
+        if not final_selected_family_edition:
+            st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
+        elif not final_selected_use_case_edition:
+            st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
+        else: 
+            st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.") # pragma: no cover
+            st.session_state.use_case_selector_edition = None
+# Fin du bloc 'elif st.session_state.view_mode == "edit":'
 
---- Sidebar Footer ---
+# Ce 'else:' est le pendant du 'if st.session_state.view_mode == "library":' et 'elif st.session_state.view_mode == "edit":'
+# Il doit donc avoir la même indentation que ces derniers.
+else:
+    if not any(st.session_state.editable_prompts.values()): # pragma: no cover
+        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
+    elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
+        st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
+        st.rerun()
+
+# --- Sidebar Footer --- (Au niveau d'indentation le plus externe)
 st.sidebar.markdown("---")
-st.sidebar.info(f"Générateur v3.4 - © {CURRENT_YEAR} La Poste (démo)") # Updated version
+st.sidebar.info(f"Générateur v3.4 - © {CURRENT_YEAR} La Poste (démo)")
