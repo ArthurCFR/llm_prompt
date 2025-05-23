@@ -1440,14 +1440,14 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
     # Ce 'else' est le pendant du 'elif final_selected_family_edition in ... and ...'
     # Il gère les cas où la famille ou le cas d'usage n'est pas valide en mode édition.
     # Son indentation doit être la même que le 'elif final_selected_family_edition in ...'
+else: 
+    if not final_selected_family_edition:
+        st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
+    elif not final_selected_use_case_edition:
+        st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
     else: 
-        if not final_selected_family_edition:
-            st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
-        elif not final_selected_use_case_edition:
-            st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
-        else: 
-            st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.") # pragma: no cover
-            st.session_state.use_case_selector_edition = None
+        st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.") # pragma: no cover
+        st.session_state.use_case_selector_edition = None
 # Fin du bloc 'elif st.session_state.view_mode == "edit":'
 
 # L'ERREUR EST PROBABLEMENT ICI :
