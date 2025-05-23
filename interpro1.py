@@ -955,7 +955,22 @@ elif st.session_state.view_mode == "edit":
 elif st.session_state.view_mode == "inject_manual": 
     st.header("💉 Injection Manuelle de Cas d'Usage JSON")
     st.markdown("""Collez ici un ou plusieurs cas d'usage au format JSON. Le JSON doit être un dictionnaire où chaque clé est le nom du nouveau cas d'usage, et la valeur est sa configuration.""")
-    st.caption("Exemple de structure pour un cas d'usage :"); st.code("""{  "Nom de Mon Nouveau Cas d'Usage": {    "template": "Ceci est le {variable_exemple} pour mon prompt.",    "variables": [      {        "name": "variable_exemple",        "label": "Variable d'Exemple",        "type": "text_input",        "default": "texte par défaut"      }    ],    "tags": ["nouveau", "exemple"]  }}""", language="json")
+    st.caption("Exemple de structure pour un cas d'usage :")
+    json_example_string = """{
+  "Nom de Mon Nouveau Cas d'Usage": {
+    "template": "Ceci est le {variable_exemple} pour mon prompt.",
+    "variables": [
+      {
+        "name": "variable_exemple",
+        "label": "Variable d'Exemple",
+        "type": "text_input",
+        "default": "texte par défaut"
+      }
+    ],
+    "tags": ["nouveau", "exemple"]
+  }
+}"""
+    st.code(json_example_string, language="json")
     available_families_for_injection = list(st.session_state.editable_prompts.keys())
     if not available_families_for_injection: st.warning("Aucune famille n'existe. Veuillez d'abord créer une famille via l'onglet 'Génération & Édition'.")
     else:
@@ -1036,7 +1051,7 @@ elif st.session_state.view_mode == "assistant_creation":
 
     if st.session_state.generated_meta_prompt_for_llm:
         st.subheader("📋 Méta Prompt Généré (à copier dans votre LLM externe) :")
-        st.text_area("Méta Prompt :", value=st.session_state.generated_meta_prompt_for_llm, height=400, key="meta_prompt_output_for_copy", help="Copiez ce texte intégralement et utilisez-le comme instruction pour un LLM (ChatGPT, Gemini, Claude, etc.). Le LLM devrait alors vous fournir la structure JSON à utiliser dans la section 'Injecter JSON Manuellement'.")
+        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True) # MODIFIÉ ICI
         st.markdown("---")
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce Méta Prompt, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
 
