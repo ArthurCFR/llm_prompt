@@ -281,17 +281,17 @@ def _preprocess_injected_use_case_data(injected_config):
                     else:
                          var_info["default"] = "" # No options, no valid default
                       
-              if var_info.get("type") == "text_area":
-                if "height" in var_info and var_info["height"] is not None:
-                    try:
-                        var_info["height"] = int(var_info["height"])
-                        if var_info["height"] < 10: # S'assurer d'une hauteur minimale raisonnable
-                             var_info["height"] = 100 
-                    except (ValueError, TypeError):
-                        st.warning(f"Hauteur invalide pour la variable text_area '{var_info['name']}'. Utilisation de la hauteur par défaut (100px).")
-                        var_info["height"] = 100
-                else:
-                    var_info.setdefault("height", 100) # Hauteur par défaut si non spécifiée
+                if var_info.get("type") == "text_area":
+                  if "height" in var_info and var_info["height"] is not None:
+                      try:
+                          var_info["height"] = int(var_info["height"])
+                          if var_info["height"] < 10: # S'assurer d'une hauteur minimale raisonnable
+                               var_info["height"] = 100 
+                      except (ValueError, TypeError):
+                          st.warning(f"Hauteur invalide pour la variable text_area '{var_info['name']}'. Utilisation de la hauteur par défaut (100px).")
+                          var_info["height"] = 100
+                  else:
+                      var_info.setdefault("height", 100) # Hauteur par défaut si non spécifiée
                       
             temp_variables.append(var_info)
     processed_config["variables"] = temp_variables
