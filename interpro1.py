@@ -1009,7 +1009,7 @@ elif st.session_state.view_mode == "inject_manual":
 
 elif st.session_state.view_mode == "assistant_creation":
     st.header("✨ Assistant de Création de prompt système")
-    st.markdown("Cet assistant vous aide à préparer une instruction détaillée. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise")
+    st.markdown("Cet assistant vous aide à préparer une instruction détaillée. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
 
     current_form_values = st.session_state.assistant_form_values 
     
