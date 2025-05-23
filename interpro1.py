@@ -171,6 +171,16 @@ def save_editable_prompts_to_gist():
         data_to_save = _preprocess_for_saving(st.session_state.editable_prompts)
         try:
             json_string = json.dumps(data_to_save, indent=4, ensure_ascii=False)
+
+            # --- AJOUT POUR DÉBOGAGE ---
+            st.subheader("⚠️ DEBUG: JSON envoyé à Gist (copiez ceci en cas d'erreur 500)")
+            st.text_area("Payload JSON", json_string, height=300)
+            # Vous pouvez aussi l'imprimer dans la console si vous exécutez localement :
+            # print("---- DEBUG: JSON to be saved to Gist ----")
+            # print(json_string)
+            # print("---- END DEBUG ----")
+            # --- FIN DE L'AJOUT POUR DÉBOGAGE ---
+            
             if not update_gist_content(GIST_ID, GITHUB_PAT, json_string):
                 st.warning("Sauvegarde Gist échouée.")
             # else: st.success("Données sauvegardées sur Gist avec succès!") # Optional: success message
