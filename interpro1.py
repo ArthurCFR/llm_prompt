@@ -664,19 +664,15 @@ with tab_bibliotheque:
 with tab_injection:
     st.subheader("Injection & Assistant")
     st.markdown("Injectez des cas d'usage en format JSON ou utilisez l'assistant pour préparer un Méta Prompt.")
-    
+    if st.button("✨ Créer un Méta Prompt (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
+        st.session_state.view_mode = "assistant_creation" 
+        st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
+        st.session_state.generated_meta_prompt_for_llm = "" 
+        st.rerun()
     if st.button("💉 Injecter JSON Manuellement", key="start_manual_injection_btn", use_container_width=True):
         st.session_state.view_mode = "inject_manual" 
         st.session_state.injection_selected_family = None 
         st.session_state.injection_json_text = "" 
-        st.session_state.generated_meta_prompt_for_llm = "" 
-        st.rerun()
-
-    st.markdown("---") 
-
-    if st.button("✨ Créer un Méta Prompt (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
-        st.session_state.view_mode = "assistant_creation" 
-        st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
         st.session_state.generated_meta_prompt_for_llm = "" 
         st.rerun()
 
