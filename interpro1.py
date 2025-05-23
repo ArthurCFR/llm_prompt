@@ -643,88 +643,103 @@ Voici un exemple de la structure JSON attendue :
 """
 
 with tab_creation_rapide:
-st.header("🚀 Création Rapide de Prompt")
-st.markdown("""
-Ce module vous guide pour créer un nouveau prompt et l'ajouter à la bibliothèque.
-1.  Définissez le nom et la famille de votre nouveau prompt.
-2.  Remplissez le questionnaire pour décrire le prompt que vous souhaitez générer.
-3.  Copiez le "META Prompt" généré et utilisez-le avec un LLM externe (ChatGPT, Claude, etc.).
-4.  Collez la réponse JSON complète du LLM pour créer automatiquement le nouveau prompt dans l'application.
-""")
-st.markdown("---")
-
-# Étape 1: Informations du Nouveau Cas d'Usage
-st.subheader("Étape 1 : Informations du Nouveau Cas d'Usage")
-available_families_cr = list(st.session_state.editable_prompts.keys())
-if not available_families_cr:
-    st.warning("Aucune famille n'existe. Veuillez en créer une dans l'onglet 'Génération & Édition' avant d'utiliser ce module.")
-    st.stop()
-
-st.session_state.cr_selected_family = st.selectbox(
-    "Sélectionnez la famille de destination :",
-    options=available_families_cr,
-    index=available_families_cr.index(st.session_state.cr_selected_family) if st.session_state.cr_selected_family and st.session_state.cr_selected_family in available_families_cr else 0,
-    key="cr_family_selector"
-)
-st.session_state.cr_new_use_case_name = st.text_input(
-    "Nom du nouveau cas d'usage (ex: analyse_contrat_commercial):",
-    value=st.session_state.cr_new_use_case_name,
-    key="cr_use_case_name_input"
-).strip()
-st.markdown("---")
-
-# Étape 2: Questionnaire pour le META Prompt
-st.subheader("Étape 2 : Questionnaire pour le META Prompt")
-st.session_state.cr_problematique = st.text_area("Problématique à résoudre par le Prompt Cible :", value=st.session_state.cr_problematique, height=100, key="cr_problematique_input")
-st.session_state.cr_doc_source = st.text_input("Type de document source que le Prompt Cible analysera (ex: PDF, contrat Word, e-mail) :", value=st.session_state.cr_doc_source, key="cr_doc_source_input")
-st.session_state.cr_elements_specifiques = st.text_area("Éléments spécifiques clés que le Prompt Cible devra extraire :", value=st.session_state.cr_elements_specifiques, height=100, key="cr_elements_specifiques_input")
-st.session_state.cr_format_sortie = st.text_input("Format de sortie désiré pour le Prompt Cible (ex: JSON, liste à puces, résumé Markdown) :", value=st.session_state.cr_format_sortie, key="cr_format_sortie_input")
-st.session_state.cr_public_cible = st.text_input("Public cible de la réponse du Prompt Cible (ex: équipe de direction, clients, service juridique) :", value=st.session_state.cr_public_cible, key="cr_public_cible_input")
-
-if st.button("Générer le META Prompt à copier", key="cr_generate_meta_button"):
-    if not st.session_state.cr_selected_family or \
-       not st.session_state.cr_new_use_case_name or \
-       not st.session_state.cr_problematique or \
-       not st.session_state.cr_doc_source or \
-       not st.session_state.cr_elements_specifiques or \
-       not st.session_state.cr_format_sortie or \
-       not st.session_state.cr_public_cible:
-        st.error("Veuillez remplir tous les champs des Étapes 1 et 2 avant de générer le META prompt.")
-    else:
-        # Vérifier si le nom du cas d'usage existe déjà dans la famille sélectionnée
-        if st.session_state.cr_new_use_case_name in st.session_state.editable_prompts.get(st.session_state.cr_selected_family, {}):
-            st.error(f"Un cas d'usage nommé '{st.session_state.cr_new_use_case_name}' existe déjà dans la famille '{st.session_state.cr_selected_family}'. Veuillez choisir un autre nom.")
-        else:
-            st.session_state.cr_generated_meta_prompt = META_PROMPT_TEMPLATE_FOR_LLM.format(
-                problematique=st.session_state.cr_problematique,
-                doc_source=st.session_state.cr_doc_source,
-                elements_specifiques_a_extraire=st.session_state.cr_elements_specifiques,
-                format_sortie_desire=st.session_state.cr_format_sortie,
-                public_cible_reponse=st.session_state.cr_public_cible
-            )
-            st.success("META Prompt généré ! Copiez-le ci-dessous.")
-st.markdown("---")
-
-# Étape 3: Affichage du META Prompt
-if st.session_state.cr_generated_meta_prompt:
-    st.subheader("Étape 3 : META Prompt à utiliser avec un LLM externe")
-    st.text_area("Copiez ce META Prompt et utilisez-le avec votre LLM préféré (ChatGPT, Claude, etc.) :", value=st.session_state.cr_generated_meta_prompt, height=300, key="cr_meta_prompt_display", help="Ce texte est en lecture seule. Copiez-le pour l'utiliser.")
+    # Début du contenu de l'onglet : indentation de 4 espaces
+    st.header("🚀 Création Rapide de Prompt")
+    st.markdown("""
+    Ce module vous guide pour créer un nouveau prompt et l'ajouter à la bibliothèque.
+    1.  Définissez le nom et la famille de votre nouveau prompt.
+    2.  Remplissez le questionnaire pour décrire le prompt que vous souhaitez générer.
+    3.  Copiez le "META Prompt" généré et utilisez-le avec un LLM externe (ChatGPT, Claude, etc.).
+    4.  Collez la réponse JSON complète du LLM pour créer automatiquement le nouveau prompt dans l'application.
+    """)
     st.markdown("---")
 
-# Étape 4: Coller la réponse JSON et Création
-st.subheader("Étape 4 : Coller la réponse JSON du LLM et Créer le Cas d'Usage")
-st.session_state.cr_llm_json_response = st.text_area(
-    "Collez ici la réponse JSON COMPLÈTE fournie par le LLM :",
-    value=st.session_state.cr_llm_json_response,
-    height=250,
-    key="cr_json_input"
-)
+    # Étape 1: Informations du Nouveau Cas d'Usage
+    st.subheader("Étape 1 : Informations du Nouveau Cas d'Usage")
+    available_families_cr = list(st.session_state.editable_prompts.keys())
+    if not available_families_cr:
+        # Contenu du if : indentation de 8 espaces (4 de plus)
+        st.warning("Aucune famille n'existe. Veuillez en créer une dans l'onglet 'Génération & Édition' avant d'utiliser ce module.")
+        st.stop()
 
-if st.button("Créer le Cas d'Usage à partir du JSON", key="cr_create_from_json_button"):
-    if not st.session_state.cr_selected_family or not st.session_state.cr_new_use_case_name:
-        st.error("Veuillez d'abord sélectionner une famille et entrer un nom pour le nouveau cas d'usage (Étape 1).")
-    elif not st.session_state.cr_llm_json_response:
-        st.error("Veuillez coller la réponse JSON du LLM dans la zone de texte.")
+    st.session_state.cr_selected_family = st.selectbox(
+        "Sélectionnez la famille de destination :",
+        options=available_families_cr,
+        index=available_families_cr.index(st.session_state.cr_selected_family) if st.session_state.cr_selected_family and st.session_state.cr_selected_family in available_families_cr else 0,
+        key="cr_family_selector"
+    )
+    st.session_state.cr_new_use_case_name = st.text_input(
+        "Nom du nouveau cas d'usage (ex: analyse_contrat_commercial):",
+        value=st.session_state.cr_new_use_case_name,
+        key="cr_use_case_name_input"
+    ).strip()
+    st.markdown("---")
+
+    # Étape 2: Questionnaire pour le META Prompt
+    st.subheader("Étape 2 : Questionnaire pour le META Prompt")
+    st.session_state.cr_problematique = st.text_area("Problématique à résoudre par le Prompt Cible :", value=st.session_state.cr_problematique, height=100, key="cr_problematique_input")
+    st.session_state.cr_doc_source = st.text_input("Type de document source que le Prompt Cible analysera (ex: PDF, contrat Word, e-mail) :", value=st.session_state.cr_doc_source, key="cr_doc_source_input")
+    st.session_state.cr_elements_specifiques = st.text_area("Éléments spécifiques clés que le Prompt Cible devra extraire :", value=st.session_state.cr_elements_specifiques, height=100, key="cr_elements_specifiques_input")
+    st.session_state.cr_format_sortie = st.text_input("Format de sortie désiré pour le Prompt Cible (ex: JSON, liste à puces, résumé Markdown) :", value=st.session_state.cr_format_sortie, key="cr_format_sortie_input")
+    st.session_state.cr_public_cible = st.text_input("Public cible de la réponse du Prompt Cible (ex: équipe de direction, clients, service juridique) :", value=st.session_state.cr_public_cible, key="cr_public_cible_input")
+
+    if st.button("Générer le META Prompt à copier", key="cr_generate_meta_button"):
+        # Contenu du if : indentation de 8 espaces
+        if not st.session_state.cr_selected_family or \
+           not st.session_state.cr_new_use_case_name or \
+           not st.session_state.cr_problematique or \
+           not st.session_state.cr_doc_source or \
+           not st.session_state.cr_elements_specifiques or \
+           not st.session_state.cr_format_sortie or \
+           not st.session_state.cr_public_cible:
+            # Contenu du if imbriqué : indentation de 12 espaces
+            st.error("Veuillez remplir tous les champs des Étapes 1 et 2 avant de générer le META prompt.")
+        else:
+            # Contenu du else : indentation de 12 espaces
+            # Vérifier si le nom du cas d'usage existe déjà dans la famille sélectionnée
+            if st.session_state.cr_new_use_case_name in st.session_state.editable_prompts.get(st.session_state.cr_selected_family, {}):
+                # Contenu du if imbriqué : indentation de 16 espaces
+                st.error(f"Un cas d'usage nommé '{st.session_state.cr_new_use_case_name}' existe déjà dans la famille '{st.session_state.cr_selected_family}'. Veuillez choisir un autre nom.")
+            else:
+                # Contenu du else imbriqué : indentation de 16 espaces
+                st.session_state.cr_generated_meta_prompt = META_PROMPT_TEMPLATE_FOR_LLM.format(
+                    problematique=st.session_state.cr_problematique,
+                    doc_source=st.session_state.cr_doc_source,
+                    elements_specifiques_a_extraire=st.session_state.cr_elements_specifiques,
+                    format_sortie_desire=st.session_state.cr_format_sortie,
+                    public_cible_reponse=st.session_state.cr_public_cible
+                )
+                st.success("META Prompt généré ! Copiez-le ci-dessous.")
+    st.markdown("---") # Retour à l'indentation de 4 espaces (niveau de l'onglet)
+
+    # Étape 3: Affichage du META Prompt
+    if st.session_state.cr_generated_meta_prompt:
+        # Contenu du if : indentation de 8 espaces
+        st.subheader("Étape 3 : META Prompt à utiliser avec un LLM externe")
+        st.text_area("Copiez ce META Prompt et utilisez-le avec votre LLM préféré (ChatGPT, Claude, etc.) :", value=st.session_state.cr_generated_meta_prompt, height=300, key="cr_meta_prompt_display", help="Ce texte est en lecture seule. Copiez-le pour l'utiliser.")
+        st.markdown("---") # Indentation de 8 espaces, car à l'intérieur du if
+
+    # Étape 4: Coller la réponse JSON et Création
+    st.subheader("Étape 4 : Coller la réponse JSON du LLM et Créer le Cas d'Usage") # Retour à l'indentation de 4 espaces
+    st.session_state.cr_llm_json_response = st.text_area(
+        "Collez ici la réponse JSON COMPLÈTE fournie par le LLM :",
+        value=st.session_state.cr_llm_json_response,
+        height=250,
+        key="cr_json_input"
+    )
+
+    if st.button("Créer le Cas d'Usage à partir du JSON", key="cr_create_from_json_button"):
+        # Contenu du if : indentation de 8 espaces
+        if not st.session_state.cr_selected_family or not st.session_state.cr_new_use_case_name:
+            # Contenu du if imbriqué : indentation de 12 espaces
+            st.error("Veuillez d'abord sélectionner une famille et entrer un nom pour le nouveau cas d'usage (Étape 1).")
+        elif not st.session_state.cr_llm_json_response:
+            # Contenu du elif : indentation de 12 espaces
+            st.error("Veuillez coller la réponse JSON du LLM dans la zone de texte.")
+        # Le bloc 'else' qui contenait la logique de parsing JSON et de création
+        # n'était pas dans votre dernier snippet, donc je ne l'ai pas ajouté ici.
+        # Si vous l'avez, il commencerait ici avec une indentation de 8 espaces,
+        # et son contenu serait indenté à 12 espaces.
     else:
         # Vérifier à nouveau si le nom du cas d'usage existe (au cas où l'utilisateur a changé d'avis après génération du méta-prompt)
         if st.session_state.cr_new_use_case_name in st.session_state.editable_prompts.get(st.session_state.cr_selected_family, {}):
@@ -813,131 +828,139 @@ if st.button("Créer le Cas d'Usage à partir du JSON", key="cr_create_from_json
                     # st.session_state.cr_selected_family = None 
                     st.rerun()
 
-            except json.JSONDecodeError:
+            # ... (fin du bloc 'try' ou du 'else' contenant le try)
+            # Ce qui suit est le début de votre snippet
+            except json.JSONDecodeError: # Supposons que le 'try' était à 8 espaces d'indentation
+                # Contenu de l'except : 12 espaces d'indentation
                 st.error("Erreur de parsing du JSON. Veuillez vérifier que le texte collé est un JSON valide et complet.")
-            except Exception as e:
+            except Exception as e: # Même niveau que l'except précédent : 8 espaces
+                # Contenu de l'except : 12 espaces d'indentation
                 st.error(f"Une erreur inattendue est survenue lors de la création du cas d'usage : {e}")
---- END: Création Rapide Tab ---
---- Main Display Area (Logic for both Library and Edit views) ---
+# --- END: Création Rapide Tab --- (Commentaire de section, niveau 0)
+
+# --- Main Display Area (Logic for both Library and Edit views) ---
 final_selected_family_edition = st.session_state.get('family_selector_edition')
 final_selected_use_case_edition = st.session_state.get('use_case_selector_edition')
 library_family_to_display = st.session_state.get('library_selected_family_for_display')
 
 if 'view_mode' not in st.session_state:
-if library_family_to_display and any(st.session_state.editable_prompts.get(fam, {}) for fam in st.session_state.editable_prompts):
-st.session_state.view_mode = "library"
-else:
-st.session_state.view_mode = "edit"
+    if library_family_to_display and any(st.session_state.editable_prompts.get(fam, {}) for fam in st.session_state.editable_prompts):
+        st.session_state.view_mode = "library"
+    else:
+        st.session_state.view_mode = "edit"
 
 if st.session_state.view_mode == "library":
-if not library_family_to_display:
-st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
-available_families_main_display = list(st.session_state.editable_prompts.keys())
-if available_families_main_display:
-st.session_state.library_selected_family_for_display = available_families_main_display[0]
-st.rerun()
-elif not any(st.session_state.editable_prompts.values()):
-st.warning("Aucune famille de cas d'usage n'est configurée. Créez-en via l'onglet 'Génération & Édition'.")
-
-elif library_family_to_display in st.session_state.editable_prompts:
-    st.header(f"Bibliothèque - Famille : {library_family_to_display}")
-    use_cases_in_family_display = st.session_state.editable_prompts[library_family_to_display]
+    if not library_family_to_display:
+        st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
+        available_families_main_display = list(st.session_state.editable_prompts.keys())
+        if available_families_main_display:
+            st.session_state.library_selected_family_for_display = available_families_main_display[0]
+            st.rerun()
+        elif not any(st.session_state.editable_prompts.values()):
+            st.warning("Aucune famille de cas d'usage n'est configurée. Créez-en via l'onglet 'Génération & Édition'.")
     
-    filtered_use_cases = {}
-    search_term_lib = st.session_state.get("library_search_term", "").strip().lower()
-    selected_tags_lib = st.session_state.get("library_selected_tags", [])
+    elif library_family_to_display in st.session_state.editable_prompts:
+        st.header(f"Bibliothèque - Famille : {library_family_to_display}")
+        use_cases_in_family_display = st.session_state.editable_prompts[library_family_to_display]
+        # La ligne redondante a été supprimée. La logique de filtrage commence ici, correctement indentée.
+        
+        filtered_use_cases = {}
+        search_term_lib = st.session_state.get("library_search_term", "").strip().lower()
+        selected_tags_lib = st.session_state.get("library_selected_tags", [])
 
-    if use_cases_in_family_display:
-        for uc_name, uc_config in use_cases_in_family_display.items():
-            match_search = True
-            if search_term_lib:
-                match_search = (search_term_lib in uc_name.lower() or
-                                search_term_lib in uc_config.get("template", "").lower() or
-                                any(search_term_lib in var.get("name","").lower() or search_term_lib in var.get("label","").lower() 
-                                    for var in uc_config.get("variables", [])))
+        if use_cases_in_family_display: # Ce if est bien dans le elif
+            for uc_name, uc_config in use_cases_in_family_display.items():
+                match_search = True
+                if search_term_lib:
+                    match_search = (search_term_lib in uc_name.lower() or
+                                    search_term_lib in uc_config.get("template", "").lower() or
+                                    any(search_term_lib in var.get("name","").lower() or search_term_lib in var.get("label","").lower() 
+                                        for var in uc_config.get("variables", [])))
 
-            match_tags = True
-            if selected_tags_lib:
-                match_tags = all(tag in uc_config.get("tags", []) for tag in selected_tags_lib)
+                match_tags = True
+                if selected_tags_lib:
+                    match_tags = all(tag in uc_config.get("tags", []) for tag in selected_tags_lib)
 
-            if match_search and match_tags:
-                filtered_use_cases[uc_name] = uc_config
-    
-    if not filtered_use_cases:
-        if not use_cases_in_family_display:
-            st.info(f"La famille '{library_family_to_display}' ne contient actuellement aucun prompt.")
-        else:
-            st.info("Aucun prompt ne correspond à vos critères de recherche/filtre dans cette famille.")
-    else:
-        sorted_use_cases_display = sorted(list(filtered_use_cases.keys()))
-        for use_case_name_display in sorted_use_cases_display:
-            prompt_config_display = filtered_use_cases[use_case_name_display]
-            template_display = prompt_config_display.get("template", "_Template non défini._")
-            exp_title = f"{use_case_name_display}"
-            if prompt_config_display.get("usage_count", 0) > 0:
-                exp_title += f" (Utilisé {prompt_config_display.get('usage_count')} fois)"
+                if match_search and match_tags:
+                    filtered_use_cases[uc_name] = uc_config
+        
+        if not filtered_use_cases: # Ce if est aussi dans le elif, au même niveau que le 'if use_cases_in_family_display:'
+            if not use_cases_in_family_display:
+                st.info(f"La famille '{library_family_to_display}' ne contient actuellement aucun prompt.")
+            else:
+                st.info("Aucun prompt ne correspond à vos critères de recherche/filtre dans cette famille.")
+        else: # else pour 'if not filtered_use_cases:'
+            sorted_use_cases_display = sorted(list(filtered_use_cases.keys()))
+            for use_case_name_display in sorted_use_cases_display:
+                prompt_config_display = filtered_use_cases[use_case_name_display]
+                template_display = prompt_config_display.get("template", "_Template non défini._")
+                exp_title = f"{use_case_name_display}"
+                if prompt_config_display.get("usage_count", 0) > 0:
+                    exp_title += f" (Utilisé {prompt_config_display.get('usage_count')} fois)"
 
-            with st.expander(exp_title, expanded=False):
-                st.markdown(f"##### Template pour : {use_case_name_display}")
-                st.code(template_display, language=None)
-                variables_display = prompt_config_display.get("variables", [])
-                if variables_display:
-                    st.markdown("**Variables associées:**")
-                    var_details_list_display = [f"- `{v.get('name', 'N/A')}` ({v.get('label', 'N/A')})" for v in variables_display if isinstance(v, dict)]
-                    if var_details_list_display: st.markdown("\n".join(var_details_list_display))
-                    else: st.caption("_Aucune variable correctement définie._") # pragma: no cover
-                else: st.caption("_Aucune variable spécifique définie._")
-                tags_display = prompt_config_display.get("tags", [])
-                if tags_display:
-                    st.markdown(f"**Tags :** {', '.join([f'`{tag}`' for tag in tags_display])}")
-                created_at_str = prompt_config_display.get('created_at', get_default_dates()[0])
-                updated_at_str = prompt_config_display.get('updated_at', get_default_dates()[1])
-                st.caption(f"Créé le: {datetime.fromisoformat(created_at_str).strftime('%d/%m/%Y %H:%M')} | Modifié le: {datetime.fromisoformat(updated_at_str).strftime('%d/%m/%Y %H:%M')}")
-                st.markdown("---")
-                col_btn_lib1, col_btn_lib2 = st.columns(2)
-                with col_btn_lib1:
-                    if st.button(f"✍️ Utiliser ce modèle", key=f"main_lib_use_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
-                        st.session_state.view_mode = "edit"
-                        st.session_state.force_select_family_name = library_family_to_display
-                        st.session_state.force_select_use_case_name = use_case_name_display
-                        st.session_state.go_to_config_section = False
-                        st.session_state.active_generated_prompt = ""
-                        st.session_state.variable_type_to_create = None
-                        st.session_state.editing_variable_info = None
-                        st.session_state.confirming_delete_details = None
-                        st.rerun()
-                with col_btn_lib2:
-                    if st.button(f"⚙️ Éditer ce prompt", key=f"main_lib_edit_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
-                        st.session_state.view_mode = "edit"
-                        st.session_state.force_select_family_name = library_family_to_display
-                        st.session_state.force_select_use_case_name = use_case_name_display
-                        st.session_state.go_to_config_section = True
-                        st.session_state.active_generated_prompt = ""
-                        st.session_state.variable_type_to_create = None
-                        st.session_state.editing_variable_info = None
-                        st.session_state.confirming_delete_details = None
-                        st.rerun()
-else: 
-    st.info("Aucune famille n'est actuellement sélectionnée dans la bibliothèque ou la famille sélectionnée n'existe plus.")
-    available_families_check = list(st.session_state.editable_prompts.keys())
-    if not available_families_check :
-        st.warning("La bibliothèque est entièrement vide. Veuillez créer des familles et des prompts.")
-elif st.session_state.view_mode == "edit":
-if not final_selected_family_edition :
-st.info("Sélectionnez une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
-elif not final_selected_use_case_edition:
-st.info(f"Sélectionnez un cas d'usage dans la famille '{final_selected_family_edition}' ou créez-en un nouveau pour commencer.")
-elif final_selected_family_edition in st.session_state.editable_prompts and 
+                with st.expander(exp_title, expanded=False):
+                    st.markdown(f"##### Template pour : {use_case_name_display}")
+                    st.code(template_display, language=None)
+                    variables_display = prompt_config_display.get("variables", [])
+                    if variables_display:
+                        st.markdown("**Variables associées:**")
+                        var_details_list_display = [f"- `{v.get('name', 'N/A')}` ({v.get('label', 'N/A')})" for v in variables_display if isinstance(v, dict)]
+                        if var_details_list_display: st.markdown("\n".join(var_details_list_display))
+                        else: st.caption("_Aucune variable correctement définie._")
+                    else: st.caption("_Aucune variable spécifique définie._")
+                    tags_display = prompt_config_display.get("tags", [])
+                    if tags_display:
+                        st.markdown(f"**Tags :** {', '.join([f'`{tag}`' for tag in tags_display])}")
+                    created_at_str = prompt_config_display.get('created_at', get_default_dates()[0])
+                    updated_at_str = prompt_config_display.get('updated_at', get_default_dates()[1])
+                    st.caption(f"Créé le: {datetime.fromisoformat(created_at_str).strftime('%d/%m/%Y %H:%M')} | Modifié le: {datetime.fromisoformat(updated_at_str).strftime('%d/%m/%Y %H:%M')}")
+                    st.markdown("---")
+                    col_btn_lib1, col_btn_lib2 = st.columns(2)
+                    with col_btn_lib1:
+                        if st.button(f"✍️ Utiliser ce modèle", key=f"main_lib_use_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
+                            st.session_state.view_mode = "edit"
+                            st.session_state.force_select_family_name = library_family_to_display
+                            st.session_state.force_select_use_case_name = use_case_name_display
+                            st.session_state.go_to_config_section = False
+                            st.session_state.active_generated_prompt = ""
+                            st.session_state.variable_type_to_create = None
+                            st.session_state.editing_variable_info = None
+                            st.session_state.confirming_delete_details = None
+                            st.rerun()
+                    with col_btn_lib2:
+                        if st.button(f"⚙️ Éditer ce prompt", key=f"main_lib_edit_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
+                            st.session_state.view_mode = "edit"
+                            st.session_state.force_select_family_name = library_family_to_display
+                            st.session_state.force_select_use_case_name = use_case_name_display
+                            st.session_state.go_to_config_section = True
+                            st.session_state.active_generated_prompt = ""
+                            st.session_state.variable_type_to_create = None
+                            st.session_state.editing_variable_info = None
+                            st.session_state.confirming_delete_details = None
+                            st.rerun()
+    else: # Ce 'else' est le pendant du 'if not library_family_to_display' et 'elif library_family_to_display in ...'
+          # Il s'exécute si on est en mode "library" mais qu'aucune famille valide n'est sélectionnée pour l'affichage.
+        st.info("Aucune famille n'est actuellement sélectionnée dans la bibliothèque ou la famille sélectionnée n'existe plus.")
+        available_families_check = list(st.session_state.editable_prompts.keys())
+        if not available_families_check :
+            st.warning("La bibliothèque est entièrement vide. Veuillez créer des familles et des prompts.")
 
-final_selected_use_case_edition in st.session_state.editable_prompts[final_selected_family_edition]:
+elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que 'if st.session_state.view_mode == "library":'
+    if not final_selected_family_edition :
+        st.info("Sélectionnez une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
+    elif not final_selected_use_case_edition:
+        st.info(f"Sélectionnez un cas d'usage dans la famille '{final_selected_family_edition}' ou créez-en un nouveau pour commencer.")
+    elif final_selected_family_edition in st.session_state.editable_prompts and \
+         final_selected_use_case_edition in st.session_state.editable_prompts[final_selected_family_edition]:
 
-    current_prompt_config = st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]
+        current_prompt_config = st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]
 
-    st.header(f"Cas d'usage: {final_selected_use_case_edition}")
-    created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0])
-    updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
-    st.caption(f"Famille: {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
-    st.markdown("---")
+        st.header(f"Cas d'usage: {final_selected_use_case_edition}")
+        created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0])
+        updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
+        st.caption(f"Famille: {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
+        st.markdown("---")
+        # ... la suite de la logique pour le view_mode == "edit"
 
     st.subheader(f"🚀 Générer le Prompt")
     gen_form_values = {}
@@ -1419,11 +1442,11 @@ else:
         st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.") # pragma: no cover
         st.session_state.use_case_selector_edition = None
 else:
-if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
-elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
-st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
-st.rerun()
+    if not any(st.session_state.editable_prompts.values()): # pragma: no cover
+        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
+    elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
+        st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
+        st.rerun()
 
 --- Sidebar Footer ---
 st.sidebar.markdown("---")
