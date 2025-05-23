@@ -1038,6 +1038,21 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
                 current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
                 current_prompt_config["updated_at"] = datetime.now().isoformat()
                 save_editable_prompts_to_gist()
+                # --- AJOUT POUR STABILISER LA SÉLECTION ---
+                # Réaffirmer la sélection actuelle pour le prochain rerun
+                # Cela aidera la sidebar à se réinitialiser correctement sur l'élément en cours d'édition.
+                current_fam_after_gen = st.session_state.get('family_selector_edition')
+                current_uc_after_gen = st.session_state.get('use_case_selector_edition')
+
+                if current_fam_after_gen and current_uc_after_gen and \
+                   current_fam_after_gen in st.session_state.editable_prompts and \
+                   current_uc_after_gen in st.session_state.editable_prompts.get(current_fam_after_gen, {}):
+                    # Si la famille et le cas d'usage sont toujours valides après la modif (ce qui devrait être le cas)
+                    # On force leur re-sélection pour stabiliser l'UI au prochain rerun.
+                    st.session_state.force_select_family_name = current_fam_after_gen
+                    st.session_state.force_select_use_case_name = current_uc_after_gen
+                # Pas de st.rerun() explicite ici, le submit du formulaire s'en charge.
+                        # --- FIN DE L'AJOUT ---
             except Exception as e: # pragma: no cover
                 st.error(f"Erreur lors de la génération du prompt: {e}")
     st.markdown("---")
