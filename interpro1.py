@@ -1437,11 +1437,10 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
         # Toujours dans le bloc 'elif final_selected_family_edition in ... and ...' (le cas où le prompt est valide pour l'édition)
         if st.session_state.get('go_to_config_section'): 
             st.session_state.go_to_config_section = False 
-    # Ce 'else:' (ligne 1445 dans votre fichier) est le pendant du bloc
-    # 'elif final_selected_family_edition in st.session_state.editable_prompts and ...'
-    # Il doit donc avoir la même indentation que ce 'elif'.
+    # Ce 'else' est le pendant du 'elif final_selected_family_edition in ... and ...'
+    # Il gère les cas où la famille ou le cas d'usage n'est pas valide en mode édition.
+    # Son indentation doit être la même que le 'elif final_selected_family_edition in ...'
     else: 
-        # Contenu de ce 'else'
         if not final_selected_family_edition:
             st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
         elif not final_selected_use_case_edition:
@@ -1451,15 +1450,21 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
             st.session_state.use_case_selector_edition = None
 # Fin du bloc 'elif st.session_state.view_mode == "edit":'
 
-# Ce 'else:' est le pendant du 'if st.session_state.view_mode == "library":' et 'elif st.session_state.view_mode == "edit":'
-# Il doit donc avoir la même indentation que ces derniers.
+# L'ERREUR EST PROBABLEMENT ICI :
+# Ce 'else:' (correspondant à la ligne 1445 de votre traceback) doit être aligné
+# avec 'if st.session_state.view_mode == "library":' et 'elif st.session_state.view_mode == "edit":'
+# C'est-à-dire, SANS indentation s'ils sont au niveau 0 du script principal pour cette logique.
 else:
+    # Contenu de ce 'else' : indenté de 4 espaces
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
+        # Contenu de cet 'if' : indenté de 8 espaces
         st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
+    # Cet 'elif' est aligné avec le 'if not any(...)' précédent : indentation de 4 espaces
     elif st.session_state.view_mode not in ["library", "edit"]: # pragma: no cover
+        # Contenu de cet 'elif' : indenté de 8 espaces
         st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
         st.rerun()
 
-# --- Sidebar Footer --- (Au niveau d'indentation le plus externe)
+# --- Sidebar Footer --- (Niveau 0, après toute la logique de dispatch de vue)
 st.sidebar.markdown("---")
 st.sidebar.info(f"Générateur v3.4 - © {CURRENT_YEAR} La Poste (démo)")
