@@ -197,7 +197,17 @@ def _postprocess_after_loading(loaded_data):
                             elif field == "step" and (field not in var_info or var_info[field] is None):
                                 var_info[field] = 1.0 # Default step to 1.0
 
-
+                    if var_info.get("type") == "text_area":
+                        if "height" in var_info and var_info["height"] is not None:
+                            try:
+                                var_info["height"] = int(var_info["height"])
+                                if var_info["height"] < 10: # S'assurer d'une hauteur minimale raisonnable
+                                    var_info["height"] = 100
+                            except (ValueError, TypeError):
+                                var_info["height"] = 100 # Hauteur par défaut si invalide
+                        else: # Si height est None ou non présent
+                            var_info["height"] = 100 # Assurer une valeur entière par défaut
+                   
             config.setdefault("tags", [])
             if not isinstance(config.get("tags"), list): # Ensure tags is always a list
                 config["tags"] = []
@@ -270,7 +280,19 @@ def _preprocess_injected_use_case_data(injected_config):
                         st.warning(f"Défaut de la variable selectbox '{var_info['name']}' non valide ou manquant. Premier option utilisée.")
                     else:
                          var_info["default"] = "" # No options, no valid default
-            
+                      
+              if var_info.get("type") == "text_area":
+                if "height" in var_info and var_info["height"] is not None:
+                    try:
+                        var_info["height"] = int(var_info["height"])
+                        if var_info["height"] < 10: # S'assurer d'une hauteur minimale raisonnable
+                             var_info["height"] = 100 
+                    except (ValueError, TypeError):
+                        st.warning(f"Hauteur invalide pour la variable text_area '{var_info['name']}'. Utilisation de la hauteur par défaut (100px).")
+                        var_info["height"] = 100
+                else:
+                    var_info.setdefault("height", 100) # Hauteur par défaut si non spécifiée
+                      
             temp_variables.append(var_info)
     processed_config["variables"] = temp_variables
 
