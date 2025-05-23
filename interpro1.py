@@ -1,4 +1,5 @@
 import streamlit as st
+import requests
 from datetime import datetime, date
 import copy
 import json
@@ -283,50 +284,59 @@ def _preprocess_injected_use_case_data(injected_config):
         
     return processed_config
 
-# --- Gist Interaction Functions (Simulated for environments without 'requests') ---
-def get_gist_content(gist_id, github_pat): # pragma: no cover
-    # This is a placeholder. In a real environment, you'd use the requests library.
-    # For local testing without secrets, this prevents errors.
-    if gist_id == "YOUR_GIST_ID_HERE" or github_pat == "YOUR_GITHUB_PAT_HERE":
-        st.info("Simulation: Gist non configuré. Retour du contenu Gist vide.")
-        return "{}" 
-    
-    # Simulating an actual API call structure if requests was available
-    # headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
-    # try:
-    #     # response = requests.get(f"https://api.github.com/gists/{gist_id}", headers=headers)
-    #     # response.raise_for_status() 
-    #     # gist_data = response.json()
-    #     # if GIST_DATA_FILENAME in gist_data["files"]:
-    #     #     return gist_data["files"][GIST_DATA_FILENAME]["content"]
-    #     # else:
-    #     #     st.info(f"Fichier '{GIST_DATA_FILENAME}' non trouvé dans Gist. Initialisation.")
-    #     #     return "{}"
-    #     pass # Placeholder for actual request call
-    # except Exception as e: # Placeholder for requests.exceptions.RequestException
-    #     st.error(f"Erreur Gist (get - simulée): {e}")
-    #     return None
-    st.warning("Fonctionnalité Gist (get_gist_content) simulée. Impossible de charger depuis GitHub.")
-    return "{}" # Return empty JSON string to allow app to initialize
+# --- Gist Interaction Functions ---
+def get_gist_content(gist_id, github_pat):
+    headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
+    try:
+        response = requests.get(f"https://api.github.com/gists/{gist_id}", headers=headers)
+        response.raise_for_status() # Lève une exception pour les codes d'erreur HTTP 4xx/5xx
+        gist_data = response.json()
+        if GIST_DATA_FILENAME in gist_data["files"]:
+            return gist_data["files"][GIST_DATA_FILENAME]["content"]
+        else:
+            # Si le fichier n'existe pas dans un Gist par ailleurs valide, c'est comme un Gist vide pour ce fichier
+            st.info(f"Fichier '{GIST_DATA_FILENAME}' non trouvé dans le Gist. Initialisation avec contenu vide.")
+            return "{}" # Retourne une chaîne JSON pour un objet vide
+    except requests.exceptions.HTTPError as http_err:
+        if response.status_code == 404:
+            st.error(f"Erreur Gist (get): Gist avec ID '{gist_id}' non trouvé (404). Vérifiez l'ID.")
+        elif response.status_code == 401 or response.status_code == 403:
+            st.error(f"Erreur Gist (get): Problème d'authentification (PAT GitHub invalide ou permissions insuffisantes).")
+        else:
+            st.error(f"Erreur HTTP Gist (get): {http_err}")
+        return None # Indique une erreur de chargement
+    except requests.exceptions.RequestException as e:
+        # Pour d'autres erreurs réseau (timeout, DNS, etc.)
+        st.error(f"Erreur de connexion Gist (get): {e}")
+        return None
+    except KeyError: # Si la structure du JSON du Gist est inattendue
+        st.error(f"Erreur Gist (get): Fichier '{GIST_DATA_FILENAME}' non trouvé dans la réponse ou structure Gist inattendue.")
+        return None
+    except json.JSONDecodeError: # Si la réponse n'est pas un JSON valide (peu probable pour l'API GitHub)
+         st.error(f"Erreur Gist (get): Réponse de l'API Gist n'est pas un JSON valide.") # pragma: no cover
+         return None # pragma: no cover
 
-def update_gist_content(gist_id, github_pat, new_content_json_string): # pragma: no cover
-    if gist_id == "YOUR_GIST_ID_HERE" or github_pat == "YOUR_GITHUB_PAT_HERE":
-        st.info(f"Simulation: Gist non configuré. Contenu à sauvegarder (non envoyé) : {new_content_json_string[:100]}...")
-        return True # Simulate success for local testing
-
-    # Simulating an actual API call structure
-    # headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
-    # data = {"files": {GIST_DATA_FILENAME: {"content": new_content_json_string}}}
-    # try:
-    #     # response = requests.patch(f"https://api.github.com/gists/{gist_id}", headers=headers, json=data)
-    #     # response.raise_for_status()
-    #     # return True
-    #     pass # Placeholder
-    # except Exception as e: # Placeholder for requests.exceptions.RequestException
-    #     st.error(f"Erreur Gist (update - simulée): {e}")
-    #     return False
-    st.info(f"Fonctionnalité Gist (update_gist_content) simulée. Sauvegarde sur GitHub désactivée. Contenu : {new_content_json_string[:100]}...")
-    return True # Simulate success
+def update_gist_content(gist_id, github_pat, new_content_json_string):
+    headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
+    data = {"files": {GIST_DATA_FILENAME: {"content": new_content_json_string}}}
+    try:
+        response = requests.patch(f"https://api.github.com/gists/{gist_id}", headers=headers, json=data)
+        response.raise_for_status()
+        st.success("Données sauvegardées sur Gist avec succès !") # Ajout d'un message de succès
+        return True
+    except requests.exceptions.HTTPError as http_err:
+        if response.status_code == 404:
+            st.error(f"Erreur Gist (update): Gist avec ID '{gist_id}' non trouvé (404). Impossible de sauvegarder.")
+        elif response.status_code == 401 or response.status_code == 403:
+            st.error(f"Erreur Gist (update): Problème d'authentification (PAT GitHub invalide ou permissions insuffisantes pour écrire).")
+        elif response.status_code == 422: # Unprocessable Entity - souvent lié à un contenu malformé ou trop grand
+            st.error(f"Erreur Gist (update): Les données n'ont pas pu être traitées par GitHub (422). Vérifiez le format du JSON. Détails: {response.text}")
+        else:
+            st.error(f"Erreur HTTP Gist (update): {http_err}")
+        return False
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erreur de connexion Gist (update): {e}")
+        return False
 
 def save_editable_prompts_to_gist():
     GIST_ID = st.secrets.get("GIST_ID", "YOUR_GIST_ID_HERE") 
