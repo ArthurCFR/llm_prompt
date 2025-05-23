@@ -662,7 +662,7 @@ with tab_bibliotheque:
 
 # --- Tab: Injection (Sidebar content) ---
 with tab_injection:
-    st.subheader("Injection & Assistant")
+    st.subheader("Assistant & Injection")
     st.markdown("Utilisez l'assistant pour préparer un prompt système ou injectez des cas d'usage en format JSON.")
     if st.button("✨ Créer un prompt système (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
         st.session_state.view_mode = "assistant_creation" 
