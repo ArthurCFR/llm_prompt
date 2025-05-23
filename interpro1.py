@@ -1323,13 +1323,15 @@ elif st.session_state.view_mode == "inject":
                         else:
                             target_family_name = st.session_state.injection_selected_family
                             if target_family_name not in st.session_state.editable_prompts:
-                                st.error(f"La famille de destination '{target_family_name}' n'existe plus.") # Should not happen if selectbox is up-to-date
-                                return
-
-                            family_prompts = st.session_state.editable_prompts[target_family_name]
-                            successful_injections = []
-                            failed_injections = []
-                            first_new_uc_name = None
+                                st.error(f"La famille de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.")
+                                # L'ancien 'return' était ici et a été supprimé.
+                                # Si cette erreur se produit, le code ci-dessous ne devrait pas s'exécuter
+                                # ou sera protégé par des vérifications ultérieures.
+                            else: # Assure que target_family_name est valide avant de continuer
+                                family_prompts = st.session_state.editable_prompts[target_family_name]
+                                successful_injections = []
+                                failed_injections = []
+                                first_new_uc_name = None
 
                             for uc_name, uc_config in injected_data.items():
                                 uc_name_stripped = uc_name.strip()
