@@ -820,7 +820,9 @@ elif st.session_state.view_mode == "edit":
             if st.form_submit_button("🚀 Générer Prompt"):
                 final_vals_for_prompt = { k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None }
                 try:
-                    class SafeFormatter(dict): def __missing__(self, key): return f"{{{key}}}" 
+                    class SafeFormatter(dict):
+                        def __missing__(self, key):
+                            return f"{{{key}}}"
                     prompt_template_content = current_prompt_config.get("template", ""); formatted_template_content = prompt_template_content.format_map(SafeFormatter(final_vals_for_prompt)); use_case_title = final_selected_use_case_edition 
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt; st.success("Prompt généré avec succès!"); st.balloons()
