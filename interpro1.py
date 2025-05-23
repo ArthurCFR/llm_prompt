@@ -322,7 +322,6 @@ def update_gist_content(gist_id, github_pat, new_content_json_string):
     try:
         response = requests.patch(f"https://api.github.com/gists/{gist_id}", headers=headers, json=data)
         response.raise_for_status()
-        st.success("Données sauvegardées sur Gist avec succès !") # Ajout d'un message de succès
         return True
     except requests.exceptions.HTTPError as http_err:
         if response.status_code == 404:
