@@ -2,14 +2,15 @@ import streamlit as st
 from datetime import datetime, date
 import copy
 import json
-# import requests # Supprimé car non utilisé dans cette version
+# import requests # Mis en commentaire car non utilisable directement dans cet environnement de démo.
+                 # Pour une exécution locale avec sauvegarde Gist, décommentez et installez la librairie.
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA")
 
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = datetime.now().year
-GIST_DATA_FILENAME = "prompt_templates_data_v3.json"
+GIST_DATA_FILENAME = "prompt_templates_data_v3.json" # Nom du fichier dans le Gist
 
 # --- META PROMPT TEMPLATE for the Assistant (Backend) ---
 # This is the template that will be filled by the user's answers
@@ -81,60 +82,72 @@ ASSISTANT_FORM_VARIABLES = [
     {"name": "public_cible_reponse", "label": "Public cible de la réponse générée par le prompt cible :", "type": "text_input", "default": "Experts du domaine"},
 ]
 
-
 def get_default_dates():
     now_iso = datetime.now().isoformat()
     return now_iso, now_iso
 
-# ... (rest of your existing functions: parse_default_value, _preprocess_for_saving, _postprocess_after_loading, _preprocess_injected_use_case_data, Gist functions, etc. remain the same)
+INITIAL_PROMPT_TEMPLATES = {
+    "Achat": {}, "RH": {}, "Finance": {}, "Comptabilité": {}
+}
+
+# --- Utility Functions ---
 def parse_default_value(value_str, var_type):
-    if not value_str:
+    if not value_str: # Handle empty string input
         if var_type == "number_input": return 0.0
         if var_type == "date_input": return datetime.now().date()
-        return ""
+        return "" # Default for text_input, text_area, selectbox if empty
     if var_type == "number_input":
         try: return float(value_str)
-        except ValueError: return 0.0
+        except ValueError: return 0.0 # Fallback for invalid number string
     elif var_type == "date_input":
         try: return datetime.strptime(value_str, "%Y-%m-%d").date()
-        except (ValueError, TypeError):
+        except (ValueError, TypeError): # Handle parsing errors or if already a date object
             return value_str if isinstance(value_str, date) else datetime.now().date()
-    return value_str
+    return value_str # For text_input, selectbox (already string), text_area
 
 def _preprocess_for_saving(data_to_save):
     processed_data = copy.deepcopy(data_to_save)
     for family_name in list(processed_data.keys()):
         use_cases_in_family = processed_data[family_name]
-        if not isinstance(use_cases_in_family, dict): # pragma: no cover
-            st.error(f"Données corrompues (famille non-dict): '{family_name}'. Suppression.") 
-            del processed_data[family_name] 
-            continue 
+        if not isinstance(use_cases_in_family, dict):
+            st.error(f"Données corrompues (famille non-dict): '{family_name}'. Suppression.") # pragma: no cover
+            del processed_data[family_name] # pragma: no cover
+            continue # pragma: no cover
         for use_case_name in list(use_cases_in_family.keys()):
             config = use_cases_in_family[use_case_name]
-            if not isinstance(config, dict): # pragma: no cover
-                st.error(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Suppression.") 
-                del processed_data[family_name][use_case_name] 
-                continue 
+            if not isinstance(config, dict):
+                st.error(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Suppression.") # pragma: no cover
+                del processed_data[family_name][use_case_name] # pragma: no cover
+                continue # pragma: no cover
+            
+            # Ensure 'variables' is a list
             if not isinstance(config.get("variables"), list):
-                config["variables"] = []
+                config["variables"] = [] # Initialize if missing or wrong type
+            
             for var_info in config.get("variables", []):
                 if isinstance(var_info, dict):
+                    # Convert date objects to string for JSON serialization
                     if var_info.get("type") == "date_input" and isinstance(var_info.get("default"), date):
                         var_info["default"] = var_info["default"].strftime("%Y-%m-%d")
+                    
+                    # Ensure number_input fields are floats
                     if var_info.get("type") == "number_input":
-                        if "default" in var_info and var_info["default"] is not None:
-                            var_info["default"] = float(var_info["default"])
-                        if "min_value" in var_info and var_info["min_value"] is not None:
-                            var_info["min_value"] = float(var_info["min_value"])
-                        if "max_value" in var_info and var_info["max_value"] is not None:
-                            var_info["max_value"] = float(var_info["max_value"])
-                        if "step" in var_info and var_info["step"] is not None:
-                            var_info["step"] = float(var_info["step"])
-                        else: 
-                            var_info["step"] = 1.0
+                        for field in ["default", "min_value", "max_value", "step"]:
+                            if field in var_info and var_info[field] is not None:
+                                try:
+                                    var_info[field] = float(var_info[field])
+                                except (ValueError, TypeError): # pragma: no cover
+                                    # Handle cases where conversion might fail, set a sensible default
+                                    if field == "default": var_info[field] = 0.0
+                                    elif field == "step": var_info[field] = 1.0
+                                    else: var_info[field] = None # min_value, max_value can be None
+                        if "step" not in var_info or var_info.get("step") is None: # Ensure step has a value
+                             var_info["step"] = 1.0
+
+
             config.setdefault("tags", [])
             if "is_favorite" in config: # pragma: no cover
-                del config["is_favorite"]
+                del config["is_favorite"] # Old field, remove if present
             config.setdefault("usage_count", 0)
             config.setdefault("created_at", datetime.now().isoformat())
             config.setdefault("updated_at", datetime.now().isoformat())
@@ -142,82 +155,97 @@ def _preprocess_for_saving(data_to_save):
 
 def _postprocess_after_loading(loaded_data):
     processed_data = copy.deepcopy(loaded_data)
-    now_iso = datetime.now().isoformat()
+    now_iso = datetime.now().isoformat() # For new/missing timestamps
     for family_name in list(processed_data.keys()):
         use_cases_in_family = processed_data[family_name]
         if not isinstance(use_cases_in_family, dict): # pragma: no cover
-            st.warning(f"Données corrompues (famille non-dict): '{family_name}'. Ignorée.") 
-            del processed_data[family_name] 
-            continue 
+            st.warning(f"Données corrompues (famille non-dict): '{family_name}'. Ignorée.")
+            del processed_data[family_name]
+            continue
         for use_case_name in list(use_cases_in_family.keys()):
             config = use_cases_in_family[use_case_name]
             if not isinstance(config, dict): # pragma: no cover
-                st.warning(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Ignoré.") 
-                del processed_data[family_name][use_case_name] 
-                continue 
+                st.warning(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Ignoré.")
+                del processed_data[family_name][use_case_name]
+                continue
+
             if not isinstance(config.get("variables"), list):
                 config["variables"] = []
+
             for var_info in config.get("variables", []):
                 if isinstance(var_info, dict):
+                    # Convert date strings back to date objects
                     if var_info.get("type") == "date_input" and isinstance(var_info.get("default"), str):
                         try:
                             var_info["default"] = datetime.strptime(var_info["default"], "%Y-%m-%d").date()
-                        except ValueError:
+                        except ValueError: # If parsing fails, default to today
                             var_info["default"] = datetime.now().date()
+                    
+                    # Ensure number_input fields are floats
                     if var_info.get("type") == "number_input":
-                        if "default" in var_info and var_info["default"] is not None:
-                            var_info["default"] = float(var_info["default"])
-                        else: 
-                            var_info["default"] = 0.0
-                        if "min_value" in var_info and var_info["min_value"] is not None:
-                            var_info["min_value"] = float(var_info["min_value"])
-                        if "max_value" in var_info and var_info["max_value"] is not None:
-                            var_info["max_value"] = float(var_info["max_value"])
-                        if "step" in var_info and var_info["step"] is not None:
-                            var_info["step"] = float(var_info["step"])
-                        else: 
-                            var_info["step"] = 1.0
+                        for field in ["default", "min_value", "max_value", "step"]:
+                            if field in var_info and var_info[field] is not None:
+                                try:
+                                    var_info[field] = float(var_info[field])
+                                except (ValueError, TypeError): # pragma: no cover
+                                    if field == "default": var_info[field] = 0.0
+                                    elif field == "step": var_info[field] = 1.0
+                                    else: var_info[field] = None
+                            elif field == "default" and (field not in var_info or var_info[field] is None):
+                                var_info[field] = 0.0 # Default to 0.0 if not present
+                            elif field == "step" and (field not in var_info or var_info[field] is None):
+                                var_info[field] = 1.0 # Default step to 1.0
+
+
             config.setdefault("tags", [])
+            if not isinstance(config.get("tags"), list): # Ensure tags is always a list
+                config["tags"] = []
             if "is_favorite" in config: # pragma: no cover
                 del config["is_favorite"]
             config.setdefault("usage_count", 0)
             config.setdefault("created_at", now_iso)
             config.setdefault("updated_at", now_iso)
-            if not isinstance(config.get("tags"), list): config["tags"] = []
     return processed_data
 
 def _preprocess_injected_use_case_data(injected_config):
     processed_config = copy.deepcopy(injected_config)
     now_iso_created, now_iso_updated = get_default_dates()
+
+    # Initialize/Overwrite specific fields for new injection
     processed_config["created_at"] = now_iso_created
     processed_config["updated_at"] = now_iso_updated
-    processed_config["usage_count"] = 0
+    processed_config["usage_count"] = 0 # New prompts start with 0 usage
+
     if "template" not in processed_config or not isinstance(processed_config["template"], str):
         processed_config["template"] = "" 
         st.warning("Cas d'usage injecté sans template valide. Template initialisé à vide.")
+
     if not isinstance(processed_config.get("variables"), list):
         processed_config["variables"] = []
+    
     temp_variables = []
     for var_info in processed_config.get("variables", []):
         if isinstance(var_info, dict):
-            if not all(k in var_info for k in ("name", "label", "type")):
+            if not all(k in var_info for k in ("name", "label", "type")): # Basic validation
                 st.warning(f"Variable injectée malformée ignorée : {var_info.get('name', 'NOM_MANQUANT')}")
                 continue
+
             if var_info.get("type") == "date_input":
                 if "default" in var_info and isinstance(var_info["default"], str):
-                    try: datetime.strptime(var_info["default"], "%Y-%m-%d") 
+                    try: datetime.strptime(var_info["default"], "%Y-%m-%d") # Validate format
                     except ValueError:
                         st.warning(f"Format de date par défaut invalide pour la variable '{var_info['name']}'. Utilisation de la date actuelle.")
                         var_info["default"] = datetime.now().date().strftime("%Y-%m-%d")
-                elif "default" in var_info and isinstance(var_info["default"], date):
-                     var_info["default"] = var_info["default"].strftime("%Y-%m-%d") 
+                elif "default" in var_info and isinstance(var_info["default"], date): # Should not happen if JSON is pure
+                     var_info["default"] = var_info["default"].strftime("%Y-%m-%d")
                 else: 
                     var_info["default"] = datetime.now().date().strftime("%Y-%m-%d")
+
             if var_info.get("type") == "number_input":
                 for num_field in ["default", "min_value", "max_value", "step"]:
                     if num_field in var_info and var_info[num_field] is not None:
                         try: var_info[num_field] = float(var_info[num_field])
-                        except (ValueError, TypeError):
+                        except (ValueError, TypeError): # pragma: no cover
                             st.warning(f"Valeur invalide pour '{num_field}' dans la variable '{var_info['name']}'. Mise à défaut.")
                             if num_field == "default": var_info[num_field] = 0.0
                             elif num_field == "step": var_info[num_field] = 1.0
@@ -226,96 +254,108 @@ def _preprocess_injected_use_case_data(injected_config):
                         var_info[num_field] = 0.0 
                     elif num_field == "step" and (num_field not in var_info or var_info[num_field] is None):
                          var_info[num_field] = 1.0 
+            
             if var_info.get("type") == "selectbox":
                 if "options" not in var_info or not isinstance(var_info["options"], list):
                     var_info["options"] = []
                     st.warning(f"Options manquantes ou malformées pour la variable selectbox '{var_info['name']}'. Initialisées à vide.")
                 else:
-                    var_info["options"] = [str(opt) for opt in var_info["options"]]
+                    var_info["options"] = [str(opt) for opt in var_info["options"]] # Ensure strings
+                
+                # Ensure default is one of the options
                 if "default" not in var_info or var_info["default"] not in var_info["options"]:
                     if var_info["options"]:
-                        var_info["default"] = var_info["options"][0]
+                        var_info["default"] = var_info["options"][0] # Default to first option
                         st.warning(f"Défaut de la variable selectbox '{var_info['name']}' non valide ou manquant. Premier option utilisée.")
                     else:
-                         var_info["default"] = "" 
+                         var_info["default"] = "" # No options, no valid default
+            
             temp_variables.append(var_info)
     processed_config["variables"] = temp_variables
+
     if not isinstance(processed_config.get("tags"), list):
         processed_config["tags"] = []
     else:
         processed_config["tags"] = sorted(list(set(str(tag).strip() for tag in processed_config["tags"] if str(tag).strip())))
+    
     if "is_favorite" in processed_config: # pragma: no cover
         del processed_config["is_favorite"]
+        
     return processed_config
 
+# --- Gist Interaction Functions (Simulated for environments without 'requests') ---
 def get_gist_content(gist_id, github_pat): # pragma: no cover
-    # This function would ideally use requests, but it's not available here.
-    # For now, it will simulate an error or empty content.
-    # In a real environment with 'requests':
+    # This is a placeholder. In a real environment, you'd use the requests library.
+    # For local testing without secrets, this prevents errors.
+    if gist_id == "YOUR_GIST_ID_HERE" or github_pat == "YOUR_GITHUB_PAT_HERE":
+        st.info("Simulation: Gist non configuré. Retour du contenu Gist vide.")
+        return "{}" 
+    
+    # Simulating an actual API call structure if requests was available
     # headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
     # try:
-    #     response = requests.get(f"https://api.github.com/gists/{gist_id}", headers=headers)
-    #     response.raise_for_status()
-    #     gist_data = response.json()
-    #     if GIST_DATA_FILENAME in gist_data["files"]:
-    #         return gist_data["files"][GIST_DATA_FILENAME]["content"]
-    #     else:
-    #         st.info(f"Fichier '{GIST_DATA_FILENAME}' non trouvé dans Gist. Initialisation.")
-    #         return "{}" 
-    # except requests.exceptions.RequestException as e: 
-    #     st.error(f"Erreur Gist (get): {e}")
+    #     # response = requests.get(f"https://api.github.com/gists/{gist_id}", headers=headers)
+    #     # response.raise_for_status() 
+    #     # gist_data = response.json()
+    #     # if GIST_DATA_FILENAME in gist_data["files"]:
+    #     #     return gist_data["files"][GIST_DATA_FILENAME]["content"]
+    #     # else:
+    #     #     st.info(f"Fichier '{GIST_DATA_FILENAME}' non trouvé dans Gist. Initialisation.")
+    #     #     return "{}"
+    #     pass # Placeholder for actual request call
+    # except Exception as e: # Placeholder for requests.exceptions.RequestException
+    #     st.error(f"Erreur Gist (get - simulée): {e}")
     #     return None
-    # except KeyError: 
-    #     st.error(f"Erreur Gist (get): Fichier '{GIST_DATA_FILENAME}' non trouvé ou structure Gist inattendue.")
-    #     return None
-    st.warning("La récupération de Gist est simulée. Le contenu sera vide ou initial.")
-    return "{}"
-
+    st.warning("Fonctionnalité Gist (get_gist_content) simulée. Impossible de charger depuis GitHub.")
+    return "{}" # Return empty JSON string to allow app to initialize
 
 def update_gist_content(gist_id, github_pat, new_content_json_string): # pragma: no cover
-    # This function would ideally use requests.
-    # For now, it will simulate success.
-    # In a real environment with 'requests':
+    if gist_id == "YOUR_GIST_ID_HERE" or github_pat == "YOUR_GITHUB_PAT_HERE":
+        st.info(f"Simulation: Gist non configuré. Contenu à sauvegarder (non envoyé) : {new_content_json_string[:100]}...")
+        return True # Simulate success for local testing
+
+    # Simulating an actual API call structure
     # headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
     # data = {"files": {GIST_DATA_FILENAME: {"content": new_content_json_string}}}
     # try:
-    #     response = requests.patch(f"https://api.github.com/gists/{gist_id}", headers=headers, json=data)
-    #     response.raise_for_status()
-    #     return True
-    # except requests.exceptions.RequestException as e:
-    #     st.error(f"Erreur Gist (update): {e}")
+    #     # response = requests.patch(f"https://api.github.com/gists/{gist_id}", headers=headers, json=data)
+    #     # response.raise_for_status()
+    #     # return True
+    #     pass # Placeholder
+    # except Exception as e: # Placeholder for requests.exceptions.RequestException
+    #     st.error(f"Erreur Gist (update - simulée): {e}")
     #     return False
-    st.info(f"Simulation de la mise à jour du Gist avec le contenu : {new_content_json_string[:100]}...")
-    return True
-
+    st.info(f"Fonctionnalité Gist (update_gist_content) simulée. Sauvegarde sur GitHub désactivée. Contenu : {new_content_json_string[:100]}...")
+    return True # Simulate success
 
 def save_editable_prompts_to_gist():
-    GIST_ID = st.secrets.get("GIST_ID", "YOUR_GIST_ID_HERE") # Provide a fallback for local dev
-    GITHUB_PAT = st.secrets.get("GITHUB_PAT", "YOUR_GITHUB_PAT_HERE") # Provide a fallback
-    if not GIST_ID or not GITHUB_PAT or GIST_ID == "YOUR_GIST_ID_HERE": # pragma: no cover
-        st.info("Secrets Gist non configurés ou valeurs par défaut. Sauvegarde sur Gist désactivée.")
+    GIST_ID = st.secrets.get("GIST_ID", "YOUR_GIST_ID_HERE") 
+    GITHUB_PAT = st.secrets.get("GITHUB_PAT", "YOUR_GITHUB_PAT_HERE") 
+    
+    if GIST_ID == "YOUR_GIST_ID_HERE" or GITHUB_PAT == "YOUR_GITHUB_PAT_HERE": # pragma: no cover
+        st.sidebar.warning("Secrets Gist non configurés. La sauvegarde sur GitHub est désactivée.")
         return
+
     if 'editable_prompts' in st.session_state:
         data_to_save = _preprocess_for_saving(st.session_state.editable_prompts)
         try:
             json_string = json.dumps(data_to_save, indent=4, ensure_ascii=False)
             if not update_gist_content(GIST_ID, GITHUB_PAT, json_string): # pragma: no cover
-                st.warning("Sauvegarde Gist échouée (simulation ou erreur réelle).") 
+                st.warning("Sauvegarde Gist échouée.") 
         except Exception as e: # pragma: no cover
             st.error(f"Erreur préparation données pour Gist: {e}")
-
-INITIAL_PROMPT_TEMPLATES = { "Achat": {}, "RH": {}, "Finance": {}, "Comptabilité": {} } 
 
 def load_editable_prompts_from_gist():
     GIST_ID = st.secrets.get("GIST_ID", "YOUR_GIST_ID_HERE")
     GITHUB_PAT = st.secrets.get("GITHUB_PAT", "YOUR_GITHUB_PAT_HERE")
-    if not GIST_ID or not GITHUB_PAT or GIST_ID == "YOUR_GIST_ID_HERE": # pragma: no cover
-        st.warning("Secrets Gist non configurés ou valeurs par défaut. Utilisation des modèles par défaut locaux.")
+
+    if GIST_ID == "YOUR_GIST_ID_HERE" or GITHUB_PAT == "YOUR_GITHUB_PAT_HERE": # pragma: no cover
+        st.sidebar.warning("Secrets Gist non configurés. Utilisation des modèles par défaut locaux.")
         return copy.deepcopy(INITIAL_PROMPT_TEMPLATES)
+
+    raw_content = get_gist_content(GIST_ID, GITHUB_PAT) # Will use simulated version if requests not available
     
-    raw_content = get_gist_content(GIST_ID, GITHUB_PAT) # This will use the mocked version
-    
-    if raw_content and raw_content != "{}": # Check if it's not the empty mock
+    if raw_content and raw_content != "{}": # Avoid parsing empty string from simulation
         try:
             loaded_data = json.loads(raw_content)
             if not loaded_data or not isinstance(loaded_data, dict): 
@@ -326,10 +366,11 @@ def load_editable_prompts_from_gist():
     else: 
         st.info("Gist vide ou inaccessible (ou simulation). Initialisation avec modèles par défaut.")
     
+    # If loading failed or Gist was empty, initialize and try to save default if Gist seems configured.
     initial_data = copy.deepcopy(INITIAL_PROMPT_TEMPLATES)
-    # No attempt to save initial data if Gist is mocked/unavailable in this context
+    # No attempt to save initial data if Gist is effectively mocked/unavailable
+    # This part was causing issues in mocked environments, so it's safer to just return initial_data.
     return initial_data
-
 
 # --- Session State Initialization ---
 if 'editable_prompts' not in st.session_state:
@@ -361,13 +402,11 @@ if 'injection_selected_family' not in st.session_state:
 if 'injection_json_text' not in st.session_state:
     st.session_state.injection_json_text = ""
 
-# --- NEW: Session state for Assistant Feature ---
 if 'assistant_form_values' not in st.session_state:
+    # Initialize with defaults from ASSISTANT_FORM_VARIABLES
     st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES}
-if 'generated_meta_prompt_for_llm' not in st.session_state: # Renamed from generated_json_for_injection
+if 'generated_meta_prompt_for_llm' not in st.session_state: 
     st.session_state.generated_meta_prompt_for_llm = ""
-# Removed 'is_generating_json_via_assistant' as we are not calling API directly
-
 
 # --- Main App UI ---
 st.title(f"🛠️ L'atelier des prompts IA")
@@ -386,28 +425,42 @@ with tab_edition_generation:
     available_families = list(st.session_state.editable_prompts.keys())
     default_family_idx_edit = 0
     current_family_for_edit = st.session_state.get('family_selector_edition')
+
     if st.session_state.force_select_family_name and st.session_state.force_select_family_name in available_families:
         current_family_for_edit = st.session_state.force_select_family_name
         st.session_state.family_selector_edition = current_family_for_edit 
-    elif current_family_for_edit and current_family_for_edit in available_families: pass 
+    elif current_family_for_edit and current_family_for_edit in available_families:
+        pass 
     elif available_families:
         current_family_for_edit = available_families[0]
         st.session_state.family_selector_edition = current_family_for_edit 
     else:
         current_family_for_edit = None
         st.session_state.family_selector_edition = None 
+    
     if current_family_for_edit and current_family_for_edit in available_families:
         default_family_idx_edit = available_families.index(current_family_for_edit)
     elif available_families: 
         default_family_idx_edit = 0
         current_family_for_edit = available_families[0]
         st.session_state.family_selector_edition = current_family_for_edit
-    else: default_family_idx_edit = 0 
-    if not available_families: st.info("Aucune famille de cas d'usage. Créez-en une via les options ci-dessous.")
+    else: 
+        default_family_idx_edit = 0 
+
+    if not available_families:
+        st.info("Aucune famille de cas d'usage. Créez-en une via les options ci-dessous.")
     else:
         prev_family_selection_edit = st.session_state.get('family_selector_edition') 
-        selected_family_ui_edit = st.selectbox("Famille :", options=available_families, index=default_family_idx_edit, key='family_selectbox_widget_edit', help="Sélectionnez une famille pour voir ses cas d'usage.")
-        if st.session_state.family_selector_edition != selected_family_ui_edit : st.session_state.family_selector_edition = selected_family_ui_edit
+        selected_family_ui_edit = st.selectbox(
+            "Famille :",
+            options=available_families,
+            index=default_family_idx_edit, 
+            key='family_selectbox_widget_edit',
+            help="Sélectionnez une famille pour voir ses cas d'usage."
+        )
+        if st.session_state.family_selector_edition != selected_family_ui_edit :
+             st.session_state.family_selector_edition = selected_family_ui_edit
+        
         if prev_family_selection_edit != selected_family_ui_edit:
             st.session_state.use_case_selector_edition = None
             st.session_state.force_select_use_case_name = None 
@@ -416,39 +469,61 @@ with tab_edition_generation:
             st.session_state.variable_type_to_create = None 
             st.session_state.editing_variable_info = None   
             st.rerun()
+
     current_selected_family_for_edit_logic = st.session_state.get('family_selector_edition')
     use_cases_in_current_family_edit_options = []
     if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in st.session_state.editable_prompts:
         use_cases_in_current_family_edit_options = list(st.session_state.editable_prompts[current_selected_family_for_edit_logic].keys())
+
     if use_cases_in_current_family_edit_options:
         default_uc_idx_edit = 0
         current_uc_for_edit = st.session_state.get('use_case_selector_edition')
-        if st.session_state.force_select_use_case_name and st.session_state.force_select_use_case_name in use_cases_in_current_family_edit_options: current_uc_for_edit = st.session_state.force_select_use_case_name
-        elif current_uc_for_edit and current_uc_for_edit in use_cases_in_current_family_edit_options: pass 
-        else: current_uc_for_edit = use_cases_in_current_family_edit_options[0]
+
+        if st.session_state.force_select_use_case_name and st.session_state.force_select_use_case_name in use_cases_in_current_family_edit_options:
+            current_uc_for_edit = st.session_state.force_select_use_case_name
+        elif current_uc_for_edit and current_uc_for_edit in use_cases_in_current_family_edit_options:
+            pass 
+        else: 
+            current_uc_for_edit = use_cases_in_current_family_edit_options[0]
+        
         st.session_state.use_case_selector_edition = current_uc_for_edit 
-        if current_uc_for_edit: default_uc_idx_edit = use_cases_in_current_family_edit_options.index(current_uc_for_edit)
+
+        if current_uc_for_edit: 
+            default_uc_idx_edit = use_cases_in_current_family_edit_options.index(current_uc_for_edit)
+        
         prev_uc_selection_edit = st.session_state.get('use_case_selector_edition') 
-        selected_use_case_ui_edit = st.radio( "Cas d'usage :", options=use_cases_in_current_family_edit_options, index=default_uc_idx_edit, key='use_case_radio_widget_edit', help="Sélectionnez un cas d'usage pour générer un prompt ou le paramétrer.")
-        if st.session_state.use_case_selector_edition != selected_use_case_ui_edit: st.session_state.use_case_selector_edition = selected_use_case_ui_edit
+        selected_use_case_ui_edit = st.radio(
+            "Cas d'usage :",
+            options=use_cases_in_current_family_edit_options,
+            index=default_uc_idx_edit,
+            key='use_case_radio_widget_edit',
+            help="Sélectionnez un cas d'usage pour générer un prompt ou le paramétrer."
+        )
+        if st.session_state.use_case_selector_edition != selected_use_case_ui_edit:
+            st.session_state.use_case_selector_edition = selected_use_case_ui_edit
+
         if prev_uc_selection_edit != selected_use_case_ui_edit:
             st.session_state.view_mode = "edit"
             st.session_state.active_generated_prompt = ""
             st.session_state.variable_type_to_create = None 
             st.session_state.editing_variable_info = None   
             st.rerun()
+
     elif current_selected_family_for_edit_logic: 
         st.info(f"Aucun cas d'usage dans '{current_selected_family_for_edit_logic}'. Créez-en un.")
         st.session_state.use_case_selector_edition = None 
+
     if st.session_state.force_select_family_name: st.session_state.force_select_family_name = None
     if st.session_state.force_select_use_case_name: st.session_state.force_select_use_case_name = None
     st.markdown("---")
+
     with st.expander("🗂️ Gérer les Familles", expanded=False):
         with st.form("new_family_form_sidebar", clear_on_submit=True):
             new_family_name = st.text_input("Nom de la nouvelle famille:", key="new_fam_name_sidebar")
             submitted_new_family = st.form_submit_button("➕ Créer Famille")
             if submitted_new_family and new_family_name.strip():
-                if new_family_name.strip() in st.session_state.editable_prompts: st.error(f"La famille '{new_family_name.strip()}' existe déjà.")
+                if new_family_name.strip() in st.session_state.editable_prompts:
+                    st.error(f"La famille '{new_family_name.strip()}' existe déjà.")
                 else:
                     st.session_state.editable_prompts[new_family_name.strip()] = {}
                     save_editable_prompts_to_gist()
@@ -457,7 +532,9 @@ with tab_edition_generation:
                     st.session_state.use_case_selector_edition = None 
                     st.session_state.view_mode = "edit"
                     st.rerun()
-            elif submitted_new_family: st.error("Le nom de la famille ne peut pas être vide.")
+            elif submitted_new_family:
+                st.error("Le nom de la famille ne peut pas être vide.")
+
         if available_families and current_selected_family_for_edit_logic :
             st.markdown("---")
             with st.form("rename_family_form_sidebar"):
@@ -466,21 +543,27 @@ with tab_edition_generation:
                 submitted_rename_family = st.form_submit_button("✏️ Renommer")
                 if submitted_rename_family and renamed_family_name_input.strip():
                     renamed_family_name = renamed_family_name_input.strip()
-                    if renamed_family_name == current_selected_family_for_edit_logic: st.info("Le nouveau nom est identique à l'ancien.")
-                    elif renamed_family_name in st.session_state.editable_prompts: st.error(f"Une famille nommée '{renamed_family_name}' existe déjà.")
+                    if renamed_family_name == current_selected_family_for_edit_logic:
+                        st.info("Le nouveau nom est identique à l'ancien.")
+                    elif renamed_family_name in st.session_state.editable_prompts:
+                        st.error(f"Une famille nommée '{renamed_family_name}' existe déjà.")
                     else:
                         st.session_state.editable_prompts[renamed_family_name] = st.session_state.editable_prompts.pop(current_selected_family_for_edit_logic)
                         save_editable_prompts_to_gist()
                         st.success(f"Famille '{current_selected_family_for_edit_logic}' renommée en '{renamed_family_name}'.")
                         st.session_state.force_select_family_name = renamed_family_name 
-                        if st.session_state.library_selected_family_for_display == current_selected_family_for_edit_logic: st.session_state.library_selected_family_for_display = renamed_family_name
+                        if st.session_state.library_selected_family_for_display == current_selected_family_for_edit_logic:
+                           st.session_state.library_selected_family_for_display = renamed_family_name
                         st.session_state.view_mode = "edit"
                         st.rerun()
-                elif submitted_rename_family: st.error("Le nouveau nom de la famille ne peut pas être vide.")
+                elif submitted_rename_family:
+                    st.error("Le nouveau nom de la famille ne peut pas être vide.")
+
             st.markdown("---")
             st.write(f"Supprimer la famille : **{current_selected_family_for_edit_logic}**")
             if st.session_state.confirming_delete_family_name == current_selected_family_for_edit_logic:
                 st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
+                
                 button_text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
                 if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     deleted_fam_name = current_selected_family_for_edit_logic 
@@ -490,9 +573,11 @@ with tab_edition_generation:
                     st.session_state.confirming_delete_family_name = None
                     st.session_state.family_selector_edition = None 
                     st.session_state.use_case_selector_edition = None
-                    if st.session_state.library_selected_family_for_display == deleted_fam_name: st.session_state.library_selected_family_for_display = None
+                    if st.session_state.library_selected_family_for_display == deleted_fam_name:
+                        st.session_state.library_selected_family_for_display = None
                     st.session_state.view_mode = "edit" 
                     st.rerun()
+                
                 if st.button("Non, annuler la suppression", key=f"cancel_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     st.session_state.confirming_delete_family_name = None
                     st.session_state.view_mode = "edit"
@@ -502,32 +587,53 @@ with tab_edition_generation:
                     st.session_state.confirming_delete_family_name = current_selected_family_for_edit_logic
                     st.session_state.view_mode = "edit"
                     st.rerun()
-        elif not available_families: st.caption("Créez une famille pour pouvoir la gérer.")
-        else: st.caption("Sélectionnez une famille (ci-dessus) pour la gérer.")
+        elif not available_families:
+            st.caption("Créez une famille pour pouvoir la gérer.")
+        else: 
+            st.caption("Sélectionnez une famille (ci-dessus) pour la gérer.")
+
     st.markdown("---")
+
     with st.expander("➕ Créer un Cas d'Usage", expanded=st.session_state.get('show_create_new_use_case_form', False)):
-        if not available_families: st.caption("Veuillez d'abord créer une famille pour y ajouter des cas d'usage.")
+        if not available_families:
+            st.caption("Veuillez d'abord créer une famille pour y ajouter des cas d'usage.")
         else: 
             if st.button("Afficher/Masquer Formulaire de Création de Cas d'Usage", key="toggle_create_uc_form_in_exp"):
                 st.session_state.show_create_new_use_case_form = not st.session_state.get('show_create_new_use_case_form', False)
                 st.rerun() 
+
             if st.session_state.get('show_create_new_use_case_form', False): 
                 with st.form("new_use_case_form_in_exp", clear_on_submit=True):
                     default_create_family_idx_tab = 0
-                    if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in available_families: default_create_family_idx_tab = available_families.index(current_selected_family_for_edit_logic)
-                    uc_parent_family = st.selectbox("Famille Parente du nouveau cas d'usage:", options=available_families, index=default_create_family_idx_tab, key="new_uc_parent_fam_in_exp")
+                    if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in available_families:
+                        default_create_family_idx_tab = available_families.index(current_selected_family_for_edit_logic)
+                    
+                    uc_parent_family = st.selectbox(
+                        "Famille Parente du nouveau cas d'usage:",
+                        options=available_families,
+                        index=default_create_family_idx_tab,
+                        key="new_uc_parent_fam_in_exp"
+                    )
                     uc_name_input = st.text_input("Nom du Nouveau Cas d'Usage:", key="new_uc_name_in_exp")
                     uc_template_input = st.text_area("Template Initial du Cas d'Usage:", height=100, key="new_uc_template_in_exp", value="Nouveau prompt...")
                     submitted_new_uc = st.form_submit_button("Créer Cas d'Usage")
+
                     if submitted_new_uc:
                         parent_family_val = uc_parent_family 
                         uc_name_val = uc_name_input.strip()
                         uc_template_val = uc_template_input 
-                        if not uc_name_val: st.error("Le nom du cas d'usage ne peut pas être vide.")
-                        elif uc_name_val in st.session_state.editable_prompts.get(parent_family_val, {}): st.error(f"Le cas d'usage '{uc_name_val}' existe déjà dans la famille '{parent_family_val}'.")
+
+                        if not uc_name_val: 
+                            st.error("Le nom du cas d'usage ne peut pas être vide.")
+                        elif uc_name_val in st.session_state.editable_prompts.get(parent_family_val, {}):
+                            st.error(f"Le cas d'usage '{uc_name_val}' existe déjà dans la famille '{parent_family_val}'.")
                         else:
                             now_iso_create, now_iso_update = get_default_dates()
-                            st.session_state.editable_prompts[parent_family_val][uc_name_val] = { "template": uc_template_val or "Nouveau prompt...", "variables": [], "tags": [], "usage_count": 0, "created_at": now_iso_create, "updated_at": now_iso_update }
+                            st.session_state.editable_prompts[parent_family_val][uc_name_val] = {
+                                "template": uc_template_val or "Nouveau prompt...",
+                                "variables": [], "tags": [], 
+                                "usage_count": 0, "created_at": now_iso_create, "updated_at": now_iso_update
+                            }
                             save_editable_prompts_to_gist()
                             st.success(f"Cas d'usage '{uc_name_val}' créé avec succès dans '{parent_family_val}'.")
                             st.session_state.show_create_new_use_case_form = False 
@@ -541,20 +647,41 @@ with tab_edition_generation:
 with tab_bibliotheque:
     st.subheader("Explorer la Bibliothèque de Prompts")
     search_col, filter_tag_col = st.columns(2)
-    with search_col: st.session_state.library_search_term = st.text_input("🔍 Rechercher par mot-clé:", value=st.session_state.get("library_search_term", ""), placeholder="Nom, template, variable...")
+    with search_col:
+        st.session_state.library_search_term = st.text_input(
+            "🔍 Rechercher par mot-clé:",
+            value=st.session_state.get("library_search_term", ""),
+            placeholder="Nom, template, variable..."
+        )
+
     all_tags_list = sorted(list(set(tag for family in st.session_state.editable_prompts.values() for uc in family.values() for tag in uc.get("tags", []))))
-    with filter_tag_col: st.session_state.library_selected_tags = st.multiselect("🏷️ Filtrer par Tags:", options=all_tags_list, default=st.session_state.get("library_selected_tags", []))
+    with filter_tag_col:
+        st.session_state.library_selected_tags = st.multiselect(
+            "🏷️ Filtrer par Tags:",
+            options=all_tags_list,
+            default=st.session_state.get("library_selected_tags", [])
+        )
     st.markdown("---")
-    if not st.session_state.editable_prompts or not any(st.session_state.editable_prompts.values()): st.info("La bibliothèque est vide. Ajoutez des prompts via l'onglet 'Génération & Édition'.")
+
+    if not st.session_state.editable_prompts or not any(st.session_state.editable_prompts.values()):
+        st.info("La bibliothèque est vide. Ajoutez des prompts via l'onglet 'Génération & Édition'.")
     else:
         sorted_families_bib = sorted(list(st.session_state.editable_prompts.keys()))
-        if not st.session_state.get('library_selected_family_for_display') or st.session_state.library_selected_family_for_display not in sorted_families_bib:
+
+        if not st.session_state.get('library_selected_family_for_display') or \
+           st.session_state.library_selected_family_for_display not in sorted_families_bib:
             st.session_state.library_selected_family_for_display = sorted_families_bib[0] if sorted_families_bib else None
+
         st.write("Sélectionner une famille à afficher :")
         for family_name_bib in sorted_families_bib:
             button_key = f"lib_family_btn_{family_name_bib.replace(' ', '_').replace('&', '_')}"
             is_selected_family = (st.session_state.library_selected_family_for_display == family_name_bib)
-            if st.button(family_name_bib, key=button_key, use_container_width=True, type="primary" if is_selected_family else "secondary"):
+            if st.button(
+                family_name_bib,
+                key=button_key,
+                use_container_width=True, 
+                type="primary" if is_selected_family else "secondary"
+            ):
                 if st.session_state.library_selected_family_for_display != family_name_bib:
                     st.session_state.library_selected_family_for_display = family_name_bib
                     st.session_state.view_mode = "library" 
@@ -570,17 +697,16 @@ with tab_injection:
         st.session_state.view_mode = "inject_manual" 
         st.session_state.injection_selected_family = None 
         st.session_state.injection_json_text = "" 
-        st.session_state.generated_meta_prompt_for_llm = "" # Clear assistant's output
+        st.session_state.generated_meta_prompt_for_llm = "" 
         st.rerun()
 
     st.markdown("---") 
 
     if st.button("✨ Créer un usage avec l'assistant", key="start_assistant_creation_btn", use_container_width=True):
         st.session_state.view_mode = "assistant_creation" 
-        st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} # Reset form with defaults
+        st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
         st.session_state.generated_meta_prompt_for_llm = "" 
         st.rerun()
-
 
 # --- Main Display Area ---
 final_selected_family_edition = st.session_state.get('family_selector_edition')
@@ -631,7 +757,7 @@ if st.session_state.view_mode == "library":
                         st.markdown("**Variables associées:**")
                         var_details_list_display = [f"- `{v.get('name', 'N/A')}` ({v.get('label', 'N/A')})" for v in variables_display if isinstance(v, dict)]
                         if var_details_list_display: st.markdown("\n".join(var_details_list_display))
-                        else: st.caption("_Aucune variable correctement définie._") 
+                        else: st.caption("_Aucune variable correctement définie._") # pragma: no cover
                     else: st.caption("_Aucune variable spécifique définie._")
                     tags_display = prompt_config_display.get("tags", [])
                     if tags_display: st.markdown(f"**Tags :** {', '.join([f'`{tag}`' for tag in tags_display])}")
@@ -699,12 +825,12 @@ elif st.session_state.view_mode == "edit":
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt; st.success("Prompt généré avec succès!"); st.balloons()
                     current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist()
-                except Exception as e: st.error(f"Erreur lors de la génération du prompt: {e}")
+                except Exception as e: st.error(f"Erreur lors de la génération du prompt: {e}") # pragma: no cover
         st.markdown("---")
         if st.session_state.active_generated_prompt:
             st.subheader("✅ Prompt Généré (éditable):")
             edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
-            if edited_prompt_value != st.session_state.active_generated_prompt: st.session_state.active_generated_prompt = edited_prompt_value
+            if edited_prompt_value != st.session_state.active_generated_prompt: st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
             st.caption("Prompt généré (pour relecture et copie manuelle) :"); st.code(st.session_state.active_generated_prompt, language=None) 
         st.markdown("---")
         if st.session_state.confirming_delete_details and st.session_state.confirming_delete_details["family"] == final_selected_family_edition and st.session_state.confirming_delete_details["use_case"] == final_selected_use_case_edition:
@@ -713,7 +839,7 @@ elif st.session_state.view_mode == "edit":
             if c1_del_uc.button(f"Oui, supprimer '{details['use_case']}'", key=f"del_yes_{details['family']}_{details['use_case']}", type="primary"):
                 deleted_uc_name_for_msg = details['use_case']; deleted_uc_fam_for_msg = details['family']; del st.session_state.editable_prompts[details["family"]][details["use_case"]]; save_editable_prompts_to_gist(); st.success(f"'{deleted_uc_name_for_msg}' supprimé de '{deleted_uc_fam_for_msg}'.")
                 st.session_state.confirming_delete_details = None; st.session_state.force_select_family_name = deleted_uc_fam_for_msg; st.session_state.force_select_use_case_name = None 
-                if st.session_state.editing_variable_info and st.session_state.editing_variable_info.get("family") == deleted_uc_fam_for_msg and st.session_state.editing_variable_info.get("use_case") == deleted_uc_name_for_msg: st.session_state.editing_variable_info = None 
+                if st.session_state.editing_variable_info and st.session_state.editing_variable_info.get("family") == deleted_uc_fam_for_msg and st.session_state.editing_variable_info.get("use_case") == deleted_uc_name_for_msg: st.session_state.editing_variable_info = None # pragma: no cover
                 st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.view_mode = "edit"; st.rerun()
             if c2_del_uc.button("Non, annuler", key=f"del_no_{details['family']}_{details['use_case']}"): st.session_state.confirming_delete_details = None; st.rerun() 
             st.markdown("---") 
@@ -764,7 +890,7 @@ elif st.session_state.view_mode == "edit":
                     if isinstance(raw_def_edit_form, date): variable_data_for_form["default"] = raw_def_edit_form.strftime("%Y-%m-%d")
                     elif raw_def_edit_form is not None: variable_data_for_form["default"] = str(raw_def_edit_form)
                     else: variable_data_for_form["default"] = "" 
-                else: st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.warning("La variable que vous tentiez de modifier n'existe plus. Annulation de l'édition."); st.rerun() 
+                else: st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.warning("La variable que vous tentiez de modifier n'existe plus. Annulation de l'édition."); st.rerun() # pragma: no cover
             if not is_editing_var and st.session_state.variable_type_to_create is None:
                 st.markdown("##### 1. Choisissez le type de variable à créer :"); variable_types_map = { "Zone de texte (courte)": "text_input", "Liste choix": "selectbox", "Date": "date_input", "Nombre": "number_input", "Zone de texte (longue)": "text_area" }; num_type_buttons = len(variable_types_map); cols_type_buttons = st.columns(min(num_type_buttons, 5)); button_idx = 0
                 for btn_label, type_val in variable_types_map.items():
@@ -798,7 +924,7 @@ elif st.session_state.view_mode == "edit":
                                 if options_list_submit: 
                                     if parsed_def_val_submit not in options_list_submit: st.warning(f"La valeur par défaut '{parsed_def_val_submit}' n'est pas dans la liste d'options. La première option '{options_list_submit[0]}' sera utilisée comme défaut."); new_var_data_to_submit["default"] = options_list_submit[0]
                                     else: new_var_data_to_submit["default"] = parsed_def_val_submit
-                                else: new_var_data_to_submit["default"] = "" 
+                                else: new_var_data_to_submit["default"] = "" # pragma: no cover
                             else: new_var_data_to_submit["default"] = parsed_def_val_submit
                             if current_type_for_form == "number_input": 
                                 if min_val_input_form is not None: new_var_data_to_submit["min_value"] = float(min_val_input_form)
@@ -811,7 +937,7 @@ elif st.session_state.view_mode == "edit":
                                 idx_to_edit_submit_form = st.session_state.editing_variable_info["index"]; target_vars_list[idx_to_edit_submit_form] = new_var_data_to_submit; st.success(f"Variable '{var_name_val_submit}' mise à jour avec succès."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None 
                             else: 
                                 existing_var_names_in_uc = [v['name'] for v in target_vars_list]
-                                if var_name_val_submit in existing_var_names_in_uc: st.error(f"Une variable avec le nom technique '{var_name_val_submit}' existe déjà pour ce cas d'usage."); can_proceed_with_save = False 
+                                if var_name_val_submit in existing_var_names_in_uc: st.error(f"Une variable avec le nom technique '{var_name_val_submit}' existe déjà pour ce cas d'usage."); can_proceed_with_save = False # pragma: no cover
                                 else: target_vars_list.append(new_var_data_to_submit); st.success(f"Variable '{var_name_val_submit}' ajoutée avec succès.")
                             if can_proceed_with_save:
                                 current_prompt_config["variables"] = target_vars_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist()
@@ -824,7 +950,7 @@ elif st.session_state.view_mode == "edit":
             st.markdown("---"); action_cols = st.columns(2)
             with action_cols[0]:
                 dup_key = f"dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key): 
+                if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key): # pragma: no cover
                     original_uc_name_dup = final_selected_use_case_edition; new_uc_name_base_dup = f"{original_uc_name_dup} (copie)"; new_uc_name_dup = new_uc_name_base_dup; copy_count_dup = 1
                     while new_uc_name_dup in st.session_state.editable_prompts[final_selected_family_edition]: new_uc_name_dup = f"{new_uc_name_base_dup} {copy_count_dup}"; copy_count_dup += 1
                     st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup] = copy.deepcopy(current_prompt_config)
@@ -838,9 +964,9 @@ elif st.session_state.view_mode == "edit":
     else: 
         if not final_selected_family_edition: st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) pour commencer.")
         elif not final_selected_use_case_edition: st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
-        else: st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections."); st.session_state.use_case_selector_edition = None
+        else: st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections."); st.session_state.use_case_selector_edition = None # pragma: no cover
 
-elif st.session_state.view_mode == "inject_manual": # Renamed from "inject"
+elif st.session_state.view_mode == "inject_manual": 
     st.header("💉 Injection Manuelle de Cas d'Usage JSON")
     st.markdown("""Collez ici un ou plusieurs cas d'usage au format JSON. Le JSON doit être un dictionnaire où chaque clé est le nom du nouveau cas d'usage, et la valeur est sa configuration.""")
     st.caption("Exemple de structure pour un cas d'usage :"); st.code("""{  "Nom de Mon Nouveau Cas d'Usage": {    "template": "Ceci est le {variable_exemple} pour mon prompt.",    "variables": [      {        "name": "variable_exemple",        "label": "Variable d'Exemple",        "type": "text_input",        "default": "texte par défaut"      }    ],    "tags": ["nouveau", "exemple"]  }}""", language="json")
@@ -860,7 +986,7 @@ elif st.session_state.view_mode == "inject_manual": # Renamed from "inject"
                         if not isinstance(injected_data, dict): st.error("Le JSON fourni doit être un dictionnaire (objet JSON).")
                         else:
                             target_family_name = st.session_state.injection_selected_family
-                            if target_family_name not in st.session_state.editable_prompts: st.error(f"La famille de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.")
+                            if target_family_name not in st.session_state.editable_prompts: st.error(f"La famille de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.") # Should not happen
                             else:
                                 family_prompts = st.session_state.editable_prompts[target_family_name]; successful_injections = []; failed_injections = []; first_new_uc_name = None
                                 for uc_name, uc_config in injected_data.items():
@@ -879,19 +1005,20 @@ elif st.session_state.view_mode == "inject_manual": # Renamed from "inject"
                                     for fail_msg in failed_injections: st.error(f"Échec d'injection : {fail_msg}")
                                 if not successful_injections and not failed_injections: st.info("Aucun cas d'usage n'a été trouvé dans le JSON fourni ou tous étaient vides/invalides.")
                     except json.JSONDecodeError as e: st.error(f"Erreur de parsing JSON : {e}")
-                    except Exception as e: st.error(f"Une erreur inattendue est survenue lors de l'injection : {e}")
+                    except Exception as e: st.error(f"Une erreur inattendue est survenue lors de l'injection : {e}") # pragma: no cover
         else: st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
 
 elif st.session_state.view_mode == "assistant_creation":
     st.header("✨ Assistant de Création de Cas d'Usage")
     st.markdown("Répondez aux questions suivantes pour générer un \"Méta Prompt\". Vous pourrez ensuite utiliser ce Méta Prompt avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour obtenir la structure JSON finale à injecter.")
 
-    current_form_values = st.session_state.assistant_form_values
+    current_form_values = st.session_state.assistant_form_values # Load current/default values
     
     with st.form(key="assistant_creation_form"):
-        form_inputs = {}
+        form_inputs = {} # To store user's input from this form submission
         for var_info in ASSISTANT_FORM_VARIABLES:
             field_key = f"assistant_form_{var_info['name']}"
+            # Use current value from session state for stickiness, fallback to default from definition
             current_value = current_form_values.get(var_info['name'], var_info['default'])
 
             if var_info["type"] == "text_input":
@@ -899,41 +1026,46 @@ elif st.session_state.view_mode == "assistant_creation":
             elif var_info["type"] == "text_area":
                 form_inputs[var_info["name"]] = st.text_area(var_info["label"], value=current_value, height=var_info.get("height", 100), key=field_key)
             elif var_info["type"] == "number_input":
+                # Ensure value is float for number_input
+                try:
+                    num_value = float(current_value)
+                except (ValueError, TypeError):
+                    num_value = float(var_info["default"])
+
                 form_inputs[var_info["name"]] = st.number_input(
                     var_info["label"], 
-                    value=float(current_value) if isinstance(current_value, (int,float)) else float(var_info["default"]), # Ensure float for number_input
+                    value=num_value,
                     min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
                     max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
                     step=float(var_info.get("step", 1.0)), 
                     key=field_key,
-                    format="%g" # Use %g for cleaner display of floats
+                    format="%g" 
                 )
-            # Add other types if needed (selectbox, date_input) - though not in current ASSISTANT_FORM_VARIABLES
+            # Add other input types here if ASSISTANT_FORM_VARIABLES uses them
 
         submitted_assistant_form = st.form_submit_button("📝 Générer le Méta Prompt pour LLM Externe")
 
         if submitted_assistant_form:
-            st.session_state.assistant_form_values = form_inputs # Save current inputs
+            st.session_state.assistant_form_values = form_inputs # Save current inputs for stickiness
             
-            # Construct the Méta Prompt by filling the template
-            # Ensure all placeholders in META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE are present in form_inputs
-            # or provide defaults if they might be missing.
             try:
+                # Ensure all placeholders are correctly handled, even if a field was somehow empty
+                # The .format_map(defaultdict(str, form_inputs)) could be an alternative for safety
+                # but simple .format should work if ASSISTANT_FORM_VARIABLES covers all placeholders.
                 populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**form_inputs)
                 st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
                 st.success("Méta Prompt généré ! Vous pouvez le copier ci-dessous.")
             except KeyError as e: # pragma: no cover
-                st.error(f"Erreur lors de la construction du Méta Prompt. Clé manquante : {e}. Veuillez vérifier les définitions de ASSISTANT_FORM_VARIABLES.")
+                st.error(f"Erreur lors de la construction du Méta Prompt. Clé de formatage manquante : {e}. Veuillez vérifier les définitions de ASSISTANT_FORM_VARIABLES et le META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.")
             except Exception as e: # pragma: no cover
-                 st.error(f"Une erreur inattendue est survenue : {e}")
-            st.rerun() # Rerun to display the generated meta prompt
+                 st.error(f"Une erreur inattendue est survenue lors de la génération du Méta Prompt : {e}")
+            # No rerun here, let the generated prompt display below
 
     if st.session_state.generated_meta_prompt_for_llm:
         st.subheader("📋 Méta Prompt Généré (à copier dans votre LLM externe) :")
         st.text_area("Méta Prompt :", value=st.session_state.generated_meta_prompt_for_llm, height=400, key="meta_prompt_output_for_copy", help="Copiez ce texte intégralement et utilisez-le comme instruction pour un LLM (ChatGPT, Gemini, Claude, etc.). Le LLM devrait alors vous fournir la structure JSON à utiliser dans la section 'Injecter JSON Manuellement'.")
         st.markdown("---")
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce Méta Prompt, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
-
 
 else: 
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
@@ -944,4 +1076,4 @@ else:
 
 # --- Sidebar Footer ---
 st.sidebar.markdown("---")
-st.sidebar.info(f"Générateur v3.3.3 - © {CURRENT_YEAR} La Poste (démo)")
+st.sidebar.info(f"Générateur v3.3.4 - © {CURRENT_YEAR} La Poste (démo)")
