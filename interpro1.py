@@ -300,85 +300,68 @@ with tab_edition_generation:
     # --- Gestion de la Sélection de Famille ---
     family_to_select = st.session_state.get('family_selector_edition')
 
-    # Priorité 1: force_select_family_name (si défini et valide)
     if st.session_state.get('force_select_family_name') and st.session_state.force_select_family_name in available_families:
         family_to_select = st.session_state.force_select_family_name
-        st.session_state.family_selector_edition = family_to_select # Mettre à jour l'état de session immédiatement
-        # Si la famille est forcée, il est prudent de réinitialiser le cas d'usage
-        # sauf si un cas d'usage est aussi forcé (géré plus bas)
+        st.session_state.family_selector_edition = family_to_select
         if not st.session_state.get('force_select_use_case_name'):
-             st.session_state.use_case_selector_edition = None
+            st.session_state.use_case_selector_edition = None
 
-
-    # Priorité 2: Vérifier si la sélection actuelle est toujours valide, sinon prendre la première famille
     if not available_families:
         family_to_select = None
         st.session_state.family_selector_edition = None
-        st.session_state.use_case_selector_edition = None # Pas de famille, donc pas de cas d'usage
+        st.session_state.use_case_selector_edition = None
     elif family_to_select not in available_families:
         family_to_select = available_families[0] if available_families else None
         st.session_state.family_selector_edition = family_to_select
-        st.session_state.use_case_selector_edition = None # La famille a changé, réinitialiser le cas d'usage
+        st.session_state.use_case_selector_edition = None
 
-    # Calcul de l'index pour le selectbox
     family_idx = 0
-    if family_to_select and available_families: # S'assurer que available_families n'est pas vide
+    if family_to_select and available_families:
         try:
             family_idx = available_families.index(family_to_select)
-        except ValueError: # Au cas où family_to_select ne serait pas dans la liste (ne devrait pas arriver ici)
+        except ValueError:
             family_to_select = available_families[0] if available_families else None
             st.session_state.family_selector_edition = family_to_select
             st.session_state.use_case_selector_edition = None
             family_idx = 0
 
-
     if not available_families:
         st.info("Aucune famille de cas d'usage. Créez-en une via les options ci-dessous.")
     else:
-        # Récupérer la valeur avant que le widget ne la modifie potentiellement
         prev_family_selection_for_comparison = st.session_state.get('family_selector_edition')
-
         selected_family_from_ui = st.selectbox(
             "Famille :",
             options=available_families,
-            index=family_idx, # Utiliser l'index calculé
-            key='family_selectbox_widget_edit_v2', # Changement de clé pour forcer la réinitialisation du widget si besoin
+            index=family_idx,
+            key='family_selectbox_widget_edit_v2',
             help="Sélectionnez une famille pour voir ses cas d'usage."
         )
-
-        # Si l'utilisateur a changé la sélection dans le selectbox
         if prev_family_selection_for_comparison != selected_family_from_ui:
             st.session_state.family_selector_edition = selected_family_from_ui
-            st.session_state.use_case_selector_edition = None # Réinitialiser le cas d'usage
-            st.session_state.force_select_family_name = None  # Consommer le flag de force s'il a été appliqué par UI
+            st.session_state.use_case_selector_edition = None
+            st.session_state.force_select_family_name = None
             st.session_state.force_select_use_case_name = None
-            st.session_state.view_mode = "edit" # Assurer le mode
-            # Réinitialiser les états spécifiques à l'édition d'un cas d'usage
+            st.session_state.view_mode = "edit"
             st.session_state.active_generated_prompt = ""
-            st.session_state.variable_type_to_create = None 
-            st.session_state.editing_variable_info = None  
+            st.session_state.variable_type_to_create = None
+            st.session_state.editing_variable_info = None
             st.rerun()
-        # S'assurer que l'état de session est synchronisé avec ce qui est affiché (même si pas de changement utilisateur)
-        # Cela peut être utile si `force_select_family_name` a mis à jour `family_to_select`
-        elif st.session_state.family_selector_edition != selected_family_from_ui :
-             st.session_state.family_selector_edition = selected_family_from_ui
-
+        elif st.session_state.family_selector_edition != selected_family_from_ui:
+            st.session_state.family_selector_edition = selected_family_from_ui
 
     # --- Gestion de la Sélection de Cas d'Usage ---
-    current_selected_family = st.session_state.get('family_selector_edition')
+    current_selected_family = st.session_state.get('family_selector_edition') # Variable clé pour la famille sélectionnée
     use_cases_options = []
     if current_selected_family and current_selected_family in st.session_state.editable_prompts:
         use_cases_options = list(st.session_state.editable_prompts[current_selected_family].keys())
 
     use_case_to_select = st.session_state.get('use_case_selector_edition')
 
-    # Priorité 1: force_select_use_case_name (si défini et valide DANS LA FAMILLE ACTUELLE)
     if st.session_state.get('force_select_use_case_name') and \
        st.session_state.force_select_use_case_name in use_cases_options:
         use_case_to_select = st.session_state.force_select_use_case_name
-        st.session_state.use_case_selector_edition = use_case_to_select # Mettre à jour l'état de session
+        st.session_state.use_case_selector_edition = use_case_to_select
 
-    # Priorité 2: Vérifier si la sélection actuelle est toujours valide, sinon prendre le premier cas d'usage
     if not use_cases_options:
         use_case_to_select = None
         st.session_state.use_case_selector_edition = None
@@ -387,7 +370,7 @@ with tab_edition_generation:
         st.session_state.use_case_selector_edition = use_case_to_select
     
     uc_idx = 0
-    if use_case_to_select and use_cases_options: # S'assurer que use_cases_options n'est pas vide
+    if use_case_to_select and use_cases_options:
         try:
             uc_idx = use_cases_options.index(use_case_to_select)
         except ValueError:
@@ -395,42 +378,35 @@ with tab_edition_generation:
             st.session_state.use_case_selector_edition = use_case_to_select
             uc_idx = 0
 
-
     if use_cases_options:
         prev_uc_selection_for_comparison = st.session_state.get('use_case_selector_edition')
-        
         selected_uc_from_ui = st.radio(
             "Cas d'usage :",
             options=use_cases_options,
-            index=uc_idx, # Utiliser l'index calculé
-            key='use_case_radio_widget_edit_v2', # Changement de clé
+            index=uc_idx,
+            key='use_case_radio_widget_edit_v2',
             help="Sélectionnez un cas d'usage pour générer un prompt ou le paramétrer."
         )
-
         if prev_uc_selection_for_comparison != selected_uc_from_ui:
             st.session_state.use_case_selector_edition = selected_uc_from_ui
-            st.session_state.force_select_use_case_name = None # Consommer
+            st.session_state.force_select_use_case_name = None
             st.session_state.view_mode = "edit"
-            # Réinitialiser les états spécifiques
             st.session_state.active_generated_prompt = ""
-            st.session_state.variable_type_to_create = None 
-            st.session_state.editing_variable_info = None 
+            st.session_state.variable_type_to_create = None
+            st.session_state.editing_variable_info = None
             st.rerun()
         elif st.session_state.use_case_selector_edition != selected_uc_from_ui:
-             st.session_state.use_case_selector_edition = selected_uc_from_ui
+            st.session_state.use_case_selector_edition = selected_uc_from_ui
+    elif current_selected_family: # MODIFIÉ ICI
+        st.info(f"Aucun cas d'usage dans '{current_selected_family}'. Créez-en un.") # MODIFIÉ ICI
+        st.session_state.use_case_selector_edition = None
 
-    elif current_selected_family:
-        st.info(f"Aucun cas d'usage dans '{current_selected_family}'. Créez-en un.")
-        st.session_state.use_case_selector_edition = None 
-
-    # Consommer les flags de force s'ils ont été utilisés ou si la sélection UI les a "confirmés"
     if st.session_state.get('force_select_family_name'):
         st.session_state.force_select_family_name = None
     if st.session_state.get('force_select_use_case_name'):
         st.session_state.force_select_use_case_name = None
     
     st.markdown("---")
-    # ... la suite (Gérer les Familles, Créer un Cas d'Usage expanders) ...
 
     with st.expander("🗂️ Gérer les Familles", expanded=False):
         with st.form("new_family_form_sidebar", clear_on_submit=True):
@@ -443,31 +419,37 @@ with tab_edition_generation:
                     st.session_state.editable_prompts[new_family_name.strip()] = {}
                     save_editable_prompts_to_gist()
                     st.success(f"Famille '{new_family_name.strip()}' créée.")
-                    st.session_state.force_select_family_name = new_family_name.strip() 
-                    st.session_state.use_case_selector_edition = None 
+                    st.session_state.force_select_family_name = new_family_name.strip()
+                    st.session_state.use_case_selector_edition = None
                     st.session_state.view_mode = "edit"
                     st.rerun()
             elif submitted_new_family:
                 st.error("Le nom de la famille ne peut pas être vide.")
 
-        if available_families and current_selected_family_for_edit_logic :
+        # MODIFIÉ ICI: Utilisation de current_selected_family
+        if available_families and current_selected_family : 
             st.markdown("---")
             with st.form("rename_family_form_sidebar"):
-                st.write(f"Renommer la famille : **{current_selected_family_for_edit_logic}**")
-                renamed_family_name_input = st.text_input("Nouveau nom :", value=current_selected_family_for_edit_logic, key="ren_fam_name_sidebar")
+                # MODIFIÉ ICI
+                st.write(f"Renommer la famille : **{current_selected_family}**") 
+                renamed_family_name_input = st.text_input("Nouveau nom :", value=current_selected_family, key="ren_fam_name_sidebar") # MODIFIÉ ICI
                 submitted_rename_family = st.form_submit_button("✏️ Renommer")
                 if submitted_rename_family and renamed_family_name_input.strip():
                     renamed_family_name = renamed_family_name_input.strip()
-                    if renamed_family_name == current_selected_family_for_edit_logic:
+                    # MODIFIÉ ICI
+                    if renamed_family_name == current_selected_family: 
                         st.info("Le nouveau nom est identique à l'ancien.")
                     elif renamed_family_name in st.session_state.editable_prompts:
                         st.error(f"Une famille nommée '{renamed_family_name}' existe déjà.")
                     else:
-                        st.session_state.editable_prompts[renamed_family_name] = st.session_state.editable_prompts.pop(current_selected_family_for_edit_logic)
+                        # MODIFIÉ ICI
+                        st.session_state.editable_prompts[renamed_family_name] = st.session_state.editable_prompts.pop(current_selected_family)
                         save_editable_prompts_to_gist()
-                        st.success(f"Famille '{current_selected_family_for_edit_logic}' renommée en '{renamed_family_name}'.")
-                        st.session_state.force_select_family_name = renamed_family_name 
-                        if st.session_state.library_selected_family_for_display == current_selected_family_for_edit_logic:
+                         # MODIFIÉ ICI
+                        st.success(f"Famille '{current_selected_family}' renommée en '{renamed_family_name}'.")
+                        st.session_state.force_select_family_name = renamed_family_name
+                        # MODIFIÉ ICI
+                        if st.session_state.library_selected_family_for_display == current_selected_family:
                            st.session_state.library_selected_family_for_display = renamed_family_name
                         st.session_state.view_mode = "edit"
                         st.rerun()
@@ -475,36 +457,41 @@ with tab_edition_generation:
                     st.error("Le nouveau nom de la famille ne peut pas être vide.")
 
             st.markdown("---")
-            st.write(f"Supprimer la famille : **{current_selected_family_for_edit_logic}**")
-            if st.session_state.confirming_delete_family_name == current_selected_family_for_edit_logic:
-                st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
-                
-                button_text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
-                if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
-                    deleted_fam_name = current_selected_family_for_edit_logic 
-                    del st.session_state.editable_prompts[current_selected_family_for_edit_logic]
+             # MODIFIÉ ICI
+            st.write(f"Supprimer la famille : **{current_selected_family}**")
+            # MODIFIÉ ICI
+            if st.session_state.confirming_delete_family_name == current_selected_family:
+                # MODIFIÉ ICI
+                st.warning(f"Supprimer '{current_selected_family}' et tous ses cas d'usage ? Action irréversible.")
+                # MODIFIÉ ICI
+                button_text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family}'"
+                # MODIFIÉ ICI
+                if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family}", use_container_width=True):
+                    deleted_fam_name = current_selected_family # MODIFIÉ ICI
+                    del st.session_state.editable_prompts[current_selected_family] # MODIFIÉ ICI
                     save_editable_prompts_to_gist()
                     st.success(f"Famille '{deleted_fam_name}' supprimée.")
                     st.session_state.confirming_delete_family_name = None
-                    st.session_state.family_selector_edition = None 
+                    st.session_state.family_selector_edition = None
                     st.session_state.use_case_selector_edition = None
                     if st.session_state.library_selected_family_for_display == deleted_fam_name:
                         st.session_state.library_selected_family_for_display = None
                     st.session_state.view_mode = "edit"
                     st.rerun()
-                
-                if st.button("Non, annuler la suppression", key=f"cancel_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
+                # MODIFIÉ ICI
+                if st.button("Non, annuler la suppression", key=f"cancel_del_fam_sb_{current_selected_family}", use_container_width=True):
                     st.session_state.confirming_delete_family_name = None
                     st.session_state.view_mode = "edit"
                     st.rerun()
             else:
-                if st.button(f"🗑️ Supprimer Famille Sélectionnée", key=f"del_fam_btn_sb_{current_selected_family_for_edit_logic}"):
-                    st.session_state.confirming_delete_family_name = current_selected_family_for_edit_logic
+                 # MODIFIÉ ICI
+                if st.button(f"🗑️ Supprimer Famille Sélectionnée", key=f"del_fam_btn_sb_{current_selected_family}"):
+                    st.session_state.confirming_delete_family_name = current_selected_family # MODIFIÉ ICI
                     st.session_state.view_mode = "edit"
                     st.rerun()
         elif not available_families:
             st.caption("Créez une famille pour pouvoir la gérer.")
-        else: 
+        else:
             st.caption("Sélectionnez une famille (ci-dessus) pour la gérer.")
 
     st.markdown("---")
@@ -512,16 +499,17 @@ with tab_edition_generation:
     with st.expander("➕ Créer un Cas d'Usage", expanded=st.session_state.get('show_create_new_use_case_form', False)):
         if not available_families:
             st.caption("Veuillez d'abord créer une famille pour y ajouter des cas d'usage.")
-        else: 
+        else:
             if st.button("Afficher/Masquer Formulaire de Création de Cas d'Usage", key="toggle_create_uc_form_in_exp"):
                 st.session_state.show_create_new_use_case_form = not st.session_state.get('show_create_new_use_case_form', False)
-                st.rerun() 
+                st.rerun()
 
-            if st.session_state.get('show_create_new_use_case_form', False): 
+            if st.session_state.get('show_create_new_use_case_form', False):
                 with st.form("new_use_case_form_in_exp", clear_on_submit=True):
                     default_create_family_idx_tab = 0
-                    if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in available_families:
-                        default_create_family_idx_tab = available_families.index(current_selected_family_for_edit_logic)
+                    # MODIFIÉ ICI
+                    if current_selected_family and current_selected_family in available_families:
+                        default_create_family_idx_tab = available_families.index(current_selected_family) # MODIFIÉ ICI
                     
                     uc_parent_family = st.selectbox(
                         "Famille Parente du nouveau cas d'usage:",
@@ -534,11 +522,11 @@ with tab_edition_generation:
                     submitted_new_uc = st.form_submit_button("Créer Cas d'Usage")
 
                     if submitted_new_uc:
-                        parent_family_val = uc_parent_family 
+                        parent_family_val = uc_parent_family
                         uc_name_val = uc_name_input.strip()
-                        uc_template_val = uc_template_input 
+                        uc_template_val = uc_template_input
 
-                        if not uc_name_val: 
+                        if not uc_name_val:
                             st.error("Le nom du cas d'usage ne peut pas être vide.")
                         elif uc_name_val in st.session_state.editable_prompts.get(parent_family_val, {}):
                             st.error(f"Le cas d'usage '{uc_name_val}' existe déjà dans la famille '{parent_family_val}'.")
@@ -546,16 +534,16 @@ with tab_edition_generation:
                             now_iso_create, now_iso_update = get_default_dates()
                             st.session_state.editable_prompts[parent_family_val][uc_name_val] = {
                                 "template": uc_template_val or "Nouveau prompt...",
-                                "variables": [], "tags": [], 
+                                "variables": [], "tags": [],
                                 "usage_count": 0, "created_at": now_iso_create, "updated_at": now_iso_update
                             }
                             save_editable_prompts_to_gist()
                             st.success(f"Cas d'usage '{uc_name_val}' créé avec succès dans '{parent_family_val}'.")
-                            st.session_state.show_create_new_use_case_form = False 
+                            st.session_state.show_create_new_use_case_form = False
                             st.session_state.force_select_family_name = parent_family_val
                             st.session_state.force_select_use_case_name = uc_name_val
                             st.session_state.view_mode = "edit"
-                            st.session_state.active_generated_prompt = "" 
+                            st.session_state.active_generated_prompt = ""
                             st.rerun()
 
 # --- Tab: Bibliothèque (Sidebar content) ---
