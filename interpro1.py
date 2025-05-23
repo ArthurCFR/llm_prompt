@@ -1077,19 +1077,19 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
                 st.success("Prompt généré avec succès!")
                 st.balloons()
                 current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
-                    current_prompt_config["updated_at"] = datetime.now().isoformat()
-                    save_editable_prompts_to_gist()
+                current_prompt_config["updated_at"] = datetime.now().isoformat()
+                save_editable_prompts_to_gist()
 
-                    # MAINTENIR CET AJOUT pour forcer la sélection au prochain rerun
-                    current_fam_after_gen = st.session_state.get('family_selector_edition')
-                    current_uc_after_gen = st.session_state.get('use_case_selector_edition')
+                # MAINTENIR CET AJOUT pour forcer la sélection au prochain rerun
+                current_fam_after_gen = st.session_state.get('family_selector_edition')
+                current_uc_after_gen = st.session_state.get('use_case_selector_edition')
 
-                    if current_fam_after_gen and current_uc_after_gen and \
-                       current_fam_after_gen in st.session_state.editable_prompts and \
-                       current_uc_after_gen in st.session_state.editable_prompts.get(current_fam_after_gen, {}):
-                        st.session_state.force_select_family_name = current_fam_after_gen
-                        st.session_state.force_select_use_case_name = current_uc_after_gen
-                    # Le rerun implicite du formulaire se chargera du reste.
+                if current_fam_after_gen and current_uc_after_gen and \
+                   current_fam_after_gen in st.session_state.editable_prompts and \
+                   current_uc_after_gen in st.session_state.editable_prompts.get(current_fam_after_gen, {}):
+                    st.session_state.force_select_family_name = current_fam_after_gen
+                    st.session_state.force_select_use_case_name = current_uc_after_gen
+                # Le rerun implicite du formulaire se chargera du reste.
                         # --- FIN DE L'AJOUT ---
             except Exception as e: # pragma: no cover
                 st.error(f"Erreur lors de la génération du prompt: {e}")
