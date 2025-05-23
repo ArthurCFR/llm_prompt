@@ -1009,7 +1009,7 @@ elif st.session_state.view_mode == "inject_manual":
 
 elif st.session_state.view_mode == "assistant_creation":
     st.header("✨ Assistant de Création de prompt système")
-    st.markdown("Répondez aux questions suivantes pour générer un \"prompt système\". Vous pourrez ensuite utiliser ce prompt système avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour obtenir la structure JSON finale à injecter via l'option \"Injecter JSON Manuellement\".")
+    st.markdown("Répondez aux questions suivantes pour générer un \"prompt système\". Vous pourrez ensuite utiliser ce prompt système avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour ensuite créer votre usage dans cet atelier. \"Injecter JSON Manuellement\".")
 
     current_form_values = st.session_state.assistant_form_values 
     
