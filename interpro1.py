@@ -375,7 +375,7 @@ st.sidebar.header("Menu Principal")
 tab_bibliotheque, tab_edition_generation, tab_injection = st.sidebar.tabs([
     "📚 Bibliothèque", 
     "✍️ Génération & Édition",
-    "💉 Injection d'usage"
+    "💉 Injection"
 ])
 
 
@@ -650,7 +650,7 @@ with tab_bibliotheque:
                     st.rerun() 
         st.markdown("---")
 
-# --- NEW: Tab: Injection d'usage (Sidebar content) ---
+# --- NEW: Tab: Injection (Sidebar content) ---
 with tab_injection:
     st.subheader("Injection de Cas d'Usage")
     st.markdown("Injectez rapidement des cas d'usage en format JSON.")
