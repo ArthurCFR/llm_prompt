@@ -263,7 +263,7 @@ if 'go_to_config_section' not in st.session_state:
 
 
 # --- Main App UI ---
-st.title(f"🧬 Le laboratoire de prompt IA")
+st.title(f"🧬 L'atelier des prompts IA")
 
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
