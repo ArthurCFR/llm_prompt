@@ -1038,7 +1038,7 @@ elif st.session_state.view_mode == "assistant_creation":
             try:
                 populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**form_inputs)
                 st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
-                st.success("prompt système généré ! Vous pouvez le copier ci-dessous.")
+                st.success("Prompt système généré ! Vous pouvez le copier ci-dessous.")
             except KeyError as e: # pragma: no cover
                 st.error(f"Erreur lors de la construction du prompt système. Clé de formatage manquante : {e}.")
             except Exception as e: # pragma: no cover
@@ -1046,7 +1046,7 @@ elif st.session_state.view_mode == "assistant_creation":
             # No rerun here, let the generated prompt display below
 
     if st.session_state.generated_meta_prompt_for_llm:
-        st.subheader("📋 prompt système Généré (à copier dans votre LLM externe) :")
+        st.subheader("📋 Prompt système Généré (à copier dans votre LLM externe) :")
         st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True) # MODIFIÉ ICI
         st.markdown("---")
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
