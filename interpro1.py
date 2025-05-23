@@ -297,99 +297,140 @@ with tab_edition_generation:
     st.subheader("Explorateur de Prompts")
     available_families = list(st.session_state.editable_prompts.keys())
 
-    default_family_idx_edit = 0
-    current_family_for_edit = st.session_state.get('family_selector_edition')
+    # --- Gestion de la Sélection de Famille ---
+    family_to_select = st.session_state.get('family_selector_edition')
 
-    if st.session_state.force_select_family_name and st.session_state.force_select_family_name in available_families:
-        current_family_for_edit = st.session_state.force_select_family_name
-        st.session_state.family_selector_edition = current_family_for_edit 
-    elif current_family_for_edit and current_family_for_edit in available_families:
-        pass 
-    elif available_families:
-        current_family_for_edit = available_families[0]
-        st.session_state.family_selector_edition = current_family_for_edit 
-    else:
-        current_family_for_edit = None
-        st.session_state.family_selector_edition = None 
-    
-    if current_family_for_edit and current_family_for_edit in available_families:
-        default_family_idx_edit = available_families.index(current_family_for_edit)
-    elif available_families: 
-        default_family_idx_edit = 0
-        current_family_for_edit = available_families[0]
-        st.session_state.family_selector_edition = current_family_for_edit
-    else: 
-        default_family_idx_edit = 0 
+    # Priorité 1: force_select_family_name (si défini et valide)
+    if st.session_state.get('force_select_family_name') and st.session_state.force_select_family_name in available_families:
+        family_to_select = st.session_state.force_select_family_name
+        st.session_state.family_selector_edition = family_to_select # Mettre à jour l'état de session immédiatement
+        # Si la famille est forcée, il est prudent de réinitialiser le cas d'usage
+        # sauf si un cas d'usage est aussi forcé (géré plus bas)
+        if not st.session_state.get('force_select_use_case_name'):
+             st.session_state.use_case_selector_edition = None
+
+
+    # Priorité 2: Vérifier si la sélection actuelle est toujours valide, sinon prendre la première famille
+    if not available_families:
+        family_to_select = None
+        st.session_state.family_selector_edition = None
+        st.session_state.use_case_selector_edition = None # Pas de famille, donc pas de cas d'usage
+    elif family_to_select not in available_families:
+        family_to_select = available_families[0] if available_families else None
+        st.session_state.family_selector_edition = family_to_select
+        st.session_state.use_case_selector_edition = None # La famille a changé, réinitialiser le cas d'usage
+
+    # Calcul de l'index pour le selectbox
+    family_idx = 0
+    if family_to_select and available_families: # S'assurer que available_families n'est pas vide
+        try:
+            family_idx = available_families.index(family_to_select)
+        except ValueError: # Au cas où family_to_select ne serait pas dans la liste (ne devrait pas arriver ici)
+            family_to_select = available_families[0] if available_families else None
+            st.session_state.family_selector_edition = family_to_select
+            st.session_state.use_case_selector_edition = None
+            family_idx = 0
+
 
     if not available_families:
         st.info("Aucune famille de cas d'usage. Créez-en une via les options ci-dessous.")
     else:
-        prev_family_selection_edit = st.session_state.get('family_selector_edition') 
-        selected_family_ui_edit = st.selectbox(
+        # Récupérer la valeur avant que le widget ne la modifie potentiellement
+        prev_family_selection_for_comparison = st.session_state.get('family_selector_edition')
+
+        selected_family_from_ui = st.selectbox(
             "Famille :",
             options=available_families,
-            index=default_family_idx_edit, 
-            key='family_selectbox_widget_edit',
+            index=family_idx, # Utiliser l'index calculé
+            key='family_selectbox_widget_edit_v2', # Changement de clé pour forcer la réinitialisation du widget si besoin
             help="Sélectionnez une famille pour voir ses cas d'usage."
         )
-        if st.session_state.family_selector_edition != selected_family_ui_edit :
-            st.session_state.family_selector_edition = selected_family_ui_edit
-        
-        if prev_family_selection_edit != selected_family_ui_edit:
-            st.session_state.use_case_selector_edition = None
-            st.session_state.force_select_use_case_name = None 
-            st.session_state.view_mode = "edit"
+
+        # Si l'utilisateur a changé la sélection dans le selectbox
+        if prev_family_selection_for_comparison != selected_family_from_ui:
+            st.session_state.family_selector_edition = selected_family_from_ui
+            st.session_state.use_case_selector_edition = None # Réinitialiser le cas d'usage
+            st.session_state.force_select_family_name = None  # Consommer le flag de force s'il a été appliqué par UI
+            st.session_state.force_select_use_case_name = None
+            st.session_state.view_mode = "edit" # Assurer le mode
+            # Réinitialiser les états spécifiques à l'édition d'un cas d'usage
             st.session_state.active_generated_prompt = ""
             st.session_state.variable_type_to_create = None 
-            st.session_state.editing_variable_info = None    
+            st.session_state.editing_variable_info = None  
             st.rerun()
+        # S'assurer que l'état de session est synchronisé avec ce qui est affiché (même si pas de changement utilisateur)
+        # Cela peut être utile si `force_select_family_name` a mis à jour `family_to_select`
+        elif st.session_state.family_selector_edition != selected_family_from_ui :
+             st.session_state.family_selector_edition = selected_family_from_ui
 
-    current_selected_family_for_edit_logic = st.session_state.get('family_selector_edition')
-    use_cases_in_current_family_edit_options = []
-    if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in st.session_state.editable_prompts:
-        use_cases_in_current_family_edit_options = list(st.session_state.editable_prompts[current_selected_family_for_edit_logic].keys())
 
-    if use_cases_in_current_family_edit_options:
-        default_uc_idx_edit = 0
-        current_uc_for_edit = st.session_state.get('use_case_selector_edition')
+    # --- Gestion de la Sélection de Cas d'Usage ---
+    current_selected_family = st.session_state.get('family_selector_edition')
+    use_cases_options = []
+    if current_selected_family and current_selected_family in st.session_state.editable_prompts:
+        use_cases_options = list(st.session_state.editable_prompts[current_selected_family].keys())
 
-        if st.session_state.force_select_use_case_name and st.session_state.force_select_use_case_name in use_cases_in_current_family_edit_options:
-            current_uc_for_edit = st.session_state.force_select_use_case_name
-        elif current_uc_for_edit and current_uc_for_edit in use_cases_in_current_family_edit_options:
-            pass 
-        else: 
-            current_uc_for_edit = use_cases_in_current_family_edit_options[0]
+    use_case_to_select = st.session_state.get('use_case_selector_edition')
+
+    # Priorité 1: force_select_use_case_name (si défini et valide DANS LA FAMILLE ACTUELLE)
+    if st.session_state.get('force_select_use_case_name') and \
+       st.session_state.force_select_use_case_name in use_cases_options:
+        use_case_to_select = st.session_state.force_select_use_case_name
+        st.session_state.use_case_selector_edition = use_case_to_select # Mettre à jour l'état de session
+
+    # Priorité 2: Vérifier si la sélection actuelle est toujours valide, sinon prendre le premier cas d'usage
+    if not use_cases_options:
+        use_case_to_select = None
+        st.session_state.use_case_selector_edition = None
+    elif use_case_to_select not in use_cases_options:
+        use_case_to_select = use_cases_options[0] if use_cases_options else None
+        st.session_state.use_case_selector_edition = use_case_to_select
+    
+    uc_idx = 0
+    if use_case_to_select and use_cases_options: # S'assurer que use_cases_options n'est pas vide
+        try:
+            uc_idx = use_cases_options.index(use_case_to_select)
+        except ValueError:
+            use_case_to_select = use_cases_options[0] if use_cases_options else None
+            st.session_state.use_case_selector_edition = use_case_to_select
+            uc_idx = 0
+
+
+    if use_cases_options:
+        prev_uc_selection_for_comparison = st.session_state.get('use_case_selector_edition')
         
-        st.session_state.use_case_selector_edition = current_uc_for_edit 
-
-        if current_uc_for_edit: 
-            default_uc_idx_edit = use_cases_in_current_family_edit_options.index(current_uc_for_edit)
-        
-        prev_uc_selection_edit = st.session_state.get('use_case_selector_edition') 
-        selected_use_case_ui_edit = st.radio(
+        selected_uc_from_ui = st.radio(
             "Cas d'usage :",
-            options=use_cases_in_current_family_edit_options,
-            index=default_uc_idx_edit,
-            key='use_case_radio_widget_edit',
+            options=use_cases_options,
+            index=uc_idx, # Utiliser l'index calculé
+            key='use_case_radio_widget_edit_v2', # Changement de clé
             help="Sélectionnez un cas d'usage pour générer un prompt ou le paramétrer."
         )
-        if st.session_state.use_case_selector_edition != selected_use_case_ui_edit:
-            st.session_state.use_case_selector_edition = selected_use_case_ui_edit
 
-        if prev_uc_selection_edit != selected_use_case_ui_edit:
+        if prev_uc_selection_for_comparison != selected_uc_from_ui:
+            st.session_state.use_case_selector_edition = selected_uc_from_ui
+            st.session_state.force_select_use_case_name = None # Consommer
             st.session_state.view_mode = "edit"
+            # Réinitialiser les états spécifiques
             st.session_state.active_generated_prompt = ""
             st.session_state.variable_type_to_create = None 
-            st.session_state.editing_variable_info = None    
+            st.session_state.editing_variable_info = None 
             st.rerun()
+        elif st.session_state.use_case_selector_edition != selected_uc_from_ui:
+             st.session_state.use_case_selector_edition = selected_uc_from_ui
 
-    elif current_selected_family_for_edit_logic: 
-        st.info(f"Aucun cas d'usage dans '{current_selected_family_for_edit_logic}'. Créez-en un.")
+    elif current_selected_family:
+        st.info(f"Aucun cas d'usage dans '{current_selected_family}'. Créez-en un.")
         st.session_state.use_case_selector_edition = None 
 
-    if st.session_state.force_select_family_name: st.session_state.force_select_family_name = None
-    if st.session_state.force_select_use_case_name: st.session_state.force_select_use_case_name = None
+    # Consommer les flags de force s'ils ont été utilisés ou si la sélection UI les a "confirmés"
+    if st.session_state.get('force_select_family_name'):
+        st.session_state.force_select_family_name = None
+    if st.session_state.get('force_select_use_case_name'):
+        st.session_state.force_select_use_case_name = None
+    
     st.markdown("---")
+    # ... la suite (Gérer les Familles, Créer un Cas d'Usage expanders) ...
 
     with st.expander("🗂️ Gérer les Familles", expanded=False):
         with st.form("new_family_form_sidebar", clear_on_submit=True):
@@ -1036,22 +1077,19 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
                 st.success("Prompt généré avec succès!")
                 st.balloons()
                 current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
-                current_prompt_config["updated_at"] = datetime.now().isoformat()
-                save_editable_prompts_to_gist()
-                # --- AJOUT POUR STABILISER LA SÉLECTION ---
-                # Réaffirmer la sélection actuelle pour le prochain rerun
-                # Cela aidera la sidebar à se réinitialiser correctement sur l'élément en cours d'édition.
-                current_fam_after_gen = st.session_state.get('family_selector_edition')
-                current_uc_after_gen = st.session_state.get('use_case_selector_edition')
+                    current_prompt_config["updated_at"] = datetime.now().isoformat()
+                    save_editable_prompts_to_gist()
 
-                if current_fam_after_gen and current_uc_after_gen and \
-                   current_fam_after_gen in st.session_state.editable_prompts and \
-                   current_uc_after_gen in st.session_state.editable_prompts.get(current_fam_after_gen, {}):
-                    # Si la famille et le cas d'usage sont toujours valides après la modif (ce qui devrait être le cas)
-                    # On force leur re-sélection pour stabiliser l'UI au prochain rerun.
-                    st.session_state.force_select_family_name = current_fam_after_gen
-                    st.session_state.force_select_use_case_name = current_uc_after_gen
-                # Pas de st.rerun() explicite ici, le submit du formulaire s'en charge.
+                    # MAINTENIR CET AJOUT pour forcer la sélection au prochain rerun
+                    current_fam_after_gen = st.session_state.get('family_selector_edition')
+                    current_uc_after_gen = st.session_state.get('use_case_selector_edition')
+
+                    if current_fam_after_gen and current_uc_after_gen and \
+                       current_fam_after_gen in st.session_state.editable_prompts and \
+                       current_uc_after_gen in st.session_state.editable_prompts.get(current_fam_after_gen, {}):
+                        st.session_state.force_select_family_name = current_fam_after_gen
+                        st.session_state.force_select_use_case_name = current_uc_after_gen
+                    # Le rerun implicite du formulaire se chargera du reste.
                         # --- FIN DE L'AJOUT ---
             except Exception as e: # pragma: no cover
                 st.error(f"Erreur lors de la génération du prompt: {e}")
