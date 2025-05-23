@@ -946,8 +946,10 @@ elif st.session_state.view_mode == "edit":
                                 if not is_editing_var: st.session_state.variable_type_to_create = None
                                 st.rerun()
                     cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}"
-                    if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."): st.session_state.variable_type_to_create = None; 
-                        if is_editing_var: st.session_state.editing_variable_info = None 
+                    if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."): 
+                        st.session_state.variable_type_to_create = None; 
+                        if is_editing_var: 
+                            st.session_state.editing_variable_info = None 
                         st.rerun()
             st.markdown("---"); action_cols = st.columns(2)
             with action_cols[0]:
