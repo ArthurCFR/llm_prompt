@@ -1078,6 +1078,22 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
                 current_prompt_config["updated_at"] = datetime.now().isoformat()
                 save_editable_prompts_to_gist()
 
+                # Forcer la resélection du cas d'usage actuel après le rerun du formulaire.
+                # final_selected_family_edition et final_selected_use_case_edition sont les
+                # famille/cas d'usage pour lesquels ce formulaire a été soumis.
+                if final_selected_family_edition and final_selected_use_case_edition and \
+                final_selected_family_edition in st.session_state.editable_prompts and \
+                final_selected_use_case_edition in st.session_state.editable_prompts.get(final_selected_family_edition, {}):
+                st.session_state.force_select_family_name = final_selected_family_edition
+                st.session_state.force_select_use_case_name = final_selected_use_case_edition
+                else:
+                # Cela ne devrait normalement pas se produire car le formulaire de génération
+                # ne s'affiche que pour un cas d'usage valide.
+                # Si cela arrive, on évite de forcer une sélection potentiellement invalide.
+                st.session_state.force_select_family_name = None
+                st.session_state.force_select_use_case_name = None
+                # st.warning("DEBUG: Impossible de forcer la sélection après génération.") # Pour débogage si besoin
+
                 # MAINTENIR CET AJOUT pour forcer la sélection au prochain rerun
                 current_fam_after_gen = st.session_state.get('family_selector_edition')
                 current_uc_after_gen = st.session_state.get('use_case_selector_edition')
@@ -1119,8 +1135,8 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
             save_editable_prompts_to_gist()
             st.success(f"'{deleted_uc_name_for_msg}' supprimé de '{deleted_uc_fam_for_msg}'.")
             st.session_state.confirming_delete_details = None
-            st.session_state.force_select_family_name = deleted_uc_fam_for_msg 
-            st.session_state.force_select_use_case_name = None 
+            st.session_state.force_select_family_name = deleted_uc_fam_for_msg # Correct
+            st.session_state.force_select_use_case_name = None # Correct
             if st.session_state.editing_variable_info and \
                st.session_state.editing_variable_info.get("family") == deleted_uc_fam_for_msg and \
                st.session_state.editing_variable_info.get("use_case") == deleted_uc_name_for_msg:
@@ -1131,7 +1147,9 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
             st.rerun()
         if c2_del_uc.button("Non, annuler", key=f"del_no_{details['family']}_{details['use_case']}"):
             st.session_state.confirming_delete_details = None
-            st.rerun() 
+            st.session_state.force_select_family_name = final_selected_family_edition # AJOUT pour maintenir la sélection si on annule
+            st.session_state.force_select_use_case_name = final_selected_use_case_edition # AJOUT
+            st.rerun()
         st.markdown("---") 
 
     should_expand_config = st.session_state.get('go_to_config_section', False)
@@ -1181,11 +1199,13 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
             st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
 
         save_template_button_key = f"save_template_button_{safe_family_key_part}_{safe_uc_key_part}"
-        if st.button("Sauvegarder Template", key=save_template_button_key): 
+        if st.button("Sauvegarder Template", key=save_template_button_key):
             current_prompt_config['template'] = new_tpl
             current_prompt_config["updated_at"] = datetime.now().isoformat()
             save_editable_prompts_to_gist()
             st.success("Template sauvegardé!")
+            st.session_state.force_select_family_name = final_selected_family_edition # AJOUT
+            st.session_state.force_select_use_case_name = final_selected_use_case_edition # AJOUT
             st.rerun()
 
         st.markdown("---")
@@ -1195,11 +1215,13 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
             "Tags (séparés par des virgules):", value=current_tags_str,
             key=f"tags_input_{final_selected_family_edition}_{final_selected_use_case_edition}" 
         )
-        if st.button("Sauvegarder Tags", key=f"save_tags_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"): 
+        if st.button("Sauvegarder Tags", key=f"save_tags_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"):
             current_prompt_config["tags"] = sorted(list(set(t.strip() for t in new_tags_str_input.split(',') if t.strip())))
             current_prompt_config["updated_at"] = datetime.now().isoformat()
             save_editable_prompts_to_gist()
             st.success("Tags sauvegardés!")
+            st.session_state.force_select_family_name = final_selected_family_edition # AJOUT
+            st.session_state.force_select_use_case_name = final_selected_use_case_edition # AJOUT
             st.rerun()
 
         st.markdown("---")
@@ -1431,17 +1453,21 @@ elif st.session_state.view_mode == "edit": # Ce 'elif' est au même niveau que '
                                 st.session_state.variable_type_to_create = None # Reset type for next creation
 
                         if can_proceed_with_save:
-                            current_prompt_config["variables"] = target_vars_list 
+                            current_prompt_config["variables"] = target_vars_list
                             current_prompt_config["updated_at"] = datetime.now().isoformat()
                             save_editable_prompts_to_gist()
+                            st.session_state.force_select_family_name = final_selected_family_edition # AJOUT
+                            st.session_state.force_select_use_case_name = final_selected_use_case_edition # AJOUT
                             st.rerun()
             
             cancel_button_label_form = "Annuler Modification" if is_editing_var else "Changer de Type / Annuler Création"
             cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}"
             if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."):
-                st.session_state.variable_type_to_create = None 
+                st.session_state.variable_type_to_create = None
                 if is_editing_var:
-                    st.session_state.editing_variable_info = None 
+                    st.session_state.editing_variable_info = None
+                st.session_state.force_select_family_name = final_selected_family_edition # AJOUT
+                st.session_state.force_select_use_case_name = final_selected_use_case_edition # AJOUT
                 st.rerun()
 
         st.markdown("---")
