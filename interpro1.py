@@ -663,7 +663,7 @@ with tab_bibliotheque:
 # --- Tab: Injection (Sidebar content) ---
 with tab_injection:
     st.subheader("Injection & Assistant")
-    st.markdown("Injectez des cas d'usage en format JSON ou utilisez l'assistant pour préparer un Méta Prompt.")
+    st.markdown("Utilisez l'assistant pour préparer un Méta Prompt ou injectez des cas d'usage en format JSON.")
     if st.button("✨ Créer un Méta Prompt (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
         st.session_state.view_mode = "assistant_creation" 
         st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
