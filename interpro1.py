@@ -387,11 +387,11 @@ st.title(f"🛠️ L'atelier des prompts IA")
 st.sidebar.header("Menu Principal")
 tab_bibliotheque, tab_edition_generation, tab_injection = st.sidebar.tabs([
     "📚 Bibliothèque",
-    "✍️ Génération & Édition",
-    "💉 Injection" 
+    "✍️ Édition",
+    "💡 Assistant" 
 ])
 
-# --- Tab: Génération & Édition (Sidebar content) ---
+# --- Tab: Édition (Sidebar content) ---
 with tab_edition_generation:
     st.subheader("Explorateur de Prompts")
     available_families = list(st.session_state.editable_prompts.keys())
@@ -636,7 +636,7 @@ with tab_bibliotheque:
     st.markdown("---")
 
     if not st.session_state.editable_prompts or not any(st.session_state.editable_prompts.values()):
-        st.info("La bibliothèque est vide. Ajoutez des prompts via l'onglet 'Génération & Édition'.")
+        st.info("La bibliothèque est vide. Ajoutez des prompts via l'onglet 'Édition'.")
     else:
         sorted_families_bib = sorted(list(st.session_state.editable_prompts.keys()))
 
@@ -693,7 +693,7 @@ if st.session_state.view_mode == "library":
             st.session_state.library_selected_family_for_display = available_families_main_display[0]
             st.rerun()
         elif not any(st.session_state.editable_prompts.values()): 
-             st.warning("Aucune famille de cas d'usage n'est configurée. Créez-en via l'onglet 'Génération & Édition'.")
+             st.warning("Aucune famille de cas d'usage n'est configurée. Créez-en via l'onglet 'Édition'.")
     elif library_family_to_display in st.session_state.editable_prompts:
         st.header(f"Bibliothèque - Famille : {library_family_to_display}")
         use_cases_in_family_display = st.session_state.editable_prompts[library_family_to_display]
@@ -750,7 +750,7 @@ if st.session_state.view_mode == "library":
         if not available_families_check : st.warning("La bibliothèque est entièrement vide. Veuillez créer des familles et des prompts.")
 
 elif st.session_state.view_mode == "edit":
-    if not final_selected_family_edition : st.info("Sélectionnez une famille dans la barre latérale (onglet Génération & Édition) ou créez-en une pour commencer.")
+    if not final_selected_family_edition : st.info("Sélectionnez une famille dans la barre latérale (onglet Édition) ou créez-en une pour commencer.")
     elif not final_selected_use_case_edition: st.info(f"Sélectionnez un cas d'usage dans la famille '{final_selected_family_edition}' ou créez-en un nouveau pour commencer.")
     elif final_selected_family_edition in st.session_state.editable_prompts and final_selected_use_case_edition in st.session_state.editable_prompts[final_selected_family_edition]:
         current_prompt_config = st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]
@@ -948,7 +948,7 @@ elif st.session_state.view_mode == "edit":
                 if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete): st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}; st.rerun() 
         if st.session_state.get('go_to_config_section'): st.session_state.go_to_config_section = False 
     else: 
-        if not final_selected_family_edition: st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Génération & Édition) pour commencer.")
+        if not final_selected_family_edition: st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Édition) pour commencer.")
         elif not final_selected_use_case_edition: st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
         else: st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections."); st.session_state.use_case_selector_edition = None # pragma: no cover
 
@@ -972,7 +972,7 @@ elif st.session_state.view_mode == "inject_manual":
 }"""
     st.code(json_example_string, language="json")
     available_families_for_injection = list(st.session_state.editable_prompts.keys())
-    if not available_families_for_injection: st.warning("Aucune famille n'existe. Veuillez d'abord créer une famille via l'onglet 'Génération & Édition'.")
+    if not available_families_for_injection: st.warning("Aucune famille n'existe. Veuillez d'abord créer une famille via l'onglet 'Édition'.")
     else:
         selected_family_for_injection = st.selectbox("Choisissez la famille de destination pour l'injection :", options=[""] + available_families_for_injection, index=0, key="injection_family_selector")
         st.session_state.injection_selected_family = selected_family_for_injection if selected_family_for_injection else None
@@ -1057,7 +1057,7 @@ elif st.session_state.view_mode == "assistant_creation":
 
 else: 
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Génération & Édition' ou vérifier votre Gist.")
+        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
     elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
         st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
         st.rerun()
