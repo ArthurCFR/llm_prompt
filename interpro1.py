@@ -1,21 +1,17 @@
 import streamlit as st
-import requests
 from datetime import datetime, date
 import copy
 import json
-# import requests # Mis en commentaire car non utilisable directement dans cet environnement de démo.
-                 # Pour une exécution locale avec sauvegarde Gist, décommentez et installez la librairie.
+import requests # Assurez-vous que cette librairie est installée si vous utilisez la fonctionnalité Gist réelle
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA")
 
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = datetime.now().year
-GIST_DATA_FILENAME = "prompt_templates_data_v3.json" # Nom du fichier dans le Gist
+GIST_DATA_FILENAME = "prompt_templates_data_v3.json"
 
 # --- META PROMPT TEMPLATE for the Assistant (Backend) ---
-# This is the template that will be filled by the user's answers
-# and then given to the user to run in an external LLM.
 META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE = """# MISSION
 Tu es un expert en conception de prompts (Prompt Engineer) spécialisé dans la création de prompts systèmes pour des modèles de langage avancés. Ta mission est de générer un "Prompt Cible" hautement efficace, structuré et réutilisable, ainsi que sa configuration JSON pour une application de gestion de prompts. Ce "Prompt Cible" sera ensuite utilisé par un utilisateur final pour réaliser une tâche spécifique.
 
@@ -43,10 +39,10 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
     * `"name"`: (string) Le nom technique de la variable (ex: `nom_client`), sans espaces ni caractères spéciaux autres que underscore, correspondant exactement à la variable dans le template.
     * `"label"`: (string) Le label descriptif pour l'utilisateur (ex: "Nom du client").
     * `"type"`: (string) Choisis parmi : `"text_input"`, `"selectbox"`, `"date_input"`, `"number_input"`, `"text_area"`.
-    * `"default"`: (string, number, ou boolean) La valeur par défaut. Pour les dates, utilise le format "AAAA-MM-JJ". Si le type est number, la valeur par défaut doit être un nombre.
+    * `"default"`: (string, number, or boolean) La valeur par défaut. Pour les dates, utilise le format "AAAA-MM-JJ". Si le type est number, la valeur par défaut doit être un nombre.
     * `"options"`: (array of strings, optionnel) Uniquement si `type` est `"selectbox"`. Liste des options.
     * `"min_value"`, `"max_value"`, `"step"`: (number, optionnel) Uniquement si `type` est `"number_input"`. `step` doit être positif.
-    * `"height"`: (number, optionnel) Uniquement si `type` est `"text_area"`.
+    * `"height"`: (number, optionnel) Uniquement si `type` est `"text_area"`. Assure-toi que c'est un entier.
 4.  **Proposer une liste de 3 à 5 mots-clés pertinents** (`"tags"`) pour le "Prompt Cible".
 
 # FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT)
@@ -72,7 +68,6 @@ Tu dois fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON
 Assure-toi que le JSON que tu génères est valide. Les variables dans le template doivent correspondre exactement aux noms définis dans la section "variables". Le nom du cas d'usage (la clé principale du JSON) doit être le même que celui que tu as mis dans `suggested_use_case_name` à l'étape précédente (mais ici c'est la clé de l'objet).
 """
 
-# --- Variables for the Meta Prompt Assistant Form ---
 ASSISTANT_FORM_VARIABLES = [
     {"name": "problematique", "label": "Décrivez la problématique ou la tâche que le prompt cible doit résoudre :", "type": "text_area", "default": "Ex: Résumer un texte de loi et lister les contraintes financières attenantes.", "height": 100},
     {"name": "doc_source", "label": "Type de document source (ex: PDF, e-mail, texte brut) si applicable (laisser vide si non pertinent) :", "type": "text_input", "default": ""},
@@ -90,21 +85,28 @@ def get_default_dates():
 INITIAL_PROMPT_TEMPLATES = {
     "Achat": {}, "RH": {}, "Finance": {}, "Comptabilité": {}
 }
+# Initial cleanup of is_favorite (should ideally not be needed if data is clean)
+for family, use_cases in INITIAL_PROMPT_TEMPLATES.items():
+    if isinstance(use_cases, dict):
+        for uc_name, uc_config in use_cases.items():
+            if "is_favorite" in uc_config: # pragma: no cover
+                del uc_config["is_favorite"]
 
-# --- Utility Functions ---
+
+# --- Utility Functions (as provided by user, known to work for them) ---
 def parse_default_value(value_str, var_type):
-    if not value_str: # Handle empty string input
+    if not value_str:
         if var_type == "number_input": return 0.0
         if var_type == "date_input": return datetime.now().date()
-        return "" # Default for text_input, text_area, selectbox if empty
+        return ""
     if var_type == "number_input":
         try: return float(value_str)
-        except ValueError: return 0.0 # Fallback for invalid number string
+        except ValueError: return 0.0
     elif var_type == "date_input":
         try: return datetime.strptime(value_str, "%Y-%m-%d").date()
-        except (ValueError, TypeError): # Handle parsing errors or if already a date object
+        except (ValueError, TypeError):
             return value_str if isinstance(value_str, date) else datetime.now().date()
-    return value_str # For text_input, selectbox (already string), text_area
+    return value_str
 
 def _preprocess_for_saving(data_to_save):
     processed_data = copy.deepcopy(data_to_save)
@@ -120,35 +122,26 @@ def _preprocess_for_saving(data_to_save):
                 st.error(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Suppression.") # pragma: no cover
                 del processed_data[family_name][use_case_name] # pragma: no cover
                 continue # pragma: no cover
-            
-            # Ensure 'variables' is a list
             if not isinstance(config.get("variables"), list):
-                config["variables"] = [] # Initialize if missing or wrong type
-            
+                config["variables"] = []
             for var_info in config.get("variables", []):
                 if isinstance(var_info, dict):
-                    # Convert date objects to string for JSON serialization
                     if var_info.get("type") == "date_input" and isinstance(var_info.get("default"), date):
                         var_info["default"] = var_info["default"].strftime("%Y-%m-%d")
-                    
-                    # Ensure number_input fields are floats
                     if var_info.get("type") == "number_input":
-                        for field in ["default", "min_value", "max_value", "step"]:
-                            if field in var_info and var_info[field] is not None:
-                                try:
-                                    var_info[field] = float(var_info[field])
-                                except (ValueError, TypeError): # pragma: no cover
-                                    # Handle cases where conversion might fail, set a sensible default
-                                    if field == "default": var_info[field] = 0.0
-                                    elif field == "step": var_info[field] = 1.0
-                                    else: var_info[field] = None # min_value, max_value can be None
-                        if "step" not in var_info or var_info.get("step") is None: # Ensure step has a value
-                             var_info["step"] = 1.0
-
-
+                        if "default" in var_info and var_info["default"] is not None:
+                            var_info["default"] = float(var_info["default"])
+                        if "min_value" in var_info and var_info["min_value"] is not None:
+                            var_info["min_value"] = float(var_info["min_value"])
+                        if "max_value" in var_info and var_info["max_value"] is not None:
+                            var_info["max_value"] = float(var_info["max_value"])
+                        if "step" in var_info and var_info["step"] is not None:
+                            var_info["step"] = float(var_info["step"])
+                        else: 
+                            var_info["step"] = 1.0
             config.setdefault("tags", [])
             if "is_favorite" in config: # pragma: no cover
-                del config["is_favorite"] # Old field, remove if present
+                del config["is_favorite"]
             config.setdefault("usage_count", 0)
             config.setdefault("created_at", datetime.now().isoformat())
             config.setdefault("updated_at", datetime.now().isoformat())
@@ -156,187 +149,127 @@ def _preprocess_for_saving(data_to_save):
 
 def _postprocess_after_loading(loaded_data):
     processed_data = copy.deepcopy(loaded_data)
-    now_iso = datetime.now().isoformat() # For new/missing timestamps
+    now_iso = datetime.now().isoformat()
     for family_name in list(processed_data.keys()):
         use_cases_in_family = processed_data[family_name]
-        if not isinstance(use_cases_in_family, dict): # pragma: no cover
-            st.warning(f"Données corrompues (famille non-dict): '{family_name}'. Ignorée.")
-            del processed_data[family_name]
-            continue
+        if not isinstance(use_cases_in_family, dict):
+            st.warning(f"Données corrompues (famille non-dict): '{family_name}'. Ignorée.") # pragma: no cover
+            del processed_data[family_name] # pragma: no cover
+            continue # pragma: no cover
         for use_case_name in list(use_cases_in_family.keys()):
             config = use_cases_in_family[use_case_name]
-            if not isinstance(config, dict): # pragma: no cover
-                st.warning(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Ignoré.")
-                del processed_data[family_name][use_case_name]
-                continue
-
+            if not isinstance(config, dict):
+                st.warning(f"Données corrompues (cas d'usage non-dict): '{use_case_name}' dans '{family_name}'. Ignoré.") # pragma: no cover
+                del processed_data[family_name][use_case_name] # pragma: no cover
+                continue # pragma: no cover
             if not isinstance(config.get("variables"), list):
                 config["variables"] = []
-
             for var_info in config.get("variables", []):
                 if isinstance(var_info, dict):
-                    # Convert date strings back to date objects
                     if var_info.get("type") == "date_input" and isinstance(var_info.get("default"), str):
                         try:
                             var_info["default"] = datetime.strptime(var_info["default"], "%Y-%m-%d").date()
-                        except ValueError: # If parsing fails, default to today
+                        except ValueError:
                             var_info["default"] = datetime.now().date()
-                    
-                    # Ensure number_input fields are floats
                     if var_info.get("type") == "number_input":
-                        for field in ["default", "min_value", "max_value", "step"]:
-                            if field in var_info and var_info[field] is not None:
-                                try:
-                                    var_info[field] = float(var_info[field])
-                                except (ValueError, TypeError): # pragma: no cover
-                                    if field == "default": var_info[field] = 0.0
-                                    elif field == "step": var_info[field] = 1.0
-                                    else: var_info[field] = None
-                            elif field == "default" and (field not in var_info or var_info[field] is None):
-                                var_info[field] = 0.0 # Default to 0.0 if not present
-                            elif field == "step" and (field not in var_info or var_info[field] is None):
-                                var_info[field] = 1.0 # Default step to 1.0
-
+                        if "default" in var_info and var_info["default"] is not None:
+                            var_info["default"] = float(var_info["default"])
+                        else: 
+                            var_info["default"] = 0.0
+                        if "min_value" in var_info and var_info["min_value"] is not None:
+                            var_info["min_value"] = float(var_info["min_value"])
+                        if "max_value" in var_info and var_info["max_value"] is not None:
+                            var_info["max_value"] = float(var_info["max_value"])
+                        if "step" in var_info and var_info["step"] is not None:
+                            var_info["step"] = float(var_info["step"])
+                        else: 
+                            var_info["step"] = 1.0
+                    # Ensure 'height' for text_area is an int if it exists
                     if var_info.get("type") == "text_area":
                         if "height" in var_info and var_info["height"] is not None:
                             try:
                                 var_info["height"] = int(var_info["height"])
-                                if var_info["height"] < 10: # S'assurer d'une hauteur minimale raisonnable
-                                    var_info["height"] = 100
+                                if var_info["height"] < 10: var_info["height"] = 100 # Sensible minimum
                             except (ValueError, TypeError):
-                                var_info["height"] = 100 # Hauteur par défaut si invalide
-                        else: # Si height est None ou non présent
-                            var_info["height"] = 100 # Assurer une valeur entière par défaut
-                   
+                                var_info["height"] = 100 # Default if invalid
+                        # No else needed, if not present, widget will use its own default
+
             config.setdefault("tags", [])
-            if not isinstance(config.get("tags"), list): # Ensure tags is always a list
-                config["tags"] = []
             if "is_favorite" in config: # pragma: no cover
                 del config["is_favorite"]
             config.setdefault("usage_count", 0)
             config.setdefault("created_at", now_iso)
             config.setdefault("updated_at", now_iso)
+            if not isinstance(config.get("tags"), list): config["tags"] = []
     return processed_data
 
-def _preprocess_injected_use_case_data(injected_config):
-    processed_config = copy.deepcopy(injected_config)
+# --- Function to specifically prepare newly injected use case data ---
+def _prepare_newly_injected_use_case(uc_config_from_json):
+    """
+    Takes a use case configuration (dict) as read from user's JSON input.
+    Initializes created_at, updated_at, usage_count.
+    Ensures 'variables' and 'tags' are lists if missing.
+    Does NOT deeply validate variable types or defaults, trusts user input for injection.
+    """
+    prepared_config = copy.deepcopy(uc_config_from_json)
     now_iso_created, now_iso_updated = get_default_dates()
 
-    # Initialize/Overwrite specific fields for new injection
-    processed_config["created_at"] = now_iso_created
-    processed_config["updated_at"] = now_iso_updated
-    processed_config["usage_count"] = 0 # New prompts start with 0 usage
+    prepared_config["created_at"] = now_iso_created
+    prepared_config["updated_at"] = now_iso_updated
+    prepared_config["usage_count"] = 0 
 
-    if "template" not in processed_config or not isinstance(processed_config["template"], str):
-        processed_config["template"] = "" 
-        st.warning("Cas d'usage injecté sans template valide. Template initialisé à vide.")
-
-    if not isinstance(processed_config.get("variables"), list):
-        processed_config["variables"] = []
+    # Ensure basic structure for variables and tags
+    if not isinstance(prepared_config.get("variables"), list):
+        prepared_config["variables"] = []
+    if not isinstance(prepared_config.get("tags"), list):
+        prepared_config["tags"] = []
+    else: # Clean up tags: ensure strings, strip whitespace, remove duplicates, sort
+        prepared_config["tags"] = sorted(list(set(str(tag).strip() for tag in prepared_config["tags"] if str(tag).strip())))
     
-    temp_variables = []
-    for var_info in processed_config.get("variables", []):
-        if isinstance(var_info, dict):
-            if not all(k in var_info for k in ("name", "label", "type")): # Basic validation
-                st.warning(f"Variable injectée malformée ignorée : {var_info.get('name', 'NOM_MANQUANT')}")
-                continue
+    # Validate 'height' for text_area variables specifically for injection
+    for var_info in prepared_config.get("variables", []):
+        if isinstance(var_info, dict) and var_info.get("type") == "text_area":
+            if "height" in var_info and var_info["height"] is not None:
+                try:
+                    var_info["height"] = int(var_info["height"])
+                    if var_info["height"] < 10: var_info["height"] = 100
+                except (ValueError, TypeError):
+                    var_info["height"] = 100 # Default if invalid
+            # If 'height' is not present, the widget's default will apply.
+            # We don't add it if missing, to keep injected data clean.
 
-            if var_info.get("type") == "date_input":
-                if "default" in var_info and isinstance(var_info["default"], str):
-                    try: datetime.strptime(var_info["default"], "%Y-%m-%d") # Validate format
-                    except ValueError:
-                        st.warning(f"Format de date par défaut invalide pour la variable '{var_info['name']}'. Utilisation de la date actuelle.")
-                        var_info["default"] = datetime.now().date().strftime("%Y-%m-%d")
-                elif "default" in var_info and isinstance(var_info["default"], date): # Should not happen if JSON is pure
-                     var_info["default"] = var_info["default"].strftime("%Y-%m-%d")
-                else: 
-                    var_info["default"] = datetime.now().date().strftime("%Y-%m-%d")
-
-            if var_info.get("type") == "number_input":
-                for num_field in ["default", "min_value", "max_value", "step"]:
-                    if num_field in var_info and var_info[num_field] is not None:
-                        try: var_info[num_field] = float(var_info[num_field])
-                        except (ValueError, TypeError): # pragma: no cover
-                            st.warning(f"Valeur invalide pour '{num_field}' dans la variable '{var_info['name']}'. Mise à défaut.")
-                            if num_field == "default": var_info[num_field] = 0.0
-                            elif num_field == "step": var_info[num_field] = 1.0
-                            else: var_info[num_field] = None 
-                    elif num_field == "default" and (num_field not in var_info or var_info[num_field] is None):
-                        var_info[num_field] = 0.0 
-                    elif num_field == "step" and (num_field not in var_info or var_info[num_field] is None):
-                         var_info[num_field] = 1.0 
-            
-            if var_info.get("type") == "selectbox":
-                if "options" not in var_info or not isinstance(var_info["options"], list):
-                    var_info["options"] = []
-                    st.warning(f"Options manquantes ou malformées pour la variable selectbox '{var_info['name']}'. Initialisées à vide.")
-                else:
-                    var_info["options"] = [str(opt) for opt in var_info["options"]] # Ensure strings
-                
-                # Ensure default is one of the options
-                if "default" not in var_info or var_info["default"] not in var_info["options"]:
-                    if var_info["options"]:
-                        var_info["default"] = var_info["options"][0] # Default to first option
-                        st.warning(f"Défaut de la variable selectbox '{var_info['name']}' non valide ou manquant. Premier option utilisée.")
-                    else:
-                         var_info["default"] = "" # No options, no valid default
-                      
-                if var_info.get("type") == "text_area":
-                  if "height" in var_info and var_info["height"] is not None:
-                      try:
-                          var_info["height"] = int(var_info["height"])
-                          if var_info["height"] < 10: # S'assurer d'une hauteur minimale raisonnable
-                               var_info["height"] = 100 
-                      except (ValueError, TypeError):
-                          st.warning(f"Hauteur invalide pour la variable text_area '{var_info['name']}'. Utilisation de la hauteur par défaut (100px).")
-                          var_info["height"] = 100
-                  else:
-                      var_info.setdefault("height", 100) # Hauteur par défaut si non spécifiée
-                      
-            temp_variables.append(var_info)
-    processed_config["variables"] = temp_variables
-
-    if not isinstance(processed_config.get("tags"), list):
-        processed_config["tags"] = []
-    else:
-        processed_config["tags"] = sorted(list(set(str(tag).strip() for tag in processed_config["tags"] if str(tag).strip())))
-    
-    if "is_favorite" in processed_config: # pragma: no cover
-        del processed_config["is_favorite"]
+    # Remove 'is_favorite' if accidentally present in injected JSON
+    if "is_favorite" in prepared_config: # pragma: no cover
+        del prepared_config["is_favorite"]
         
-    return processed_config
+    return prepared_config
 
 # --- Gist Interaction Functions ---
 def get_gist_content(gist_id, github_pat):
     headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
     try:
         response = requests.get(f"https://api.github.com/gists/{gist_id}", headers=headers)
-        response.raise_for_status() # Lève une exception pour les codes d'erreur HTTP 4xx/5xx
+        response.raise_for_status() 
         gist_data = response.json()
         if GIST_DATA_FILENAME in gist_data["files"]:
             return gist_data["files"][GIST_DATA_FILENAME]["content"]
         else:
-            # Si le fichier n'existe pas dans un Gist par ailleurs valide, c'est comme un Gist vide pour ce fichier
             st.info(f"Fichier '{GIST_DATA_FILENAME}' non trouvé dans le Gist. Initialisation avec contenu vide.")
-            return "{}" # Retourne une chaîne JSON pour un objet vide
-    except requests.exceptions.HTTPError as http_err:
-        if response.status_code == 404:
-            st.error(f"Erreur Gist (get): Gist avec ID '{gist_id}' non trouvé (404). Vérifiez l'ID.")
-        elif response.status_code == 401 or response.status_code == 403:
-            st.error(f"Erreur Gist (get): Problème d'authentification (PAT GitHub invalide ou permissions insuffisantes).")
-        else:
-            st.error(f"Erreur HTTP Gist (get): {http_err}")
-        return None # Indique une erreur de chargement
-    except requests.exceptions.RequestException as e:
-        # Pour d'autres erreurs réseau (timeout, DNS, etc.)
+            return "{}" 
+    except requests.exceptions.HTTPError as http_err: # pragma: no cover
+        if response.status_code == 404: st.error(f"Erreur Gist (get): Gist avec ID '{gist_id}' non trouvé (404). Vérifiez l'ID.")
+        elif response.status_code in [401, 403]: st.error(f"Erreur Gist (get): Problème d'authentification (PAT GitHub invalide ou permissions insuffisantes).")
+        else: st.error(f"Erreur HTTP Gist (get): {http_err}")
+        return None 
+    except requests.exceptions.RequestException as e: # pragma: no cover
         st.error(f"Erreur de connexion Gist (get): {e}")
         return None
-    except KeyError: # Si la structure du JSON du Gist est inattendue
-        st.error(f"Erreur Gist (get): Fichier '{GIST_DATA_FILENAME}' non trouvé dans la réponse ou structure Gist inattendue.")
+    except KeyError: # pragma: no cover
+        st.error(f"Erreur Gist (get): Fichier '{GIST_DATA_FILENAME}' non trouvé ou structure Gist inattendue.")
         return None
-    except json.JSONDecodeError: # Si la réponse n'est pas un JSON valide (peu probable pour l'API GitHub)
-         st.error(f"Erreur Gist (get): Réponse de l'API Gist n'est pas un JSON valide.") # pragma: no cover
-         return None # pragma: no cover
+    except json.JSONDecodeError: # pragma: no cover
+         st.error(f"Erreur Gist (get): Réponse de l'API Gist n'est pas un JSON valide.") 
+         return None 
 
 def update_gist_content(gist_id, github_pat, new_content_json_string):
     headers = {"Authorization": f"token {github_pat}", "Accept": "application/vnd.github.v3+json"}
@@ -344,64 +277,71 @@ def update_gist_content(gist_id, github_pat, new_content_json_string):
     try:
         response = requests.patch(f"https://api.github.com/gists/{gist_id}", headers=headers, json=data)
         response.raise_for_status()
+        # st.success("Données sauvegardées sur Gist avec succès !") # Message peut être géré par la fonction appelante
         return True
-    except requests.exceptions.HTTPError as http_err:
-        if response.status_code == 404:
-            st.error(f"Erreur Gist (update): Gist avec ID '{gist_id}' non trouvé (404). Impossible de sauvegarder.")
-        elif response.status_code == 401 or response.status_code == 403:
-            st.error(f"Erreur Gist (update): Problème d'authentification (PAT GitHub invalide ou permissions insuffisantes pour écrire).")
-        elif response.status_code == 422: # Unprocessable Entity - souvent lié à un contenu malformé ou trop grand
-            st.error(f"Erreur Gist (update): Les données n'ont pas pu être traitées par GitHub (422). Vérifiez le format du JSON. Détails: {response.text}")
-        else:
-            st.error(f"Erreur HTTP Gist (update): {http_err}")
+    except requests.exceptions.HTTPError as http_err: # pragma: no cover
+        if response.status_code == 404: st.error(f"Erreur Gist (update): Gist avec ID '{gist_id}' non trouvé (404). Impossible de sauvegarder.")
+        elif response.status_code in [401, 403]: st.error(f"Erreur Gist (update): Problème d'authentification (PAT GitHub invalide ou permissions insuffisantes pour écrire).")
+        elif response.status_code == 422: st.error(f"Erreur Gist (update): Les données n'ont pas pu être traitées par GitHub (422). Vérifiez le format du JSON. Détails: {response.text}")
+        else: st.error(f"Erreur HTTP Gist (update): {http_err}")
         return False
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException as e: # pragma: no cover
         st.error(f"Erreur de connexion Gist (update): {e}")
         return False
 
 def save_editable_prompts_to_gist():
-    GIST_ID = st.secrets.get("GIST_ID", "YOUR_GIST_ID_HERE") 
-    GITHUB_PAT = st.secrets.get("GITHUB_PAT", "YOUR_GITHUB_PAT_HERE") 
+    GIST_ID = st.secrets.get("GIST_ID") 
+    GITHUB_PAT = st.secrets.get("GITHUB_PAT") 
     
-    if GIST_ID == "YOUR_GIST_ID_HERE" or GITHUB_PAT == "YOUR_GITHUB_PAT_HERE": # pragma: no cover
-        st.sidebar.warning("Secrets Gist non configurés. La sauvegarde sur GitHub est désactivée.")
+    if not GIST_ID or not GITHUB_PAT: # pragma: no cover
+        st.sidebar.warning("Secrets Gist (GIST_ID/GITHUB_PAT) non configurés. Sauvegarde sur GitHub désactivée.")
         return
 
     if 'editable_prompts' in st.session_state:
         data_to_save = _preprocess_for_saving(st.session_state.editable_prompts)
         try:
             json_string = json.dumps(data_to_save, indent=4, ensure_ascii=False)
-            if not update_gist_content(GIST_ID, GITHUB_PAT, json_string): # pragma: no cover
-                st.warning("Sauvegarde Gist échouée.") 
+            if update_gist_content(GIST_ID, GITHUB_PAT, json_string): 
+                pass # Success message can be handled by caller or removed if too verbose
+            else: 
+                st.warning("Sauvegarde Gist échouée.") # pragma: no cover
         except Exception as e: # pragma: no cover
             st.error(f"Erreur préparation données pour Gist: {e}")
 
 def load_editable_prompts_from_gist():
-    GIST_ID = st.secrets.get("GIST_ID", "YOUR_GIST_ID_HERE")
-    GITHUB_PAT = st.secrets.get("GITHUB_PAT", "YOUR_GITHUB_PAT_HERE")
+    GIST_ID = st.secrets.get("GIST_ID")
+    GITHUB_PAT = st.secrets.get("GITHUB_PAT")
 
-    if GIST_ID == "YOUR_GIST_ID_HERE" or GITHUB_PAT == "YOUR_GITHUB_PAT_HERE": # pragma: no cover
-        st.sidebar.warning("Secrets Gist non configurés. Utilisation des modèles par défaut locaux.")
+    if not GIST_ID or not GITHUB_PAT: # pragma: no cover
+        st.sidebar.warning("Secrets Gist (GIST_ID/GITHUB_PAT) non configurés. Utilisation des modèles par défaut locaux.")
         return copy.deepcopy(INITIAL_PROMPT_TEMPLATES)
 
-    raw_content = get_gist_content(GIST_ID, GITHUB_PAT) # Will use simulated version if requests not available
+    raw_content = get_gist_content(GIST_ID, GITHUB_PAT) 
     
-    if raw_content and raw_content != "{}": # Avoid parsing empty string from simulation
+    if raw_content: 
         try:
             loaded_data = json.loads(raw_content)
             if not loaded_data or not isinstance(loaded_data, dict): 
                 raise ValueError("Contenu Gist vide ou mal structuré.")
             return _postprocess_after_loading(loaded_data)
         except (json.JSONDecodeError, TypeError, ValueError) as e: 
-            st.info(f"Erreur chargement Gist ({e}). Initialisation avec modèles par défaut.")
+            st.info(f"Erreur chargement Gist ('{str(e)[:50]}...'). Initialisation avec modèles par défaut.")
     else: 
-        st.info("Gist vide ou inaccessible (ou simulation). Initialisation avec modèles par défaut.")
+        st.info("Gist vide ou inaccessible. Initialisation avec modèles par défaut.")
     
-    # If loading failed or Gist was empty, initialize and try to save default if Gist seems configured.
     initial_data = copy.deepcopy(INITIAL_PROMPT_TEMPLATES)
-    # No attempt to save initial data if Gist is effectively mocked/unavailable
-    # This part was causing issues in mocked environments, so it's safer to just return initial_data.
+    # Only attempt to save to Gist if secrets are present AND it was the first load (Gist was empty/inaccessible)
+    # This prevents re-saving defaults if Gist loading just failed for a temporary reason but Gist has data
+    if GIST_ID and GITHUB_PAT and (raw_content is None or raw_content == "{}"):
+        data_to_save_init = _preprocess_for_saving(initial_data) 
+        try:
+            json_string_init = json.dumps(data_to_save_init, indent=4, ensure_ascii=False)
+            if update_gist_content(GIST_ID, GITHUB_PAT, json_string_init):
+                st.info("Modèles par défaut sauvegardés sur Gist pour initialisation.")
+        except Exception as e: # pragma: no cover
+            st.error(f"Erreur sauvegarde initiale sur Gist: {e}")
     return initial_data
+
 
 # --- Session State Initialization ---
 if 'editable_prompts' not in st.session_state:
@@ -434,7 +374,6 @@ if 'injection_json_text' not in st.session_state:
     st.session_state.injection_json_text = ""
 
 if 'assistant_form_values' not in st.session_state:
-    # Initialize with defaults from ASSISTANT_FORM_VARIABLES
     st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES}
 if 'generated_meta_prompt_for_llm' not in st.session_state: 
     st.session_state.generated_meta_prompt_for_llm = ""
@@ -721,23 +660,25 @@ with tab_bibliotheque:
 
 # --- Tab: Injection (Sidebar content) ---
 with tab_injection:
-    st.subheader("Injection de Cas d'Usage")
-    st.markdown("Injectez des cas d'usage en format JSON ou utilisez l'assistant.")
+    st.subheader("Injection & Assistant") # Titre de l'onglet légèrement modifié
+    st.markdown("Injectez des cas d'usage en format JSON ou utilisez l'assistant pour préparer un Méta Prompt.")
     
     if st.button("💉 Injecter JSON Manuellement", key="start_manual_injection_btn", use_container_width=True):
         st.session_state.view_mode = "inject_manual" 
         st.session_state.injection_selected_family = None 
         st.session_state.injection_json_text = "" 
-        st.session_state.generated_meta_prompt_for_llm = "" 
+        st.session_state.generated_meta_prompt_for_llm = "" # Clear assistant's output if switching
         st.rerun()
 
     st.markdown("---") 
 
-    if st.button("✨ Créer un usage avec l'assistant", key="start_assistant_creation_btn", use_container_width=True):
+    if st.button("✨ Créer un Méta Prompt (Assistant)", key="start_assistant_creation_btn", use_container_width=True): # Titre bouton modifié
         st.session_state.view_mode = "assistant_creation" 
+        # Reset form values to defaults when assistant is started
         st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
-        st.session_state.generated_meta_prompt_for_llm = "" 
+        st.session_state.generated_meta_prompt_for_llm = "" # Clear previous output
         st.rerun()
+
 
 # --- Main Display Area ---
 final_selected_family_edition = st.session_state.get('family_selector_edition')
@@ -835,7 +776,7 @@ elif st.session_state.view_mode == "edit":
                             opts = var_info.get("options", []); idx = 0 
                             if opts: 
                                 try: idx = opts.index(field_default) if field_default in opts else 0
-                                except ValueError: idx = 0 
+                                except ValueError: idx = 0 # pragma: no cover
                             gen_form_values[var_info["name"]] = st.selectbox(var_info["label"], options=opts, index=idx, key=widget_key)
                         elif var_type == "date_input":
                             val_date = field_default if isinstance(field_default, date) else datetime.now().date()
@@ -847,13 +788,20 @@ elif st.session_state.view_mode == "edit":
                             if min_val_gen is not None and val_num_gen < min_val_gen: val_num_gen = min_val_gen 
                             if max_val_gen is not None and val_num_gen > max_val_gen: val_num_gen = max_val_gen 
                             gen_form_values[var_info["name"]] = st.number_input(var_info["label"], value=val_num_gen, min_value=min_val_gen,max_value=max_val_gen, step=step_val_gen, key=widget_key, format="%g")
-                        elif var_type == "text_area": gen_form_values[var_info["name"]] = st.text_area(var_info["label"], value=str(field_default or ""), height=var_info.get("height",100), key=widget_key)
+                        elif var_type == "text_area": 
+                            # Ensure height is int for text_area
+                            height_val = var_info.get("height", 100)
+                            try: height_int = int(height_val)
+                            except (ValueError, TypeError) : height_int = 100 # Default if conversion fails
+                            if height_int < 10: height_int = 100
+
+                            gen_form_values[var_info["name"]] = st.text_area(var_info["label"], value=str(field_default or ""), height=height_int, key=widget_key)
             if st.form_submit_button("🚀 Générer Prompt"):
                 final_vals_for_prompt = { k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None }
                 try:
                     class SafeFormatter(dict):
-                        def __missing__(self, key):
-                            return f"{{{key}}}"
+                        def __missing__(self, key): # pragma: no cover
+                            return f"{{{key}}}" 
                     prompt_template_content = current_prompt_config.get("template", ""); formatted_template_content = prompt_template_content.format_map(SafeFormatter(final_vals_for_prompt)); use_case_title = final_selected_use_case_edition 
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt; st.success("Prompt généré avec succès!"); st.balloons()
@@ -978,7 +926,7 @@ elif st.session_state.view_mode == "edit":
                                 st.rerun()
                     cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}"
                     if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."): 
-                        st.session_state.variable_type_to_create = None; 
+                        st.session_state.variable_type_to_create = None 
                         if is_editing_var: 
                             st.session_state.editing_variable_info = None 
                         st.rerun()
@@ -1029,9 +977,12 @@ elif st.session_state.view_mode == "inject_manual":
                                     if not uc_name_stripped: failed_injections.append(f"Nom de cas d'usage vide ignoré."); continue
                                     if not isinstance(uc_config, dict) or "template" not in uc_config: failed_injections.append(f"'{uc_name_stripped}': Configuration invalide ou template manquant."); continue
                                     if uc_name_stripped in family_prompts: st.warning(f"Le cas d'usage '{uc_name_stripped}' existe déjà dans la famille '{target_family_name}'. Il a été ignoré."); failed_injections.append(f"'{uc_name_stripped}': Existe déjà, ignoré."); continue
-                                    processed_uc_config = _preprocess_injected_use_case_data(uc_config)
-                                    if not processed_uc_config.get("template"): failed_injections.append(f"'{uc_name_stripped}': Template invalide après traitement."); continue
-                                    family_prompts[uc_name_stripped] = processed_uc_config; successful_injections.append(uc_name_stripped)
+                                    
+                                    # Utiliser la nouvelle fonction dédiée pour les données injectées
+                                    prepared_uc_config = _prepare_newly_injected_use_case(uc_config)
+                                    
+                                    if not prepared_uc_config.get("template"): failed_injections.append(f"'{uc_name_stripped}': Template invalide après traitement."); continue
+                                    family_prompts[uc_name_stripped] = prepared_uc_config; successful_injections.append(uc_name_stripped)
                                     if first_new_uc_name is None: first_new_uc_name = uc_name_stripped
                                 if successful_injections:
                                     save_editable_prompts_to_gist(); st.success(f"{len(successful_injections)} cas d'usage injectés avec succès dans '{target_family_name}': {', '.join(successful_injections)}"); st.session_state.injection_json_text = "" 
@@ -1044,16 +995,15 @@ elif st.session_state.view_mode == "inject_manual":
         else: st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
 
 elif st.session_state.view_mode == "assistant_creation":
-    st.header("✨ Assistant de Création de Cas d'Usage")
-    st.markdown("Répondez aux questions suivantes pour générer un \"Méta Prompt\". Vous pourrez ensuite utiliser ce Méta Prompt avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour obtenir la structure JSON finale à injecter.")
+    st.header("✨ Assistant de Création de Méta Prompt")
+    st.markdown("Répondez aux questions suivantes pour générer un \"Méta Prompt\". Vous pourrez ensuite utiliser ce Méta Prompt avec un LLM externe (comme ChatGPT, Claude, Gemini, etc.) pour obtenir la structure JSON finale à injecter via l'option \"Injecter JSON Manuellement\".")
 
-    current_form_values = st.session_state.assistant_form_values # Load current/default values
+    current_form_values = st.session_state.assistant_form_values 
     
     with st.form(key="assistant_creation_form"):
-        form_inputs = {} # To store user's input from this form submission
+        form_inputs = {} 
         for var_info in ASSISTANT_FORM_VARIABLES:
             field_key = f"assistant_form_{var_info['name']}"
-            # Use current value from session state for stickiness, fallback to default from definition
             current_value = current_form_values.get(var_info['name'], var_info['default'])
 
             if var_info["type"] == "text_input":
@@ -1061,40 +1011,26 @@ elif st.session_state.view_mode == "assistant_creation":
             elif var_info["type"] == "text_area":
                 form_inputs[var_info["name"]] = st.text_area(var_info["label"], value=current_value, height=var_info.get("height", 100), key=field_key)
             elif var_info["type"] == "number_input":
-                # Ensure value is float for number_input
-                try:
-                    num_value = float(current_value)
-                except (ValueError, TypeError):
-                    num_value = float(var_info["default"])
-
+                try: num_value = float(current_value)
+                except (ValueError, TypeError): num_value = float(var_info["default"])
                 form_inputs[var_info["name"]] = st.number_input(
-                    var_info["label"], 
-                    value=num_value,
+                    var_info["label"], value=num_value,
                     min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
                     max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
-                    step=float(var_info.get("step", 1.0)), 
-                    key=field_key,
-                    format="%g" 
-                )
-            # Add other input types here if ASSISTANT_FORM_VARIABLES uses them
-
-        submitted_assistant_form = st.form_submit_button("📝 Générer le Méta Prompt pour LLM Externe")
+                    step=float(var_info.get("step", 1.0)), key=field_key, format="%g" )
+        submitted_assistant_form = st.form_submit_button("📝 Générer le Méta Prompt")
 
         if submitted_assistant_form:
-            st.session_state.assistant_form_values = form_inputs # Save current inputs for stickiness
-            
+            st.session_state.assistant_form_values = form_inputs 
             try:
-                # Ensure all placeholders are correctly handled, even if a field was somehow empty
-                # The .format_map(defaultdict(str, form_inputs)) could be an alternative for safety
-                # but simple .format should work if ASSISTANT_FORM_VARIABLES covers all placeholders.
                 populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**form_inputs)
                 st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
                 st.success("Méta Prompt généré ! Vous pouvez le copier ci-dessous.")
             except KeyError as e: # pragma: no cover
-                st.error(f"Erreur lors de la construction du Méta Prompt. Clé de formatage manquante : {e}. Veuillez vérifier les définitions de ASSISTANT_FORM_VARIABLES et le META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.")
+                st.error(f"Erreur lors de la construction du Méta Prompt. Clé de formatage manquante : {e}.")
             except Exception as e: # pragma: no cover
                  st.error(f"Une erreur inattendue est survenue lors de la génération du Méta Prompt : {e}")
-            # No rerun here, let the generated prompt display below
+            # Pas de rerun ici, pour que le prompt généré s'affiche immédiatement après le succès.
 
     if st.session_state.generated_meta_prompt_for_llm:
         st.subheader("📋 Méta Prompt Généré (à copier dans votre LLM externe) :")
@@ -1111,4 +1047,4 @@ else:
 
 # --- Sidebar Footer ---
 st.sidebar.markdown("---")
-st.sidebar.info(f"Générateur v3.3.4 - © {CURRENT_YEAR} La Poste (démo)")
+st.sidebar.info(f"Générateur v3.3.5 - © {CURRENT_YEAR} La Poste (démo)")
