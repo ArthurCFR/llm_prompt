@@ -679,7 +679,7 @@ elif st.session_state.view_mode == "edit":
         st.caption(f"Famille: {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
         st.markdown("---")
 
-        st.subheader(f"🚀 Générer Prompt")
+        st.subheader(f"🚀 Générer le Prompt")
         gen_form_values = {}
         with st.form(key=f"gen_form_{final_selected_family_edition}_{final_selected_use_case_edition}"):
             if not current_prompt_config.get("variables"): st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
