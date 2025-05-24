@@ -877,21 +877,62 @@ elif st.session_state.view_mode == "edit":
                     if cols_type_buttons[button_idx % len(cols_type_buttons)].button(btn_label, key=f"btn_type_{type_val}_{final_selected_use_case_edition.replace(' ','_')}", use_container_width=True): st.session_state.variable_type_to_create = type_val; st.rerun()
                     button_idx += 1
                 st.markdown("---")
-            if st.session_state.variable_type_to_create:
-                current_type_for_form = st.session_state.variable_type_to_create; variable_types_map_display = { "text_input": "Zone de texte (courte)", "selectbox": "Liste choix", "date_input": "Date", "number_input": "Nombre", "text_area": "Zone de texte (longue)" }; readable_type = variable_types_map_display.get(current_type_for_form, "Type Inconnu"); form_title = f"Modifier Variable : {variable_data_for_form.get('name','N/A')} ({readable_type})" if is_editing_var else f"Nouvelle Variable : {readable_type}"; st.markdown(f"##### 2. Configurez la variable")
-                form_key_suffix = f"_edit_{st.session_state.editing_variable_info['index']}" if is_editing_var and st.session_state.editing_variable_info else "_create"; form_var_specific_key = f"form_var_{current_type_for_form}_{final_selected_use_case_edition.replace(' ','_')}{form_key_suffix}"
+         if st.session_state.variable_type_to_create:
+                current_type_for_form = st.session_state.variable_type_to_create
+                variable_types_map_display = { 
+                    "text_input": "Zone de texte (courte)", "selectbox": "Liste choix", 
+                    "date_input": "Date", "number_input": "Nombre", "text_area": "Zone de texte (longue)"
+                }
+                readable_type = variable_types_map_display.get(current_type_for_form, "Type Inconnu")
+                form_title = f"Modifier Variable : {variable_data_for_form.get('name','N/A')} ({readable_type})" if is_editing_var else f"Nouvelle Variable : {readable_type}"
+                st.markdown(f"##### 2. Configurez la variable")
+
+                form_key_suffix = f"_edit_{st.session_state.editing_variable_info['index']}" if is_editing_var and st.session_state.editing_variable_info else "_create"
+                form_var_specific_key = f"form_var_{current_type_for_form}_{final_selected_use_case_edition.replace(' ','_')}{form_key_suffix}"
+
+                # --- DÉBUT DU FORMULAIRE ---
                 with st.form(key=form_var_specific_key, clear_on_submit=(not is_editing_var)): 
-                    st.subheader(form_title); var_name_input_form = st.text_input("Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux -espaces, crochets {},virgules, etc.-)", value=variable_data_for_form.get("name", ""), key=f"{form_var_specific_key}_name", disabled=is_editing_var); var_label_input_form = st.text_input("Label pour l'utilisateur (description affichée)", value=variable_data_for_form.get("label", ""), key=f"{form_var_specific_key}_label"); var_options_str_input_form = ""
-                    if current_type_for_form == "selectbox": var_options_str_input_form = st.text_input("Options (séparées par une virgule)", value=variable_data_for_form.get("options", ""), key=f"{form_var_specific_key}_options")
-                    date_hint = " (Format AAAA-MM-JJ)" if current_type_for_form == "date_input" else ""; var_default_val_str_input_form = st.text_input(f"Valeur par défaut{date_hint}", value=str(variable_data_for_form.get("default", "")), key=f"{form_var_specific_key}_default")
+                    st.subheader(form_title)
+                    var_name_input_form = st.text_input(
+                        "Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux -espaces, crochets {},virgules, etc.-)", 
+                        value=variable_data_for_form.get("name", ""), 
+                        key=f"{form_var_specific_key}_name",
+                        disabled=is_editing_var 
+                    )
+                    var_label_input_form = st.text_input(
+                        "Label pour l'utilisateur (description affichée)", 
+                        value=variable_data_for_form.get("label", ""), 
+                        key=f"{form_var_specific_key}_label"
+                    )
+                    var_options_str_input_form = ""
+                    if current_type_for_form == "selectbox":
+                        var_options_str_input_form = st.text_input(
+                            "Options (séparées par une virgule)", 
+                            value=variable_data_for_form.get("options", ""), 
+                            key=f"{form_var_specific_key}_options"
+                        )
+                    date_hint = " (Format AAAA-MM-JJ)" if current_type_for_form == "date_input" else ""
+                    var_default_val_str_input_form = st.text_input(
+                        f"Valeur par défaut{date_hint}", 
+                        value=str(variable_data_for_form.get("default", "")), 
+                        key=f"{form_var_specific_key}_default"
+                    )
+
                     min_val_input_form, max_val_input_form, step_val_input_form, height_val_input_form = None, None, None, None
                     if current_type_for_form == "number_input": 
-                        num_cols_var_form = st.columns(3); min_val_edit_default = variable_data_for_form.get("min_value"); max_val_edit_default = variable_data_for_form.get("max_value"); step_val_edit_default = variable_data_for_form.get("step", 1.0) 
+                        num_cols_var_form = st.columns(3)
+                        min_val_edit_default = variable_data_for_form.get("min_value")
+                        max_val_edit_default = variable_data_for_form.get("max_value")
+                        step_val_edit_default = variable_data_for_form.get("step", 1.0) 
                         min_val_input_form = num_cols_var_form[0].number_input("Valeur minimale (optionnel)", value=float(min_val_edit_default) if min_val_edit_default is not None else None, format="%g", key=f"{form_var_specific_key}_min")
                         max_val_input_form = num_cols_var_form[1].number_input("Valeur maximale (optionnel)", value=float(max_val_edit_default) if max_val_edit_default is not None else None, format="%g", key=f"{form_var_specific_key}_max")
                         step_val_input_form = num_cols_var_form[2].number_input("Pas (incrément)", value=float(step_val_edit_default), format="%g", min_value=1e-9, key=f"{form_var_specific_key}_step") 
-                    if current_type_for_form == "text_area": height_val_input_form = st.number_input("Hauteur de la zone de texte (pixels)", value=int(variable_data_for_form.get("height", 100)), min_value=50, step=25, key=f"{form_var_specific_key}_height")
-                    submit_button_label_form = "Sauvegarder Modifications" if is_editing_var else "Ajouter Variable"; submitted_specific_var_form = st.form_submit_button(submit_button_label_form)
+                    if current_type_for_form == "text_area": 
+                        height_val_input_form = st.number_input("Hauteur de la zone de texte (pixels)", value=int(variable_data_for_form.get("height", 100)), min_value=68, step=25, key=f"{form_var_specific_key}_height") # min_value ajusté à 68
+
+                    submit_button_label_form = "Sauvegarder Modifications" if is_editing_var else "Ajouter Variable"
+                    submitted_specific_var_form = st.form_submit_button(submit_button_label_form) # BOUTON DE SOUMISSION DU FORMULAIRE
+
                     if submitted_specific_var_form:
                         var_name_val_submit = var_name_input_form.strip()
                         if not var_name_val_submit or not var_label_input_form.strip(): st.error("Le nom technique et le label de la variable sont requis.")
@@ -911,7 +952,9 @@ elif st.session_state.view_mode == "edit":
                                 if max_val_input_form is not None: new_var_data_to_submit["max_value"] = float(max_val_input_form)
                                 if step_val_input_form is not None: new_var_data_to_submit["step"] = float(step_val_input_form)
                                 else: new_var_data_to_submit["step"] = 1.0 
-                            if current_type_for_form == "text_area" and height_val_input_form is not None: new_var_data_to_submit["height"] = int(height_val_input_form)
+                            if current_type_for_form == "text_area" and height_val_input_form is not None: 
+                                new_var_data_to_submit["height"] = int(height_val_input_form) # Déjà un int grâce au widget number_input
+                            
                             can_proceed_with_save = True; target_vars_list = current_prompt_config.get('variables', [])
                             if is_editing_var:
                                 idx_to_edit_submit_form = st.session_state.editing_variable_info["index"]; target_vars_list[idx_to_edit_submit_form] = new_var_data_to_submit; st.success(f"Variable '{var_name_val_submit}' mise à jour avec succès."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None 
@@ -923,14 +966,21 @@ elif st.session_state.view_mode == "edit":
                                 current_prompt_config["variables"] = target_vars_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist()
                                 if not is_editing_var: st.session_state.variable_type_to_create = None
                                 st.rerun()
-                    
-                    cancel_button_label_form = "Annuler Modification" if is_editing_var else "Changer de Type / Annuler Création"                    
-                    cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}"
-                    if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."): 
-                        st.session_state.variable_type_to_create = None 
-                        if is_editing_var: 
-                            st.session_state.editing_variable_info = None 
-                        st.rerun()
+                # --- FIN DU BLOC st.form(...) ---
+
+                # --- DÉPLACEMENT DU BOUTON ANNULER ICI (EN DEHORS ET APRÈS LE FORMULAIRE) ---
+                # Les variables is_editing_var et form_var_specific_key sont toujours accessibles ici.
+                cancel_button_label_form = "Annuler Modification" if is_editing_var else "Changer de Type / Annuler Création"
+                # Clé unique pour ce bouton, distincte de celles du formulaire si besoin
+                cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}_outside" 
+                
+                if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."):
+                    st.session_state.variable_type_to_create = None 
+                    if is_editing_var: 
+                        st.session_state.editing_variable_info = None 
+                    st.rerun()
+            # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
+
             st.markdown("---"); action_cols = st.columns(2)
             with action_cols[0]:
                 dup_key = f"dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
