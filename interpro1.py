@@ -1061,48 +1061,80 @@ elif st.session_state.view_mode == "inject_manual":
 
 elif st.session_state.view_mode == "assistant_creation":
     st.header("✨ Assistant de Création de prompt système")
-    st.markdown("Cet assistant vous aide à préparer une instruction détaillée. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
+    # Phrase d'introduction modifiée comme demandé précédemment
+    st.markdown("Cet assistant vous aide à préparer une **instruction détaillée**. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
 
-    current_form_values = st.session_state.assistant_form_values 
-    
+    # Pour le débogage, affichons l'état actuel des valeurs du formulaire au début du rendu
+    # st.write("DEBUG: st.session_state.assistant_form_values AU DEBUT:", st.session_state.assistant_form_values)
+
     with st.form(key="assistant_creation_form"):
-        form_inputs = {} 
+        # On utilise un dictionnaire temporaire pour construire les valeurs
+        # qui seront ensuite utilisées pour mettre à jour st.session_state.assistant_form_values
+        # et pour générer le prompt.
+        current_form_input_values = {} 
+
         for var_info in ASSISTANT_FORM_VARIABLES:
             field_key = f"assistant_form_{var_info['name']}"
-            current_value = current_form_values.get(var_info['name'], var_info['default'])
+            # On utilise la valeur de l'état de session pour pré-remplir le widget
+            value_for_widget = st.session_state.assistant_form_values.get(var_info['name'], var_info['default'])
 
             if var_info["type"] == "text_input":
-                form_inputs[var_info["name"]] = st.text_input(var_info["label"], value=current_value, key=field_key)
+                current_form_input_values[var_info["name"]] = st.text_input(
+                    var_info["label"], 
+                    value=value_for_widget, # Pré-remplissage
+                    key=field_key
+                )
             elif var_info["type"] == "text_area":
-                form_inputs[var_info["name"]] = st.text_area(var_info["label"], value=current_value, height=var_info.get("height", 100), key=field_key)
+                current_form_input_values[var_info["name"]] = st.text_area(
+                    var_info["label"], 
+                    value=value_for_widget, # Pré-remplissage
+                    height=var_info.get("height", 100), 
+                    key=field_key
+                )
             elif var_info["type"] == "number_input":
-                try: num_value = float(current_value)
-                except (ValueError, TypeError): num_value = float(var_info["default"])
-                form_inputs[var_info["name"]] = st.number_input(
-                    var_info["label"], value=num_value,
+                try: 
+                    num_value_for_widget = float(value_for_widget)
+                except (ValueError, TypeError): 
+                    num_value_for_widget = float(var_info["default"])
+                
+                current_form_input_values[var_info["name"]] = st.number_input(
+                    var_info["label"], 
+                    value=num_value_for_widget, # Pré-remplissage
                     min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
                     max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
-                    step=float(var_info.get("step", 1.0)), key=field_key, format="%g" )
+                    step=float(var_info.get("step", 1.0)), 
+                    key=field_key, 
+                    format="%g" 
+                )
+        
         submitted_assistant_form = st.form_submit_button("📝 Générer le prompt système")
 
         if submitted_assistant_form:
-            st.session_state.assistant_form_values = form_inputs 
+            # Lorsque le formulaire est soumis, current_form_input_values contient les dernières valeurs des widgets.
+            # On met à jour st.session_state.assistant_form_values avec ces nouvelles valeurs.
+            st.session_state.assistant_form_values = current_form_input_values.copy() # Utiliser une copie
+            
+            # Pour le débogage, affichons les valeurs qui viennent d'être sauvegardées
+            # st.write("DEBUG: st.session_state.assistant_form_values APRÈS SOUMISSION:", st.session_state.assistant_form_values)
+
             try:
-                populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**form_inputs)
+                # On utilise les valeurs fraîchement sauvegardées dans l'état de session pour la génération
+                populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**st.session_state.assistant_form_values)
                 st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
                 st.success("Prompt système généré ! Vous pouvez le copier ci-dessous.")
             except KeyError as e: # pragma: no cover
                 st.error(f"Erreur lors de la construction du prompt système. Clé de formatage manquante : {e}.")
             except Exception as e: # pragma: no cover
-                 st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
-            # No rerun here, let the generated prompt display below
+                st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
+            # Pas de st.rerun() explicite ici, Streamlit gère le re-rendu après la soumission du formulaire.
+            # L'affichage du prompt généré se fera dans la même exécution du script.
 
     if st.session_state.generated_meta_prompt_for_llm:
         st.subheader("📋 Prompt système Généré (à copier dans votre LLM externe) :")
-        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True) # MODIFIÉ ICI
+        # Modification demandée: utiliser st.code pour l'affichage non éditable et l'icône de copie
+        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
         st.markdown("---")
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
-
 else: 
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
         st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
