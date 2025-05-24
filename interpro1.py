@@ -877,7 +877,7 @@ elif st.session_state.view_mode == "edit":
                     if cols_type_buttons[button_idx % len(cols_type_buttons)].button(btn_label, key=f"btn_type_{type_val}_{final_selected_use_case_edition.replace(' ','_')}", use_container_width=True): st.session_state.variable_type_to_create = type_val; st.rerun()
                     button_idx += 1
                 st.markdown("---")
-         if st.session_state.variable_type_to_create:
+            if st.session_state.variable_type_to_create:
                 current_type_for_form = st.session_state.variable_type_to_create
                 variable_types_map_display = { 
                     "text_input": "Zone de texte (courte)", "selectbox": "Liste choix", 
