@@ -23,10 +23,10 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
 
 ## Pour le "Prompt Cible" (le template textuel) :
 1.  **Définir clairement le rôle** de l'IA qui exécutera le prompt (par exemple, "Tu es un analyste juridique et financier expert...").
-2.  **Spécifier l'objectif principal** de manière concise, basé sur la `{problematique}`.
+2.  **Spécifier l'objectif principal** de manière concise, basé sur la problematique.
 3.  **Si pertinent, indiquer explicitement que le type de document source** et que l'IA doit être capable de le traiter : `{doc_source}`. Si `{doc_source}` est vide ou non pertinent, n'en fais pas mention.
 4.  **Guider l'IA sur les informations spécifiques à extraire.** Ces informations sont : `{elements_specifiques_a_extraire}`.
-5.  **Indiquer le format de sortie désiré pour le résultat du prompt cible : `{format_sortie_desire}`.**
+5.  **Indiquer le format de sortie désiré pour le résultat du prompt cible : `{format_sortie_desire}`. Le résultat obtenu après l'utilisation du prompt cible doit être pensé pour être agréable à lire, harmonieusement présenté, utilisant les styles de texte à bon escient (ex : gras, italique, souligné) "**
 6.  **Inclure des instructions pour gérer les ambiguïtés** ou le manque d'information (par exemple, demander des clarifications ou indiquer les limites).
 7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre {min_var} et {max_var}. Chaque variable doit être encadrée par des accolades simples (ex: `{{variable_name}}`) dans le template du "Prompt Cible".
 8.  **Spécifier le public cible du résultat de ce prompt : `{public_cible_reponse}`.**
