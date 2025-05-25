@@ -1006,7 +1006,7 @@ elif st.session_state.view_mode == "edit":
                     st.rerun()
             # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
 
-st.markdown("---")
+        st.markdown("---")
         st.subheader("Actions sur le Cas d'Usage")
 
         if st.session_state.duplicating_use_case_details and \
