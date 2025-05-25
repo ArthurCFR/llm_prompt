@@ -370,6 +370,7 @@ if 'library_search_term' not in st.session_state: st.session_state.library_searc
 if 'library_selected_tags' not in st.session_state: st.session_state.library_selected_tags = []
 if 'variable_type_to_create' not in st.session_state: st.session_state.variable_type_to_create = None
 if 'active_generated_prompt' not in st.session_state: st.session_state.active_generated_prompt = ""
+if 'duplicating_use_case_details' not in st.session_state: st.session_state.duplicating_use_case_details = None
 if 'go_to_config_section' not in st.session_state: st.session_state.go_to_config_section = False
 
 if 'injection_selected_family' not in st.session_state:
@@ -1005,19 +1006,81 @@ elif st.session_state.view_mode == "edit":
                     st.rerun()
             # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
 
-            st.markdown("---"); action_cols = st.columns(2)
-            with action_cols[0]:
-                dup_key = f"dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key): # pragma: no cover
-                    original_uc_name_dup = final_selected_use_case_edition; new_uc_name_base_dup = f"{original_uc_name_dup} (copie)"; new_uc_name_dup = new_uc_name_base_dup; copy_count_dup = 1
-                    while new_uc_name_dup in st.session_state.editable_prompts[final_selected_family_edition]: new_uc_name_dup = f"{new_uc_name_base_dup} {copy_count_dup}"; copy_count_dup += 1
-                    st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup] = copy.deepcopy(current_prompt_config)
-                    now_iso_dup_create, now_iso_dup_update = get_default_dates()
-                    st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup]["created_at"] = now_iso_dup_create; st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup]["updated_at"] = now_iso_dup_update; st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup]["usage_count"] = 0; save_editable_prompts_to_gist(); st.success(f"Cas d'usage '{original_uc_name_dup}' dupliqué en '{new_uc_name_dup}'.")
-                    st.session_state.force_select_family_name = final_selected_family_edition; st.session_state.force_select_use_case_name = new_uc_name_dup; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.rerun()
-            with action_cols[1]:
-                del_uc_key_exp = f"del_uc_btn_exp_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"; is_confirming_this_uc_delete = bool(st.session_state.confirming_delete_details and st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition)
-                if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete): st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}; st.rerun() 
+st.markdown("---")
+        st.subheader("Actions sur le Cas d'Usage")
+
+        if st.session_state.duplicating_use_case_details and \
+           st.session_state.duplicating_use_case_details["family"] == final_selected_family_edition and \
+           st.session_state.duplicating_use_case_details["use_case"] == final_selected_use_case_edition:
+
+            original_uc_name_for_dup_form = st.session_state.duplicating_use_case_details["use_case"]
+            st.markdown(f"#### Dupliquer '{original_uc_name_for_dup_form}'")
+
+            with st.form(key=f"form_duplicate_name_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"):
+                suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
+                suggested_new_name = suggested_new_name_base
+                temp_copy_count = 1
+                while suggested_new_name in st.session_state.editable_prompts.get(final_selected_family_edition, {}):
+                    suggested_new_name = f"{suggested_new_name_base} {temp_copy_count}"
+                    temp_copy_count += 1
+
+                new_duplicated_uc_name_input = st.text_input(
+                    "Nouveau nom pour le cas d'usage dupliqué:", 
+                    value=suggested_new_name,
+                    key=f"new_dup_name_input_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
+                )
+
+                submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
+
+                if submitted_duplicate_form:
+                    new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
+                    family_for_dup = st.session_state.duplicating_use_case_details["family"]
+
+                    if not new_uc_name_val_from_form:
+                        st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
+                    elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(family_for_dup, {}):
+                        st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{family_for_dup}'.")
+                    else:
+                        st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
+                        now_iso_dup_create, now_iso_dup_update = get_default_dates()
+                        st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["created_at"] = now_iso_dup_create
+                        st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
+                        st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["usage_count"] = 0
+                        save_editable_prompts_to_gist()
+                        st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{family_for_dup}'.")
+
+                        st.session_state.duplicating_use_case_details = None 
+                        st.session_state.force_select_family_name = family_for_dup
+                        st.session_state.force_select_use_case_name = new_uc_name_val_from_form
+                        st.session_state.active_generated_prompt = ""
+                        st.session_state.variable_type_to_create = None
+                        st.session_state.editing_variable_info = None
+                        st.session_state.go_to_config_section = True
+                        st.rerun()
+
+            if st.button("❌ Annuler la Duplication", key=f"cancel_dup_process_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}", use_container_width=True):
+                st.session_state.duplicating_use_case_details = None
+                st.rerun()
+
+        else: 
+            action_cols_manage = st.columns(2)
+            with action_cols_manage[0]: 
+                dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key_init, use_container_width=True):
+                    st.session_state.duplicating_use_case_details = {
+                        "family": final_selected_family_edition,
+                        "use_case": final_selected_use_case_edition
+                    }
+                    st.rerun()
+
+            with action_cols_manage[1]: 
+                del_uc_key_exp_main = f"del_uc_btn_exp_main_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                is_confirming_this_uc_delete_main = bool(st.session_state.confirming_delete_details and \
+                                                    st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and \
+                                                    st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition)
+                if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp_main, type="secondary", disabled=is_confirming_this_uc_delete_main, use_container_width=True):
+                    st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
+                    st.rerun()
         if st.session_state.get('go_to_config_section'): st.session_state.go_to_config_section = False 
     else: 
         if not final_selected_family_edition: st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Édition) pour commencer.")
