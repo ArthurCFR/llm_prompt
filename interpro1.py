@@ -28,14 +28,14 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
 4.  **Guider l'IA sur les informations spécifiques à extraire.** Ces informations sont : `{elements_specifiques_a_extraire}`.
 5.  **Indiquer le format de sortie désiré pour le résultat du prompt cible : `{format_sortie_desire}`. Le résultat obtenu après l'utilisation du prompt cible doit être pensé pour être agréable à lire, harmonieusement présenté, utilisant les styles de texte à bon escient (ex : gras, italique, souligné) "**
 6.  **Inclure des instructions pour gérer les ambiguïtés** ou le manque d'information (par exemple, demander des clarifications ou indiquer les limites).
-7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre {min_var} et {max_var}. Chaque variable doit être encadrée par des accolades simples (ex: `{{variable_name}}`) dans le template du "Prompt Cible".
+7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre {min_var} et {max_var}. Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}` ou `{{detail_du_produit}}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
 8.  **Spécifier le public cible du résultat de ce prompt : `{public_cible_reponse}`.**
 
 ## Pour la configuration JSON (qui encapsule le "Prompt Cible") :
 1.  **Suggérer un nom pour le cas d'usage** (`suggested_use_case_name`) : descriptif et concis (max 5-7 mots).
 2.  **Inclure le "Prompt Cible" textuel** dans le champ `"template"` du JSON.
 3.  **Lister et décrire chaque variable** utilisée dans le champ `"variables"` du JSON. Chaque objet variable doit avoir :
-    * `"name"`: (string) Le nom technique de la variable (ex: `nom_client`), sans espaces ni caractères spéciaux autres que underscore, correspondant exactement à la variable dans le template.
+    * `"name"`: (string) Le nom technique de la variable (ex: `nom_du_client` si le placeholder dans le template est `{{nom_du_client}}`), sans espaces ni caractères spéciaux autres que underscore.
     * `"label"`: (string) Le label descriptif pour l'utilisateur (ex: "Nom du client").
     * `"type"`: (string) Choisis parmi : `"text_input"`, `"selectbox"`, `"date_input"`, `"number_input"`, `"text_area"`.
     * `"default"`: (string, number, or boolean) La valeur par défaut. Pour les dates, utilise le format "AAAA-MM-JJ". Si le type est number, la valeur par défaut doit être un nombre.
@@ -798,14 +798,36 @@ elif st.session_state.view_mode == "edit":
             if st.form_submit_button("🚀 Générer Prompt"):
                 final_vals_for_prompt = { k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None }
                 try:
-                    class SafeFormatter(dict):
-                        def __missing__(self, key): # pragma: no cover
-                            return f"{{{key}}}" 
-                    prompt_template_content = current_prompt_config.get("template", ""); formatted_template_content = prompt_template_content.format_map(SafeFormatter(final_vals_for_prompt)); use_case_title = final_selected_use_case_edition 
+                    prompt_template_content = current_prompt_config.get("template", "")
+                    processed_template = prompt_template_content
+
+                    # 1. Remplacer les variables connues par Streamlit (celles du formulaire)
+                    # Trier par longueur de clé (descendant) pour éviter les substitutions partielles
+                    # (ex: remplacer {jour_semaine} avant {jour})
+                    sorted_vars_for_formatting = sorted(final_vals_for_prompt.items(), key=lambda item: len(item[0]), reverse=True)
+
+                    for var_name, var_value in sorted_vars_for_formatting:
+                        placeholder_streamlit = f"{{{var_name}}}"
+                        # Remplacer uniquement les placeholders exacts et simples
+                        processed_template = processed_template.replace(placeholder_streamlit, str(var_value))
+                    
+                    # 2. Convertir les doubles accolades (pour le LLM final) en simples accolades
+                    # Ceci suppose que le template original (venant du JSON) utilisait bien {{...}}
+                    # pour les placeholders destinés au LLM final.
+                    formatted_template_content = processed_template.replace("{{", "{").replace("}}", "}")
+
+                    use_case_title = final_selected_use_case_edition 
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
-                    st.session_state.active_generated_prompt = generated_prompt; st.success("Prompt généré avec succès!"); st.balloons()
-                    current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist()
-                except Exception as e: st.error(f"Erreur lors de la génération du prompt: {e}") # pragma: no cover
+                    st.session_state.active_generated_prompt = generated_prompt
+                    st.success("Prompt généré avec succès!")
+                    st.balloons()
+                    current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
+                    current_prompt_config["updated_at"] = datetime.now().isoformat()
+                    save_editable_prompts_to_gist()
+                
+                except Exception as e: # Garder un catch-all pour les erreurs imprévues
+                    st.error(f"Erreur inattendue lors de la génération du prompt : {e}") # pragma: no cover
+                    st.session_state.active_generated_prompt = f"ERREUR INATTENDUE - TEMPLATE ORIGINAL :\n---\n{prompt_template_content}" # pragma: no cover
         st.markdown("---")
         if st.session_state.active_generated_prompt:
             st.subheader("✅ Prompt Généré (éditable):")
