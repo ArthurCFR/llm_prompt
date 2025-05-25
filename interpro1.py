@@ -30,6 +30,7 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
 6.  **Inclure des instructions pour gérer les ambiguïtés** ou le manque d'information (par exemple, demander des clarifications ou indiquer les limites).
 7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre {min_var} et {max_var}. Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}` ou `{{detail_du_produit}}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
 8.  **Spécifier le public cible du résultat de ce prompt : `{public_cible_reponse}`.**
+9.  **Ne pas rendre évident qu'il a été généré à partir d'un LLM en évitant des appartées contextuelles telles que des phrases : 'basée sur l'input', 'a partir des informations du prompt', etc..**
 9.  **Faire en sorte que le résultat obtenu par le prompt cible n'ai pas l'air d'avoir été généré à partir d'un LLM, en évitant des appartées contextuelles telles que des phrases : 'basée sur l'input', 'a partir des informations du prompt', etc..**
 
 ## Pour la configuration JSON (qui encapsule le "Prompt Cible") :
@@ -190,7 +191,7 @@ def _postprocess_after_loading(loaded_data): # User's trusted version + height f
                             var_info["step"] = float(var_info["step"])
                         else: 
                             var_info["step"] = 1.0
-                    
+
                     # --- ADDED ROBUST HEIGHT VALIDATION ---
                     if var_info.get("type") == "text_area":
                         height_val = var_info.get("height")
@@ -234,7 +235,7 @@ def _prepare_newly_injected_use_case_config(uc_config_from_json):
 
     if not isinstance(prepared_config.get("variables"), list):
         prepared_config["variables"] = []
-    
+
     for var_info in prepared_config.get("variables", []): # Ensure height is valid for text_area
         if isinstance(var_info, dict) and var_info.get("type") == "text_area":
             height_val = var_info.get("height")
@@ -251,10 +252,10 @@ def _prepare_newly_injected_use_case_config(uc_config_from_json):
         prepared_config["tags"] = []
     else:
         prepared_config["tags"] = sorted(list(set(str(tag).strip() for tag in prepared_config["tags"] if str(tag).strip())))
-    
+
     if "is_favorite" in prepared_config: # pragma: no cover
         del prepared_config["is_favorite"]
-        
+
     return prepared_config
 
 # --- Gist Interaction Functions (User's original versions) ---
@@ -410,7 +411,7 @@ with tab_edition_generation:
     else:
         current_family_for_edit = None
         st.session_state.family_selector_edition = None 
-    
+
     if current_family_for_edit and current_family_for_edit in available_families:
         default_family_idx_edit = available_families.index(current_family_for_edit)
     elif available_families: 
@@ -433,7 +434,7 @@ with tab_edition_generation:
         )
         if st.session_state.family_selector_edition != selected_family_ui_edit :
              st.session_state.family_selector_edition = selected_family_ui_edit
-        
+
         if prev_family_selection_edit != selected_family_ui_edit:
             st.session_state.use_case_selector_edition = None
             st.session_state.force_select_use_case_name = None 
@@ -458,12 +459,12 @@ with tab_edition_generation:
             pass 
         else: 
             current_uc_for_edit = use_cases_in_current_family_edit_options[0]
-        
+
         st.session_state.use_case_selector_edition = current_uc_for_edit 
 
         if current_uc_for_edit: 
             default_uc_idx_edit = use_cases_in_current_family_edit_options.index(current_uc_for_edit)
-        
+
         prev_uc_selection_edit = st.session_state.get('use_case_selector_edition') 
         selected_use_case_ui_edit = st.radio(
             "Cas d'usage :",
@@ -536,7 +537,7 @@ with tab_edition_generation:
             st.write(f"Supprimer la famille : **{current_selected_family_for_edit_logic}**")
             if st.session_state.confirming_delete_family_name == current_selected_family_for_edit_logic:
                 st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
-                
+
                 button_text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
                 if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     deleted_fam_name = current_selected_family_for_edit_logic 
@@ -550,7 +551,7 @@ with tab_edition_generation:
                         st.session_state.library_selected_family_for_display = None
                     st.session_state.view_mode = "edit" 
                     st.rerun()
-                
+
                 if st.button("Non, annuler la suppression", key=f"cancel_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     st.session_state.confirming_delete_family_name = None
                     st.session_state.view_mode = "edit"
@@ -580,7 +581,7 @@ with tab_edition_generation:
                     default_create_family_idx_tab = 0
                     if current_selected_family_for_edit_logic and current_selected_family_for_edit_logic in available_families:
                         default_create_family_idx_tab = available_families.index(current_selected_family_for_edit_logic)
-                    
+
                     uc_parent_family = st.selectbox(
                         "Famille Parente du nouveau cas d'usage:",
                         options=available_families,
@@ -811,7 +812,7 @@ elif st.session_state.view_mode == "edit":
                         placeholder_streamlit = f"{{{var_name}}}"
                         # Remplacer uniquement les placeholders exacts et simples
                         processed_template = processed_template.replace(placeholder_streamlit, str(var_value))
-                    
+
                     # 2. Convertir les doubles accolades (pour le LLM final) en simples accolades
                     # Ceci suppose que le template original (venant du JSON) utilisait bien {{...}}
                     # pour les placeholders destinés au LLM final.
@@ -825,7 +826,7 @@ elif st.session_state.view_mode == "edit":
                     current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
                     current_prompt_config["updated_at"] = datetime.now().isoformat()
                     save_editable_prompts_to_gist()
-                
+
                 except Exception as e: # Garder un catch-all pour les erreurs imprévues
                     st.error(f"Erreur inattendue lors de la génération du prompt : {e}") # pragma: no cover
                     st.session_state.active_generated_prompt = f"ERREUR INATTENDUE - TEMPLATE ORIGINAL :\n---\n{prompt_template_content}" # pragma: no cover
@@ -977,7 +978,7 @@ elif st.session_state.view_mode == "edit":
                                 else: new_var_data_to_submit["step"] = 1.0 
                             if current_type_for_form == "text_area" and height_val_input_form is not None: 
                                 new_var_data_to_submit["height"] = int(height_val_input_form) # Déjà un int grâce au widget number_input
-                            
+
                             can_proceed_with_save = True; target_vars_list = current_prompt_config.get('variables', [])
                             if is_editing_var:
                                 idx_to_edit_submit_form = st.session_state.editing_variable_info["index"]; target_vars_list[idx_to_edit_submit_form] = new_var_data_to_submit; st.success(f"Variable '{var_name_val_submit}' mise à jour avec succès."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None 
@@ -996,7 +997,7 @@ elif st.session_state.view_mode == "edit":
                 cancel_button_label_form = "Annuler Modification" if is_editing_var else "Changer de Type / Annuler Création"
                 # Clé unique pour ce bouton, distincte de celles du formulaire si besoin
                 cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}_outside" 
-                
+
                 if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."):
                     st.session_state.variable_type_to_create = None 
                     if is_editing_var: 
@@ -1066,9 +1067,9 @@ elif st.session_state.view_mode == "inject_manual":
                                     if not uc_name_stripped: failed_injections.append(f"Nom de cas d'usage vide ignoré."); continue
                                     if not isinstance(uc_config_json, dict) or "template" not in uc_config_json: failed_injections.append(f"'{uc_name_stripped}': Configuration invalide ou template manquant."); continue
                                     if uc_name_stripped in family_prompts: st.warning(f"Le cas d'usage '{uc_name_stripped}' existe déjà dans la famille '{target_family_name}'. Il a été ignoré."); failed_injections.append(f"'{uc_name_stripped}': Existe déjà, ignoré."); continue
-                                    
+
                                     prepared_uc_config = _prepare_newly_injected_use_case_config(uc_config_json) # Use the new specific function
-                                    
+
                                     if not prepared_uc_config.get("template"): failed_injections.append(f"'{uc_name_stripped}': Template invalide après traitement."); continue # Should be caught by _prepare_newly_injected_use_case_config if it makes template empty
                                     family_prompts[uc_name_stripped] = prepared_uc_config; successful_injections.append(uc_name_stripped)
                                     if first_new_uc_name is None: first_new_uc_name = uc_name_stripped
@@ -1119,7 +1120,7 @@ elif st.session_state.view_mode == "assistant_creation":
                     num_value_for_widget = float(value_for_widget)
                 except (ValueError, TypeError): 
                     num_value_for_widget = float(var_info["default"])
-                
+
                 current_form_input_values[var_info["name"]] = st.number_input(
                     var_info["label"], 
                     value=num_value_for_widget, # Pré-remplissage
@@ -1129,14 +1130,14 @@ elif st.session_state.view_mode == "assistant_creation":
                     key=field_key, 
                     format="%g" 
                 )
-        
+
         submitted_assistant_form = st.form_submit_button("📝 Générer le prompt système")
 
         if submitted_assistant_form:
             # Lorsque le formulaire est soumis, current_form_input_values contient les dernières valeurs des widgets.
             # On met à jour st.session_state.assistant_form_values avec ces nouvelles valeurs.
             st.session_state.assistant_form_values = current_form_input_values.copy() # Utiliser une copie
-            
+
             # Pour le débogage, affichons les valeurs qui viennent d'être sauvegardées
             # st.write("DEBUG: st.session_state.assistant_form_values APRÈS SOUMISSION:", st.session_state.assistant_form_values)
 
