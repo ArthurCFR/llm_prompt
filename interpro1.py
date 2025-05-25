@@ -351,7 +351,8 @@ if 'editable_prompts' not in st.session_state:
     st.session_state.editable_prompts = load_editable_prompts_from_gist()
 if 'view_mode' not in st.session_state:
     st.session_state.view_mode = "library"
-
+if 'pending_duplication_info' not in st.session_state:
+    st.session_state.pending_duplication_info = None
 if 'library_selected_family_for_display' not in st.session_state: 
     available_families = list(st.session_state.editable_prompts.keys())
     st.session_state.library_selected_family_for_display = available_families[0] if available_families else None
@@ -846,183 +847,232 @@ elif st.session_state.view_mode == "edit":
                 st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.view_mode = "edit"; st.rerun()
             if c2_del_uc.button("Non, annuler", key=f"del_no_{details['family']}_{details['use_case']}"): st.session_state.confirming_delete_details = None; st.rerun() 
             st.markdown("---") 
-        should_expand_config = st.session_state.get('go_to_config_section', False)
+# --- DÉBUT DE LA SECTION À REMPLACER / INTÉGRER ---
+        # Déterminer si l'expander doit être ouvert (si on configure ou si une duplication est en attente)
+        should_expand_config = st.session_state.get('go_to_config_section', False) or \
+                               bool(st.session_state.get('pending_duplication_info') and \
+                                    st.session_state.pending_duplication_info["family"] == final_selected_family_edition and \
+                                    st.session_state.pending_duplication_info["original_name"] == final_selected_use_case_edition)
+
         with st.expander(f"⚙️ Paramétrage du Prompt: {final_selected_use_case_edition}", expanded=should_expand_config):
-            st.subheader("Template du Prompt")
-            safe_family_key_part = str(final_selected_family_edition).replace(' ', '_').replace('.', '_').replace('{', '_').replace('}', '_').replace('(', '_').replace(')', '_'); safe_uc_key_part = str(final_selected_use_case_edition).replace(' ', '_').replace('.', '_').replace('{', '_').replace('}', '_').replace('(', '_').replace(')', '_')
-            template_text_area_key = f"template_text_area_{safe_family_key_part}_{safe_uc_key_part}"; new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=template_text_area_key)
-            st.markdown("""<style> div[data-testid="stExpander"] div[data-testid="stCodeBlock"] { margin-top: 0.1rem !important; margin-bottom: 0.15rem !important; padding-top: 0.1rem !important; padding-bottom: 0.1rem !important; } div[data-testid="stExpander"] div[data-testid="stCodeBlock"] pre { padding-top: 0.2rem !important; padding-bottom: 0.2rem !important; line-height: 1.1 !important; font-size: 0.85em !important; margin: 0 !important; } </style>""", unsafe_allow_html=True)
-            st.markdown("##### Variables disponibles à insérer :"); variables_config = current_prompt_config.get('variables', [])
-            if not variables_config: st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
-            else:
-                col1, col2 = st.columns(2)
-                for i, var_info in enumerate(variables_config):
-                    if 'name' in var_info:
-                        variable_string_to_display = f"{{{var_info['name']}}}"; target_column = col1 if i % 2 == 0 else col2
-                        with target_column: st.code(variable_string_to_display, language=None)
-                st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
-            save_template_button_key = f"save_template_button_{safe_family_key_part}_{safe_uc_key_part}"
-            if st.button("Sauvegarder Template", key=save_template_button_key): current_prompt_config['template'] = new_tpl; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Template sauvegardé!"); st.rerun()
-            st.markdown("---"); st.subheader("🏷️ Tags"); current_tags_str = ", ".join(current_prompt_config.get("tags", []))
-            new_tags_str_input = st.text_input("Tags (séparés par des virgules):", value=current_tags_str, key=f"tags_input_{final_selected_family_edition}_{final_selected_use_case_edition}")
-            if st.button("Sauvegarder Tags", key=f"save_tags_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"): current_prompt_config["tags"] = sorted(list(set(t.strip() for t in new_tags_str_input.split(',') if t.strip()))); current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Tags sauvegardés!"); st.rerun()
-            st.markdown("---"); st.subheader("Variables du Prompt"); current_variables_list = current_prompt_config.get('variables', [])
-            if not current_variables_list: st.info("Aucune variable définie.")
-            else: pass 
-            for idx, var_data in enumerate(list(current_variables_list)): 
-                var_id_for_key = var_data.get('name', f"varidx{idx}").replace(" ", "_"); action_key_prefix = f"var_action_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_{var_id_for_key}"
-                col_info, col_up, col_down, col_edit, col_delete = st.columns([3, 0.5, 0.5, 0.8, 0.8])
-                with col_info: st.markdown(f"**{idx + 1}. {var_data.get('name', 'N/A')}** ({var_data.get('label', 'N/A')})\n*Type: `{var_data.get('type', 'N/A')}`*")
-                with col_up:
-                    disable_up_button = (idx == 0)
-                    if st.button("↑", key=f"{action_key_prefix}_up", help="Monter cette variable", disabled=disable_up_button, use_container_width=True): current_variables_list[idx], current_variables_list[idx-1] = current_variables_list[idx-1], current_variables_list[idx]; current_prompt_config["variables"] = current_variables_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.rerun()
-                with col_down:
-                    disable_down_button = (idx == len(current_variables_list) - 1)
-                    if st.button("↓", key=f"{action_key_prefix}_down", help="Descendre cette variable", disabled=disable_down_button, use_container_width=True): current_variables_list[idx], current_variables_list[idx+1] = current_variables_list[idx+1], current_variables_list[idx]; current_prompt_config["variables"] = current_variables_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.rerun()
-                with col_edit:
-                    if st.button("Modifier", key=f"{action_key_prefix}_edit", use_container_width=True): st.session_state.editing_variable_info = { "family": final_selected_family_edition, "use_case": final_selected_use_case_edition, "index": idx, "data": copy.deepcopy(var_data) }; st.session_state.variable_type_to_create = var_data.get('type'); st.rerun()
-                with col_delete:
-                    if st.button("Suppr.", key=f"{action_key_prefix}_delete", type="secondary", use_container_width=True): variable_name_to_delete = current_variables_list.pop(idx).get('name', 'Variable inconnue'); current_prompt_config["variables"] = current_variables_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success(f"Variable '{variable_name_to_delete}' supprimée."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.rerun()
-            st.markdown("---"); st.subheader("Ajouter ou Modifier une Variable"); is_editing_var = False; variable_data_for_form = {"name": "", "label": "", "type": "", "options": "", "default": ""} 
-            if st.session_state.editing_variable_info and st.session_state.editing_variable_info.get("family") == final_selected_family_edition and st.session_state.editing_variable_info.get("use_case") == final_selected_use_case_edition:
-                edit_var_idx = st.session_state.editing_variable_info["index"]
-                if edit_var_idx < len(current_prompt_config.get('variables',[])):
-                    is_editing_var = True; current_editing_data_snapshot = current_prompt_config['variables'][edit_var_idx]; variable_data_for_form.update(copy.deepcopy(current_editing_data_snapshot))
-                    if isinstance(variable_data_for_form.get("options"), list): variable_data_for_form["options"] = ", ".join(map(str, variable_data_for_form["options"]))
-                    raw_def_edit_form = variable_data_for_form.get("default")
-                    if isinstance(raw_def_edit_form, date): variable_data_for_form["default"] = raw_def_edit_form.strftime("%Y-%m-%d")
-                    elif raw_def_edit_form is not None: variable_data_for_form["default"] = str(raw_def_edit_form)
-                    else: variable_data_for_form["default"] = "" 
-                else: st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.warning("La variable que vous tentiez de modifier n'existe plus. Annulation de l'édition."); st.rerun() # pragma: no cover
-            if not is_editing_var and st.session_state.variable_type_to_create is None:
-                st.markdown("##### 1. Choisissez le type de variable à créer :"); variable_types_map = { "Zone de texte (courte)": "text_input", "Liste choix": "selectbox", "Date": "date_input", "Nombre": "number_input", "Zone de texte (longue)": "text_area" }; num_type_buttons = len(variable_types_map); cols_type_buttons = st.columns(min(num_type_buttons, 5)); button_idx = 0
-                for btn_label, type_val in variable_types_map.items():
-                    if cols_type_buttons[button_idx % len(cols_type_buttons)].button(btn_label, key=f"btn_type_{type_val}_{final_selected_use_case_edition.replace(' ','_')}", use_container_width=True): st.session_state.variable_type_to_create = type_val; st.rerun()
-                    button_idx += 1
-                st.markdown("---")
-            if st.session_state.variable_type_to_create:
-                current_type_for_form = st.session_state.variable_type_to_create
-                variable_types_map_display = { 
-                    "text_input": "Zone de texte (courte)", "selectbox": "Liste choix", 
-                    "date_input": "Date", "number_input": "Nombre", "text_area": "Zone de texte (longue)"
-                }
-                readable_type = variable_types_map_display.get(current_type_for_form, "Type Inconnu")
-                form_title = f"Modifier Variable : {variable_data_for_form.get('name','N/A')} ({readable_type})" if is_editing_var else f"Nouvelle Variable : {readable_type}"
-                st.markdown(f"##### 2. Configurez la variable")
-
-                form_key_suffix = f"_edit_{st.session_state.editing_variable_info['index']}" if is_editing_var and st.session_state.editing_variable_info else "_create"
-                form_var_specific_key = f"form_var_{current_type_for_form}_{final_selected_use_case_edition.replace(' ','_')}{form_key_suffix}"
-
-                # --- DÉBUT DU FORMULAIRE ---
-                with st.form(key=form_var_specific_key, clear_on_submit=(not is_editing_var)): 
-                    st.subheader(form_title)
-                    var_name_input_form = st.text_input(
-                        "Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux -espaces, crochets {},virgules, etc.-)", 
-                        value=variable_data_for_form.get("name", ""), 
-                        key=f"{form_var_specific_key}_name",
-                        disabled=is_editing_var 
-                    )
-                    var_label_input_form = st.text_input(
-                        "Label pour l'utilisateur (description affichée)", 
-                        value=variable_data_for_form.get("label", ""), 
-                        key=f"{form_var_specific_key}_label"
-                    )
-                    var_options_str_input_form = ""
-                    if current_type_for_form == "selectbox":
-                        var_options_str_input_form = st.text_input(
-                            "Options (séparées par une virgule)", 
-                            value=variable_data_for_form.get("options", ""), 
-                            key=f"{form_var_specific_key}_options"
-                        )
-                    date_hint = " (Format AAAA-MM-JJ)" if current_type_for_form == "date_input" else ""
-                    var_default_val_str_input_form = st.text_input(
-                        f"Valeur par défaut{date_hint}", 
-                        value=str(variable_data_for_form.get("default", "")), 
-                        key=f"{form_var_specific_key}_default"
-                    )
-
-                    min_val_input_form, max_val_input_form, step_val_input_form, height_val_input_form = None, None, None, None
-                    if current_type_for_form == "number_input": 
-                        num_cols_var_form = st.columns(3)
-                        min_val_edit_default = variable_data_for_form.get("min_value")
-                        max_val_edit_default = variable_data_for_form.get("max_value")
-                        step_val_edit_default = variable_data_for_form.get("step", 1.0) 
-                        min_val_input_form = num_cols_var_form[0].number_input("Valeur minimale (optionnel)", value=float(min_val_edit_default) if min_val_edit_default is not None else None, format="%g", key=f"{form_var_specific_key}_min")
-                        max_val_input_form = num_cols_var_form[1].number_input("Valeur maximale (optionnel)", value=float(max_val_edit_default) if max_val_edit_default is not None else None, format="%g", key=f"{form_var_specific_key}_max")
-                        step_val_input_form = num_cols_var_form[2].number_input("Pas (incrément)", value=float(step_val_edit_default), format="%g", min_value=1e-9, key=f"{form_var_specific_key}_step") 
-                    if current_type_for_form == "text_area": 
-                        height_val_input_form = st.number_input("Hauteur de la zone de texte (pixels)", value=int(variable_data_for_form.get("height", 100)), min_value=68, step=25, key=f"{form_var_specific_key}_height") # min_value ajusté à 68
-
-                    submit_button_label_form = "Sauvegarder Modifications" if is_editing_var else "Ajouter Variable"
-                    submitted_specific_var_form = st.form_submit_button(submit_button_label_form) # BOUTON DE SOUMISSION DU FORMULAIRE
-
-                    if submitted_specific_var_form:
-                        var_name_val_submit = var_name_input_form.strip()
-                        if not var_name_val_submit or not var_label_input_form.strip(): st.error("Le nom technique et le label de la variable sont requis.")
-                        elif not var_name_val_submit.isidentifier(): st.error("Nom technique invalide. Utilisez lettres, chiffres, underscores. Ne pas commencer par un chiffre. Ne pas utiliser de mot-clé Python.")
-                        elif current_type_for_form == "selectbox" and not [opt.strip() for opt in var_options_str_input_form.split(',') if opt.strip()]: st.error("Pour une variable de type 'Liste choix', au moins une option est requise.")
-                        else:
-                            new_var_data_to_submit = { "name": var_name_val_submit, "label": var_label_input_form.strip(), "type": current_type_for_form }; parsed_def_val_submit = parse_default_value(var_default_val_str_input_form.strip(), current_type_for_form)
-                            if current_type_for_form == "selectbox":
-                                options_list_submit = [opt.strip() for opt in var_options_str_input_form.split(',') if opt.strip()]; new_var_data_to_submit["options"] = options_list_submit
-                                if options_list_submit: 
-                                    if parsed_def_val_submit not in options_list_submit: st.warning(f"La valeur par défaut '{parsed_def_val_submit}' n'est pas dans la liste d'options. La première option '{options_list_submit[0]}' sera utilisée comme défaut."); new_var_data_to_submit["default"] = options_list_submit[0]
-                                    else: new_var_data_to_submit["default"] = parsed_def_val_submit
-                                else: new_var_data_to_submit["default"] = "" # pragma: no cover
-                            else: new_var_data_to_submit["default"] = parsed_def_val_submit
-                            if current_type_for_form == "number_input": 
-                                if min_val_input_form is not None: new_var_data_to_submit["min_value"] = float(min_val_input_form)
-                                if max_val_input_form is not None: new_var_data_to_submit["max_value"] = float(max_val_input_form)
-                                if step_val_input_form is not None: new_var_data_to_submit["step"] = float(step_val_input_form)
-                                else: new_var_data_to_submit["step"] = 1.0 
-                            if current_type_for_form == "text_area" and height_val_input_form is not None: 
-                                new_var_data_to_submit["height"] = int(height_val_input_form) # Déjà un int grâce au widget number_input
-                            
-                            can_proceed_with_save = True; target_vars_list = current_prompt_config.get('variables', [])
-                            if is_editing_var:
-                                idx_to_edit_submit_form = st.session_state.editing_variable_info["index"]; target_vars_list[idx_to_edit_submit_form] = new_var_data_to_submit; st.success(f"Variable '{var_name_val_submit}' mise à jour avec succès."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None 
-                            else: 
-                                existing_var_names_in_uc = [v['name'] for v in target_vars_list]
-                                if var_name_val_submit in existing_var_names_in_uc: st.error(f"Une variable avec le nom technique '{var_name_val_submit}' existe déjà pour ce cas d'usage."); can_proceed_with_save = False # pragma: no cover
-                                else: target_vars_list.append(new_var_data_to_submit); st.success(f"Variable '{var_name_val_submit}' ajoutée avec succès.")
-                            if can_proceed_with_save:
-                                current_prompt_config["variables"] = target_vars_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist()
-                                if not is_editing_var: st.session_state.variable_type_to_create = None
-                                st.rerun()
-                # --- FIN DU BLOC st.form(...) ---
-
-                # --- DÉPLACEMENT DU BOUTON ANNULER ICI (EN DEHORS ET APRÈS LE FORMULAIRE) ---
-                # Les variables is_editing_var et form_var_specific_key sont toujours accessibles ici.
-                cancel_button_label_form = "Annuler Modification" if is_editing_var else "Changer de Type / Annuler Création"
-                # Clé unique pour ce bouton, distincte de celles du formulaire si besoin
-                cancel_btn_key = f"cancel_var_action_btn_{form_var_specific_key}_outside" 
+            
+            # --- NOUVEAU : Formulaire pour nommer la duplication ---
+            if st.session_state.get('pending_duplication_info'):
+                pending_info = st.session_state.pending_duplication_info
                 
+                # S'assurer que la duplication en attente concerne bien le cas d'usage actuellement sélectionné
+                if pending_info["family"] == final_selected_family_edition and \
+                   pending_info["original_name"] == final_selected_use_case_edition:
+
+                    st.info(f"Duplication de \"{pending_info['original_name']}\". Veuillez nommer la copie :")
+                    with st.form("duplicate_use_case_name_form", clear_on_submit=True): # clear_on_submit est utile ici
+                        new_uc_name_for_duplicate = st.text_input(
+                            "Nom pour la copie du cas d'usage:", 
+                            value=f"{pending_info['original_name']} (copie)" # Suggère un nom par défaut
+                        )
+                        
+                        col_dup_confirm, col_dup_cancel = st.columns(2)
+                        submitted_duplicate_confirm = col_dup_confirm.form_submit_button("✅ Confirmer et Créer la Copie")
+                        submitted_duplicate_cancel = col_dup_cancel.form_submit_button("❌ Annuler la Duplication")
+
+                        if submitted_duplicate_confirm:
+                            new_name_stripped = new_uc_name_for_duplicate.strip()
+                            if not new_name_stripped:
+                                st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
+                            elif new_name_stripped == pending_info["original_name"]:
+                                st.error("Le nom de la copie doit être différent de l'original.")
+                            elif new_name_stripped in st.session_state.editable_prompts[pending_info["family"]]:
+                                st.error(f"Un cas d'usage nommé '{new_name_stripped}' existe déjà dans cette famille.")
+                            else:
+                                config_to_copy = pending_info["original_config"]
+                                # Mise à jour des métadonnées pour la nouvelle copie
+                                now_iso_dup_create, now_iso_dup_update = get_default_dates()
+                                config_to_copy["created_at"] = now_iso_dup_create
+                                config_to_copy["updated_at"] = now_iso_dup_update
+                                config_to_copy["usage_count"] = 0
+                                
+                                st.session_state.editable_prompts[pending_info["family"]][new_name_stripped] = config_to_copy
+                                save_editable_prompts_to_gist()
+                                st.success(f"Cas d'usage \"{pending_info['original_name']}\" dupliqué en \"{new_name_stripped}\".")
+                                
+                                st.session_state.pending_duplication_info = None
+                                st.session_state.force_select_family_name = pending_info["family"]
+                                st.session_state.force_select_use_case_name = new_name_stripped
+                                st.session_state.go_to_config_section = True 
+                                st.session_state.active_generated_prompt = ""
+                                st.session_state.variable_type_to_create = None 
+                                st.session_state.editing_variable_info = None   
+                                st.rerun()
+                        
+                        if submitted_duplicate_cancel:
+                            st.session_state.pending_duplication_info = None
+                            st.toast("Duplication annulée.")
+                            st.rerun()
+                else:
+                    # La duplication en attente ne correspond pas au cas d'usage actuel (l'utilisateur a navigué ailleurs), 
+                    # on l'annule pour éviter la confusion si l'utilisateur revient.
+                    st.session_state.pending_duplication_info = None
+                    # Pas besoin de rerun ici, l'état se corrigera au prochain changement si nécessaire.
+
+            # --- Logique originale de paramétrage (s'affiche si pas de duplication en cours pour CE cas d'usage) ---
+            # On vérifie à nouveau si une duplication est en cours pour ce cas d'usage spécifique avant d'afficher le reste
+            is_currently_duplicating_this_uc = bool(
+                st.session_state.get('pending_duplication_info') and \
+                st.session_state.pending_duplication_info["family"] == final_selected_family_edition and \
+                st.session_state.pending_duplication_info["original_name"] == final_selected_use_case_edition
+            )
+
+            if not is_currently_duplicating_this_uc:
+                st.subheader("Template du Prompt")
+                safe_family_key_part = str(final_selected_family_edition).replace(' ', '_').replace('.', '_').replace('{', '_').replace('}', '_').replace('(', '_').replace(')', '_')
+                safe_uc_key_part = str(final_selected_use_case_edition).replace(' ', '_').replace('.', '_').replace('{', '_').replace('}', '_').replace('(', '_').replace(')', '_')
+                template_text_area_key = f"template_text_area_{safe_family_key_part}_{safe_uc_key_part}"
+                new_tpl = st.text_area("Template:", value=current_prompt_config.get('template', ''), height=200, key=template_text_area_key)
+                st.markdown("""<style> div[data-testid="stExpander"] div[data-testid="stCodeBlock"] { margin-top: 0.1rem !important; margin-bottom: 0.15rem !important; padding-top: 0.1rem !important; padding-bottom: 0.1rem !important; } div[data-testid="stExpander"] div[data-testid="stCodeBlock"] pre { padding-top: 0.2rem !important; padding-bottom: 0.2rem !important; line-height: 1.1 !important; font-size: 0.85em !important; margin: 0 !important; } </style>""", unsafe_allow_html=True)
+                st.markdown("##### Variables disponibles à insérer :"); variables_config = current_prompt_config.get('variables', [])
+                if not variables_config: st.caption("Aucune variable définie pour ce prompt. Ajoutez-en ci-dessous.")
+                else:
+                    col1, col2 = st.columns(2)
+                    for i, var_info_disp in enumerate(variables_config): # Renommé var_info en var_info_disp pour éviter conflit
+                        if 'name' in var_info_disp:
+                            variable_string_to_display = f"{{{var_info_disp['name']}}}"; target_column = col1 if i % 2 == 0 else col2
+                            with target_column: st.code(variable_string_to_display, language=None)
+                    st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
+                save_template_button_key = f"save_template_button_{safe_family_key_part}_{safe_uc_key_part}"
+                if st.button("Sauvegarder Template", key=save_template_button_key): current_prompt_config['template'] = new_tpl; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Template sauvegardé!"); st.rerun()
+                
+                st.markdown("---"); st.subheader("🏷️ Tags"); current_tags_str = ", ".join(current_prompt_config.get("tags", []))
+                new_tags_str_input = st.text_input("Tags (séparés par des virgules):", value=current_tags_str, key=f"tags_input_{final_selected_family_edition}_{final_selected_use_case_edition}")
+                if st.button("Sauvegarder Tags", key=f"save_tags_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"): current_prompt_config["tags"] = sorted(list(set(t.strip() for t in new_tags_str_input.split(',') if t.strip()))); current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Tags sauvegardés!"); st.rerun()
+                
+                st.markdown("---"); st.subheader("Variables du Prompt"); current_variables_list = current_prompt_config.get('variables', [])
+                if not current_variables_list: st.info("Aucune variable définie.")
+                else: pass 
+                for idx, var_data_loop in enumerate(list(current_variables_list)): # Renommé var_data en var_data_loop
+                    var_id_for_key = var_data_loop.get('name', f"varidx{idx}").replace(" ", "_"); action_key_prefix = f"var_action_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_{var_id_for_key}"
+                    col_info, col_up, col_down, col_edit, col_delete = st.columns([3, 0.5, 0.5, 0.8, 0.8])
+                    with col_info: st.markdown(f"**{idx + 1}. {var_data_loop.get('name', 'N/A')}** ({var_data_loop.get('label', 'N/A')})\n*Type: `{var_data_loop.get('type', 'N/A')}`*")
+                    with col_up:
+                        disable_up_button = (idx == 0)
+                        if st.button("↑", key=f"{action_key_prefix}_up", help="Monter cette variable", disabled=disable_up_button, use_container_width=True): current_variables_list[idx], current_variables_list[idx-1] = current_variables_list[idx-1], current_variables_list[idx]; current_prompt_config["variables"] = current_variables_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.rerun()
+                    with col_down:
+                        disable_down_button = (idx == len(current_variables_list) - 1)
+                        if st.button("↓", key=f"{action_key_prefix}_down", help="Descendre cette variable", disabled=disable_down_button, use_container_width=True): current_variables_list[idx], current_variables_list[idx+1] = current_variables_list[idx+1], current_variables_list[idx]; current_prompt_config["variables"] = current_variables_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.rerun()
+                    with col_edit:
+                        if st.button("Modifier", key=f"{action_key_prefix}_edit", use_container_width=True): st.session_state.editing_variable_info = { "family": final_selected_family_edition, "use_case": final_selected_use_case_edition, "index": idx, "data": copy.deepcopy(var_data_loop) }; st.session_state.variable_type_to_create = var_data_loop.get('type'); st.rerun()
+                    with col_delete:
+                        if st.button("Suppr.", key=f"{action_key_prefix}_delete", type="secondary", use_container_width=True): variable_name_to_delete = current_variables_list.pop(idx).get('name', 'Variable inconnue'); current_prompt_config["variables"] = current_variables_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success(f"Variable '{variable_name_to_delete}' supprimée."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.rerun()
+                
+                st.markdown("---"); st.subheader("Ajouter ou Modifier une Variable"); is_editing_var = False; variable_data_for_form = {"name": "", "label": "", "type": "", "options": "", "default": ""} 
+                if st.session_state.editing_variable_info and st.session_state.editing_variable_info.get("family") == final_selected_family_edition and st.session_state.editing_variable_info.get("use_case") == final_selected_use_case_edition:
+                    edit_var_idx = st.session_state.editing_variable_info["index"]
+                    if edit_var_idx < len(current_prompt_config.get('variables',[])):
+                        is_editing_var = True; current_editing_data_snapshot = current_prompt_config['variables'][edit_var_idx]; variable_data_for_form.update(copy.deepcopy(current_editing_data_snapshot))
+                        if isinstance(variable_data_for_form.get("options"), list): variable_data_for_form["options"] = ", ".join(map(str, variable_data_for_form["options"]))
+                        raw_def_edit_form = variable_data_for_form.get("default")
+                        if isinstance(raw_def_edit_form, date): variable_data_for_form["default"] = raw_def_edit_form.strftime("%Y-%m-%d")
+                        elif raw_def_edit_form is not None: variable_data_for_form["default"] = str(raw_def_edit_form)
+                        else: variable_data_for_form["default"] = "" 
+                    else: st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None; st.warning("La variable que vous tentiez de modifier n'existe plus. Annulation de l'édition."); st.rerun() # pragma: no cover
+                
+                if not is_editing_var and st.session_state.variable_type_to_create is None:
+                    st.markdown("##### 1. Choisissez le type de variable à créer :"); variable_types_map = { "Zone de texte (courte)": "text_input", "Liste choix": "selectbox", "Date": "date_input", "Nombre": "number_input", "Zone de texte (longue)": "text_area" }; num_type_buttons = len(variable_types_map); cols_type_buttons = st.columns(min(num_type_buttons, 5)); button_idx = 0
+                    for btn_label, type_val in variable_types_map.items():
+                        if cols_type_buttons[button_idx % len(cols_type_buttons)].button(btn_label, key=f"btn_type_{type_val}_{final_selected_use_case_edition.replace(' ','_')}", use_container_width=True): st.session_state.variable_type_to_create = type_val; st.rerun()
+                        button_idx += 1
+                    st.markdown("---")
+                
+                if st.session_state.variable_type_to_create:
+                    current_type_for_form = st.session_state.variable_type_to_create; variable_types_map_display = { "text_input": "Zone de texte (courte)", "selectbox": "Liste choix", "date_input": "Date", "number_input": "Nombre", "text_area": "Zone de texte (longue)" }; readable_type = variable_types_map_display.get(current_type_for_form, "Type Inconnu"); form_title = f"Modifier Variable : {variable_data_for_form.get('name','N/A')} ({readable_type})" if is_editing_var else f"Nouvelle Variable : {readable_type}"; st.markdown(f"##### 2. Configurez la variable")
+                    form_key_suffix = f"_edit_{st.session_state.editing_variable_info['index']}" if is_editing_var and st.session_state.editing_variable_info else "_create"; form_var_specific_key = f"form_var_{current_type_for_form}_{final_selected_use_case_edition.replace(' ','_')}{form_key_suffix}"
+                    with st.form(key=form_var_specific_key, clear_on_submit=(not is_editing_var)): 
+                        st.subheader(form_title); var_name_input_form = st.text_input("Nom technique (ex : nom_client. Ne pas utiliser de caractères spéciaux -espaces, crochets {},virgules, etc.-)", value=variable_data_for_form.get("name", ""), key=f"{form_var_specific_key}_name", disabled=is_editing_var); var_label_input_form = st.text_input("Label pour l'utilisateur (description affichée)", value=variable_data_for_form.get("label", ""), key=f"{form_var_specific_key}_label"); var_options_str_input_form = ""
+                        if current_type_for_form == "selectbox": var_options_str_input_form = st.text_input("Options (séparées par une virgule)", value=variable_data_for_form.get("options", ""), key=f"{form_var_specific_key}_options")
+                        date_hint = " (Format AAAA-MM-JJ)" if current_type_for_form == "date_input" else ""; var_default_val_str_input_form = st.text_input(f"Valeur par défaut{date_hint}", value=str(variable_data_for_form.get("default", "")), key=f"{form_var_specific_key}_default")
+                        min_val_input_form, max_val_input_form, step_val_input_form, height_val_input_form = None, None, None, None
+                        if current_type_for_form == "number_input": 
+                            num_cols_var_form = st.columns(3); min_val_edit_default = variable_data_for_form.get("min_value"); max_val_edit_default = variable_data_for_form.get("max_value"); step_val_edit_default = variable_data_for_form.get("step", 1.0) 
+                            min_val_input_form = num_cols_var_form[0].number_input("Valeur minimale (optionnel)", value=float(min_val_edit_default) if min_val_edit_default is not None else None, format="%g", key=f"{form_var_specific_key}_min")
+                            max_val_input_form = num_cols_var_form[1].number_input("Valeur maximale (optionnel)", value=float(max_val_edit_default) if max_val_edit_default is not None else None, format="%g", key=f"{form_var_specific_key}_max")
+                            step_val_input_form = num_cols_var_form[2].number_input("Pas (incrément)", value=float(step_val_edit_default), format="%g", min_value=1e-9, key=f"{form_var_specific_key}_step") 
+                        if current_type_for_form == "text_area": height_val_input_form = st.number_input("Hauteur de la zone de texte (pixels)", value=int(variable_data_for_form.get("height", 100)), min_value=68, step=25, key=f"{form_var_specific_key}_height")
+                        submit_button_label_form = "Sauvegarder Modifications" if is_editing_var else "Ajouter Variable"; submitted_specific_var_form = st.form_submit_button(submit_button_label_form)
+                        if submitted_specific_var_form:
+                            var_name_val_submit = var_name_input_form.strip()
+                            if not var_name_val_submit or not var_label_input_form.strip(): st.error("Le nom technique et le label de la variable sont requis.")
+                            elif not var_name_val_submit.isidentifier(): st.error("Nom technique invalide. Utilisez lettres, chiffres, underscores. Ne pas commencer par un chiffre. Ne pas utiliser de mot-clé Python.")
+                            elif current_type_for_form == "selectbox" and not [opt.strip() for opt in var_options_str_input_form.split(',') if opt.strip()]: st.error("Pour une variable de type 'Liste choix', au moins une option est requise.")
+                            else:
+                                new_var_data_to_submit = { "name": var_name_val_submit, "label": var_label_input_form.strip(), "type": current_type_for_form }; parsed_def_val_submit = parse_default_value(var_default_val_str_input_form.strip(), current_type_for_form)
+                                if current_type_for_form == "selectbox":
+                                    options_list_submit = [opt.strip() for opt in var_options_str_input_form.split(',') if opt.strip()]; new_var_data_to_submit["options"] = options_list_submit
+                                    if options_list_submit: 
+                                        if parsed_def_val_submit not in options_list_submit: st.warning(f"La valeur par défaut '{parsed_def_val_submit}' n'est pas dans la liste d'options. La première option '{options_list_submit[0]}' sera utilisée comme défaut."); new_var_data_to_submit["default"] = options_list_submit[0]
+                                        else: new_var_data_to_submit["default"] = parsed_def_val_submit
+                                    else: new_var_data_to_submit["default"] = "" # pragma: no cover
+                                else: new_var_data_to_submit["default"] = parsed_def_val_submit
+                                if current_type_for_form == "number_input": 
+                                    if min_val_input_form is not None: new_var_data_to_submit["min_value"] = float(min_val_input_form)
+                                    if max_val_input_form is not None: new_var_data_to_submit["max_value"] = float(max_val_input_form)
+                                    if step_val_input_form is not None: new_var_data_to_submit["step"] = float(step_val_input_form)
+                                    else: new_var_data_to_submit["step"] = 1.0 
+                                if current_type_for_form == "text_area" and height_val_input_form is not None: new_var_data_to_submit["height"] = int(height_val_input_form)
+                                can_proceed_with_save = True; target_vars_list = current_prompt_config.get('variables', [])
+                                if is_editing_var:
+                                    idx_to_edit_submit_form = st.session_state.editing_variable_info["index"]; target_vars_list[idx_to_edit_submit_form] = new_var_data_to_submit; st.success(f"Variable '{var_name_val_submit}' mise à jour avec succès."); st.session_state.editing_variable_info = None; st.session_state.variable_type_to_create = None 
+                                else: 
+                                    existing_var_names_in_uc = [v['name'] for v in target_vars_list]
+                                    if var_name_val_submit in existing_var_names_in_uc: st.error(f"Une variable avec le nom technique '{var_name_val_submit}' existe déjà pour ce cas d'usage."); can_proceed_with_save = False # pragma: no cover
+                                    else: target_vars_list.append(new_var_data_to_submit); st.success(f"Variable '{var_name_val_submit}' ajoutée avec succès.")
+                                if can_proceed_with_save:
+                                    current_prompt_config["variables"] = target_vars_list; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist()
+                                    if not is_editing_var: st.session_state.variable_type_to_create = None
+                                    st.rerun()
+                    # --- BOUTON ANNULER déplacé EN DEHORS du st.form ---
+                    # (Ce bouton n'est plus à l'intérieur du 'with st.form' ci-dessus)
+                # Fin du 'with st.form(...)' - Le bouton Annuler doit être après cette ligne
+
+                cancel_button_label_form = "Annuler Modification" if is_editing_var else "Changer de Type / Annuler Création"
+                cancel_btn_key_suffix = f"_edit_{st.session_state.editing_variable_info['index']}" if is_editing_var and st.session_state.editing_variable_info else "_create"
+                cancel_btn_key = f"cancel_var_action_btn_{current_type_for_form}_{final_selected_use_case_edition.replace(' ','_')}{cancel_btn_key_suffix}_outside" # Clé unique
+
                 if st.button(cancel_button_label_form, key=cancel_btn_key, help="Réinitialise le formulaire de variable."):
                     st.session_state.variable_type_to_create = None 
                     if is_editing_var: 
                         st.session_state.editing_variable_info = None 
                     st.rerun()
-            # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
+                # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
+                
+                st.markdown("---") # Séparateur avant les boutons d'action du cas d'usage
+                action_cols = st.columns(2)
+                with action_cols[0]:
+                    dup_key = f"dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key):
+                        st.session_state.pending_duplication_info = {
+                            "family": final_selected_family_edition,
+                            "original_name": final_selected_use_case_edition,
+                            "original_config": copy.deepcopy(current_prompt_config) 
+                        }
+                        st.session_state.go_to_config_section = True 
+                        st.rerun()
+                
+                with action_cols[1]:
+                    del_uc_key_exp = f"del_uc_btn_exp_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    is_confirming_this_uc_delete = bool(
+                        st.session_state.confirming_delete_details and
+                        st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and
+                        st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition
+                    )
+                    if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete):
+                        st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
+                        st.rerun() 
+            # Fin du if not is_currently_duplicating_this_uc:
 
-            st.markdown("---"); action_cols = st.columns(2)
-            with action_cols[0]:
-                dup_key = f"dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key): # pragma: no cover
-                    original_uc_name_dup = final_selected_use_case_edition; new_uc_name_base_dup = f"{original_uc_name_dup} (copie)"; new_uc_name_dup = new_uc_name_base_dup; copy_count_dup = 1
-                    while new_uc_name_dup in st.session_state.editable_prompts[final_selected_family_edition]: new_uc_name_dup = f"{new_uc_name_base_dup} {copy_count_dup}"; copy_count_dup += 1
-                    st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup] = copy.deepcopy(current_prompt_config)
-                    now_iso_dup_create, now_iso_dup_update = get_default_dates()
-                    st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup]["created_at"] = now_iso_dup_create; st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup]["updated_at"] = now_iso_dup_update; st.session_state.editable_prompts[final_selected_family_edition][new_uc_name_dup]["usage_count"] = 0; save_editable_prompts_to_gist(); st.success(f"Cas d'usage '{original_uc_name_dup}' dupliqué en '{new_uc_name_dup}'.")
-                    st.session_state.force_select_family_name = final_selected_family_edition; st.session_state.force_select_use_case_name = new_uc_name_dup; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.rerun()
-            with action_cols[1]:
-                del_uc_key_exp = f"del_uc_btn_exp_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"; is_confirming_this_uc_delete = bool(st.session_state.confirming_delete_details and st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition)
-                if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp, type="secondary", disabled=is_confirming_this_uc_delete): st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}; st.rerun() 
-        if st.session_state.get('go_to_config_section'): st.session_state.go_to_config_section = False 
-    else: 
-        if not final_selected_family_edition: st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Édition) pour commencer.")
-        elif not final_selected_use_case_edition: st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
-        else: st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections."); st.session_state.use_case_selector_edition = None # pragma: no cover
-
+            # Reset go_to_config_section flag only if not in a pending duplication for this UC,
+            # to ensure expander stays open during duplication naming.
+            if st.session_state.get('go_to_config_section') and not is_currently_duplicating_this_uc: 
+                st.session_state.go_to_config_section = False 
+        # --- FIN DE LA SECTION À REMPLACER / INTÉGRER ---
 elif st.session_state.view_mode == "inject_manual": 
     st.header("💉 Injection Manuelle de Cas d'Usage JSON")
     st.markdown("""Collez ici un ou plusieurs cas d'usage au format JSON. Le JSON doit être un dictionnaire où chaque clé est le nom du nouveau cas d'usage, et la valeur est sa configuration.""")
