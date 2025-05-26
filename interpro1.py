@@ -1367,7 +1367,7 @@ elif st.session_state.view_mode == "assistant_creation":
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
 else: 
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
+        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition', ou vérifier votre Gist.")
     elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
         st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
         st.rerun()
