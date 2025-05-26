@@ -848,8 +848,7 @@ elif st.session_state.view_mode == "edit":
         st.subheader("Actions sur le Cas d'Usage")
         action_cols_manage = st.columns(2)
         with action_cols_manage[0]:
-            dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-            # Only show the main duplicate button if not currently duplicating this use case
+            dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_main"
             is_dup_form_active = (
                 st.session_state.duplicating_use_case_details and
                 st.session_state.duplicating_use_case_details["family"] == final_selected_family_edition and
@@ -887,7 +886,7 @@ elif st.session_state.view_mode == "edit":
                     value=suggested_new_name,
                     key=f"new_dup_name_input_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
                 )
-                dup_key_form = f"initiate_dup_uc_btn_form_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
+                dup_key_form = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}_form"
                 submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True, key=dup_key_form)
                 if submitted_duplicate_form:
                     new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
@@ -1190,7 +1189,7 @@ elif st.session_state.view_mode == "edit":
             else: 
                 action_cols_manage = st.columns(2)
                 with action_cols_manage[0]: 
-                    dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_main"
                     if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key_init, use_container_width=True):
                         st.session_state.duplicating_use_case_details = {
                             "family": final_selected_family_edition,
