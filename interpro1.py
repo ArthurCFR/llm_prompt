@@ -804,7 +804,24 @@ elif st.session_state.view_mode == "edit":
                             else: final_height = None 
                             gen_form_values[var_info["name"]] = st.text_area(var_info["label"], value=str(field_default or ""), height=final_height, key=widget_key)
             if st.form_submit_button("🚀 Générer Prompt"):
-                final_vals_for_prompt = { k: (v.strftime("%d/%m/%Y") if isinstance(v, date) else v) for k, v in gen_form_values.items() if v is not None }
+                processed_values_for_template = {}
+                for k, v_val in gen_form_values.items(): # gen_form_values vient de votre formulaire
+                    if v_val is None:
+                        # On ne met pas les valeurs None dans le dictionnaire,
+                        # donc les placeholders correspondants ne seront pas remplacés (comportement original)
+                        continue 
+                    
+                    if isinstance(v_val, date):
+                        processed_values_for_template[k] = v_val.strftime("%d/%m/%Y")
+                    elif isinstance(v_val, float) and v_val.is_integer():
+                        # Si c'est un float représentant un entier (ex: 50.0), convertir en int puis en str ("50")
+                        processed_values_for_template[k] = str(int(v_val))
+                    else:
+                        # Pour tous les autres types (str, float non entier, bool, etc.), convertir en str
+                        processed_values_for_template[k] = str(v_val)
+                
+                final_vals_for_prompt = processed_values_for_template # final_vals_for_prompt contient maintenant des chaînes
+
                 try:
                     prompt_template_content = current_prompt_config.get("template", "")
                     processed_template = prompt_template_content
