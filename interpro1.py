@@ -870,9 +870,6 @@ elif st.session_state.view_mode == "edit":
                 st.caption("Survolez une variable ci-dessus et cliquez sur l'icône qui apparaît pour la copier.")
             save_template_button_key = f"save_template_button_{safe_family_key_part}_{safe_uc_key_part}"
             if st.button("Sauvegarder Template", key=save_template_button_key): current_prompt_config['template'] = new_tpl; current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Template sauvegardé!"); st.rerun()
-            st.markdown("---"); st.subheader("🏷️ Tags"); current_tags_str = ", ".join(current_prompt_config.get("tags", []))
-            new_tags_str_input = st.text_input("Tags (séparés par des virgules):", value=current_tags_str, key=f"tags_input_{final_selected_family_edition}_{final_selected_use_case_edition}")
-            if st.button("Sauvegarder Tags", key=f"save_tags_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"): current_prompt_config["tags"] = sorted(list(set(t.strip() for t in new_tags_str_input.split(',') if t.strip()))); current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Tags sauvegardés!"); st.rerun()
             st.markdown("---"); st.subheader("Variables du Prompt"); current_variables_list = current_prompt_config.get('variables', [])
             if not current_variables_list: st.info("Aucune variable définie.")
             else: pass 
@@ -1009,6 +1006,9 @@ elif st.session_state.view_mode == "edit":
                     if is_editing_var: 
                         st.session_state.editing_variable_info = None 
                     st.rerun()
+            st.markdown("---"); st.subheader("🏷️ Tags"); current_tags_str = ", ".join(current_prompt_config.get("tags", []))
+            new_tags_str_input = st.text_input("Tags (séparés par des virgules):", value=current_tags_str, key=f"tags_input_{final_selected_family_edition}_{final_selected_use_case_edition}")
+            if st.button("Sauvegarder Tags", key=f"save_tags_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"): current_prompt_config["tags"] = sorted(list(set(t.strip() for t in new_tags_str_input.split(',') if t.strip()))); current_prompt_config["updated_at"] = datetime.now().isoformat(); save_editable_prompts_to_gist(); st.success("Tags sauvegardés!"); st.rerun()
             # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
 
             st.markdown("---")
