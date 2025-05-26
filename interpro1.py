@@ -842,7 +842,6 @@ elif st.session_state.view_mode == "edit":
             edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
             if edited_prompt_value != st.session_state.active_generated_prompt: st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
             st.caption("Prompt généré (pour relecture et copie manuelle) :")
-            st.caption("Prompt généré (pour relecture et copie manuelle) :")
             if st.session_state.active_generated_prompt:
                 st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
             else:
