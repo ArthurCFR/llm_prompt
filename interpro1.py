@@ -2,7 +2,9 @@ import streamlit as st
 from datetime import datetime, date
 import copy
 import json
-import requests 
+import requests
+import html
+import re
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA")
@@ -153,6 +155,55 @@ def _preprocess_for_saving(data_to_save):
             config.setdefault("created_at", datetime.now().isoformat())
             config.setdefault("updated_at", datetime.now().isoformat())
     return processed_data
+
+def format_prompt_for_custom_display(text_content):
+    # Fonction pour remplacer les variables par des spans bleus
+    def replace_var_with_blue_span(match):
+        # Échappe le contenu de la variable pour l'affichage sécurisé en HTML
+        # white-space: pre-wrap aide à conserver les espaces comme dans st.code
+        return f'<span style="color: blue; white-space: pre-wrap;">{html.escape(match.group(0))}</span>'
+
+    lines = text_content.split('\n')
+    processed_lines = []
+    
+    # Couleur pour les titres (un rouge distinctif)
+    title_color = "#C70039" # Vous pouvez choisir une autre nuance de rouge si vous préférez
+
+    for line in lines:
+        # Applique la coloration bleue aux variables sur la ligne actuelle
+        # Cela se fait avant de vérifier si la ligne est un titre,
+        # pour que les variables dans les titres soient aussi colorées.
+        line_with_blue_vars = re.sub(r'(\{.*?\})', replace_var_with_blue_span, line)
+
+        # Remplace les en-têtes Markdown par des balises Hx HTML stylées en rouge
+        # Ajustez les font-size et margin si besoin pour l'esthétique
+        if line.startswith("# "): # Titre H1
+            # Extrait le contenu après '# '
+            header_content = line[2:] 
+            # Réapplique la coloration des variables spécifiquement sur le contenu de l'en-tête
+            header_content_with_vars = re.sub(r'(\{.*?\})', replace_var_with_blue_span, header_content)
+            processed_lines.append(f'<h1 style="color: {title_color}; font-size: 1.75em; margin-top: 0.6em; margin-bottom: 0.3em; white-space: pre-wrap;">{header_content_with_vars}</h1>')
+        elif line.startswith("## "): # Titre H2
+            header_content = line[3:]
+            header_content_with_vars = re.sub(r'(\{.*?\})', replace_var_with_blue_span, header_content)
+            processed_lines.append(f'<h2 style="color: {title_color}; font-size: 1.5em; margin-top: 0.5em; margin-bottom: 0.25em; white-space: pre-wrap;">{header_content_with_vars}</h2>')
+        elif line.startswith("### "): # Titre H3
+            header_content = line[4:]
+            header_content_with_vars = re.sub(r'(\{.*?\})', replace_var_with_blue_span, header_content)
+            processed_lines.append(f'<h3 style="color: {title_color}; font-size: 1.25em; margin-top: 0.4em; margin-bottom: 0.2em; white-space: pre-wrap;">{header_content_with_vars}</h3>')
+        # Ajoutez d'autres conditions pour #### (H4), ##### (H5), etc., si nécessaire
+        else:
+            # Si ce n'est pas un titre que nous stylisons manuellement,
+            # on utilise la ligne qui a déjà les variables en bleu.
+            # st.markdown traitera toute autre syntaxe Markdown (gras, italique, listes) sur ces lignes.
+            processed_lines.append(line_with_blue_vars)
+            
+    # Rejoint les lignes traitées. st.markdown interprétera les \n.
+    # Le style white-space: pre-wrap; dans les Hx et spans aide à gérer les espaces.
+    return "\n".join(processed_lines)
+
+
+
 
 def _postprocess_after_loading(loaded_data): # User's trusted version + height fix
     processed_data = copy.deepcopy(loaded_data)
@@ -841,7 +892,13 @@ elif st.session_state.view_mode == "edit":
             st.subheader("✅ Prompt Généré (éditable):")
             edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
             if edited_prompt_value != st.session_state.active_generated_prompt: st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
-            st.caption("Prompt généré (pour relecture et copie manuelle) :"); st.code(st.session_state.active_generated_prompt, language=None)
+            st.caption("Prompt généré (pour relecture et copie manuelle) :")
+            if st.session_state.active_generated_prompt:
+                formatted_prompt_display = format_prompt_for_custom_display(st.session_state.active_generated_prompt)
+                st.markdown(formatted_prompt_display, unsafe_allow_html=True)
+            else:
+                # Au cas où il n'y aurait pas de prompt actif, affichez un message ou un bloc de code vide
+                st.markdown("*Aucun prompt généré à afficher.*") 
         st.markdown("---")
         if st.session_state.confirming_delete_details and st.session_state.confirming_delete_details["family"] == final_selected_family_edition and st.session_state.confirming_delete_details["use_case"] == final_selected_use_case_edition:
             details = st.session_state.confirming_delete_details; st.warning(f"Supprimer '{details['use_case']}' de '{details['family']}' ? Action irréversible.")
