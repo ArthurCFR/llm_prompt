@@ -841,30 +841,7 @@ elif st.session_state.view_mode == "edit":
             st.subheader("✅ Prompt Généré (éditable):")
             edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
             if edited_prompt_value != st.session_state.active_generated_prompt: st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
-            st.caption("Prompt généré (pour relecture et copie manuelle) :"); st.code(st.session_state.active_generated_prompt, language=None) 
-
-            # --- Notation du prompt généré ---
-            rating_key = f"has_rated_{final_selected_family_edition}_{final_selected_use_case_edition}"
-            if not st.session_state.get(rating_key, False):
-                current_ratings = current_prompt_config.get("ratings", [])
-                average_rating = current_prompt_config.get("average_rating", 0.0)
-                st.markdown("### Noter ce prompt")
-                user_rating = st.radio("Votre note :", [1, 2, 3, 4, 5], horizontal=True, key=f"rating_{final_selected_family_edition}_{final_selected_use_case_edition}")
-                if st.button("Soumettre la note", key=f"submit_rating_{final_selected_family_edition}_{final_selected_use_case_edition}"):
-                    current_ratings.append(user_rating)
-                    current_prompt_config["ratings"] = current_ratings
-                    current_prompt_config["average_rating"] = sum(current_ratings) / len(current_ratings)
-                    save_editable_prompts_to_gist()
-                    st.session_state[rating_key] = True
-                    st.success(f"Merci pour votre note ! Note moyenne actuelle : {current_prompt_config['average_rating']:.2f}/5")
-            else:
-                st.info("Vous avez déjà noté ce prompt. Merci !")
-            # Affichage de la note globale
-            current_ratings = current_prompt_config.get("ratings", [])
-            if current_ratings:
-                st.info(f"Note moyenne de ce prompt : {current_prompt_config['average_rating']:.2f}/5 ({len(current_ratings)} votes)")
-            else:
-                st.info("Ce prompt n'a pas encore été noté.")
+            st.caption("Prompt généré (pour relecture et copie manuelle) :"); st.code(st.session_state.active_generated_prompt, language=None)
         st.markdown("---")
         if st.session_state.confirming_delete_details and st.session_state.confirming_delete_details["family"] == final_selected_family_edition and st.session_state.confirming_delete_details["use_case"] == final_selected_use_case_edition:
             details = st.session_state.confirming_delete_details; st.warning(f"Supprimer '{details['use_case']}' de '{details['family']}' ? Action irréversible.")
