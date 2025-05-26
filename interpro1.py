@@ -1144,7 +1144,7 @@ elif st.session_state.view_mode == "edit":
                 original_uc_name_for_dup_form = st.session_state.duplicating_use_case_details["use_case"]
                 st.markdown(f"#### Dupliquer '{original_uc_name_for_dup_form}'")
 
-                with st.form(key=f"form_duplicate_name_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"):
+                with st.form(key=f"form_duplicate_name_expander_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"):
                     suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
                     suggested_new_name = suggested_new_name_base
                     temp_copy_count = 1
@@ -1155,10 +1155,10 @@ elif st.session_state.view_mode == "edit":
                     new_duplicated_uc_name_input = st.text_input(
                         "Nouveau nom pour le cas d'usage dupliqué:", 
                         value=suggested_new_name,
-                        key=f"new_dup_name_input_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
+                        key=f"new_dup_name_input_expander_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
                     )
 
-                    submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
+                    submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True, key=f"submit_dup_form_expander_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}")
 
                     if submitted_duplicate_form:
                         new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
@@ -1189,8 +1189,8 @@ elif st.session_state.view_mode == "edit":
             else: 
                 action_cols_manage = st.columns(2)
                 with action_cols_manage[0]: 
-                    dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_main"
-                    if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key_init, use_container_width=True):
+                    dup_key_init_exp = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_expander_main"
+                    if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key_init_exp, use_container_width=True):
                         st.session_state.duplicating_use_case_details = {
                             "family": final_selected_family_edition,
                             "use_case": final_selected_use_case_edition
@@ -1198,11 +1198,11 @@ elif st.session_state.view_mode == "edit":
                         st.rerun()
 
                 with action_cols_manage[1]: 
-                    del_uc_key_exp_main = f"del_uc_btn_exp_main_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    del_uc_key_exp_main_exp = f"del_uc_btn_exp_main_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}_expander"
                     is_confirming_this_uc_delete_main = bool(st.session_state.confirming_delete_details and \
                                                         st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and \
                                                         st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition)
-                    if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp_main, type="secondary", disabled=is_confirming_this_uc_delete_main, use_container_width=True):
+                    if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp_main_exp, type="secondary", disabled=is_confirming_this_uc_delete_main, use_container_width=True):
                         st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
                         st.rerun()
 
