@@ -1006,228 +1006,247 @@ elif st.session_state.view_mode == "edit":
                     st.rerun()
             # --- FIN DU BLOC if st.session_state.variable_type_to_create: ---
 
-              st.markdown("---")
-              st.subheader("Actions sur le Cas d'Usage")
-      
-              if st.session_state.duplicating_use_case_details and \
-                 st.session_state.duplicating_use_case_details["family"] == final_selected_family_edition and \
-                 st.session_state.duplicating_use_case_details["use_case"] == final_selected_use_case_edition:
-      
-                  original_uc_name_for_dup_form = st.session_state.duplicating_use_case_details["use_case"]
-                  st.markdown(f"#### Dupliquer '{original_uc_name_for_dup_form}'")
-      
-                  with st.form(key=f"form_duplicate_name_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"):
-                      suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
-                      suggested_new_name = suggested_new_name_base
-                      temp_copy_count = 1
-                      while suggested_new_name in st.session_state.editable_prompts.get(final_selected_family_edition, {}):
-                          suggested_new_name = f"{suggested_new_name_base} {temp_copy_count}"
-                          temp_copy_count += 1
-      
-                      new_duplicated_uc_name_input = st.text_input(
-                          "Nouveau nom pour le cas d'usage dupliqué:", 
-                          value=suggested_new_name,
-                          key=f"new_dup_name_input_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
-                      )
-      
-                      submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
-      
-                      if submitted_duplicate_form:
-                          new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
-                          family_for_dup = st.session_state.duplicating_use_case_details["family"]
-      
-                          if not new_uc_name_val_from_form:
-                              st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
-                          elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(family_for_dup, {}):
-                              st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{family_for_dup}'.")
-                          else:
-                              st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
-                              now_iso_dup_create, now_iso_dup_update = get_default_dates()
-                              st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["created_at"] = now_iso_dup_create
-                              st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
-                              st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["usage_count"] = 0
-                              save_editable_prompts_to_gist()
-                              st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{family_for_dup}'.")
-      
-                              st.session_state.duplicating_use_case_details = None 
-                              st.session_state.force_select_family_name = family_for_dup
-                              st.session_state.force_select_use_case_name = new_uc_name_val_from_form
-                              st.session_state.active_generated_prompt = ""
-                              st.session_state.variable_type_to_create = None
-                              st.session_state.editing_variable_info = None
-                              st.session_state.go_to_config_section = True
-                              st.rerun()
-      
-                  if st.button("❌ Annuler la Duplication", key=f"cancel_dup_process_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}", use_container_width=True):
-                      st.session_state.duplicating_use_case_details = None
-                      st.rerun()
-      
-              else: 
-                  action_cols_manage = st.columns(2)
-                  with action_cols_manage[0]: 
-                      dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                      if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key_init, use_container_width=True):
-                          st.session_state.duplicating_use_case_details = {
-                              "family": final_selected_family_edition,
-                              "use_case": final_selected_use_case_edition
-                          }
-                          st.rerun()
-      
-                  with action_cols_manage[1]: 
-                      del_uc_key_exp_main = f"del_uc_btn_exp_main_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
-                      is_confirming_this_uc_delete_main = bool(st.session_state.confirming_delete_details and \
-                                                          st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and \
-                                                          st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition)
-                      if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp_main, type="secondary", disabled=is_confirming_this_uc_delete_main, use_container_width=True):
-                          st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
-                          st.rerun()
-              if st.session_state.get('go_to_config_section'): st.session_state.go_to_config_section = False 
-          else: 
-              if not final_selected_family_edition: st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Édition) pour commencer.")
-              elif not final_selected_use_case_edition: st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
-              else: st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections."); st.session_state.use_case_selector_edition = None # pragma: no cover
-      
-      elif st.session_state.view_mode == "inject_manual": 
-          st.header("💉 Injection Manuelle de Cas d'Usage JSON")
-          st.markdown("""Collez ici un ou plusieurs cas d'usage au format JSON. Le JSON doit être un dictionnaire où chaque clé est le nom du nouveau cas d'usage, et la valeur est sa configuration.""")
-          st.caption("Exemple de structure pour un cas d'usage :")
-          json_example_string = """{
-        "Nom de Mon Nouveau Cas d'Usage": {
-          "template": "Ceci est le {variable_exemple} pour mon prompt.",
-          "variables": [
-            {
-              "name": "variable_exemple",
-              "label": "Variable d'Exemple",
-              "type": "text_input",
-              "default": "texte par défaut"
-            }
-          ],
-          "tags": ["nouveau", "exemple"]
-        }
-      }"""
-          st.code(json_example_string, language="json")
-          available_families_for_injection = list(st.session_state.editable_prompts.keys())
-          if not available_families_for_injection: st.warning("Aucune famille n'existe. Veuillez d'abord créer une famille via l'onglet 'Édition'.")
-          else:
-              selected_family_for_injection = st.selectbox("Choisissez la famille de destination pour l'injection :", options=[""] + available_families_for_injection, index=0, key="injection_family_selector")
-              st.session_state.injection_selected_family = selected_family_for_injection if selected_family_for_injection else None
-              if st.session_state.injection_selected_family:
-                  st.subheader(f"Injecter dans la famille : {st.session_state.injection_selected_family}")
-                  st.session_state.injection_json_text = st.text_area("Collez le JSON des cas d'usage ici :", value=st.session_state.get("injection_json_text", ""), height=300, key="injection_json_input")
-                  if st.button("➕ Injecter les Cas d'Usage", key="submit_injection_btn"):
-                      if not st.session_state.injection_json_text.strip(): st.error("La zone de texte JSON est vide.")
-                      else:
-                          try:
-                              injected_data = json.loads(st.session_state.injection_json_text)
-                              if not isinstance(injected_data, dict): st.error("Le JSON fourni doit être un dictionnaire (objet JSON).")
-                              else:
-                                  target_family_name = st.session_state.injection_selected_family
-                                  if target_family_name not in st.session_state.editable_prompts: st.error(f"La famille de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.") 
-                                  else:
-                                      family_prompts = st.session_state.editable_prompts[target_family_name]; successful_injections = []; failed_injections = []; first_new_uc_name = None
-                                      for uc_name, uc_config_json in injected_data.items(): # uc_config_json is the raw dict from user's JSON
-                                          uc_name_stripped = uc_name.strip()
-                                          if not uc_name_stripped: failed_injections.append(f"Nom de cas d'usage vide ignoré."); continue
-                                          if not isinstance(uc_config_json, dict) or "template" not in uc_config_json: failed_injections.append(f"'{uc_name_stripped}': Configuration invalide ou template manquant."); continue
-                                          if uc_name_stripped in family_prompts: st.warning(f"Le cas d'usage '{uc_name_stripped}' existe déjà dans la famille '{target_family_name}'. Il a été ignoré."); failed_injections.append(f"'{uc_name_stripped}': Existe déjà, ignoré."); continue
-      
-                                          prepared_uc_config = _prepare_newly_injected_use_case_config(uc_config_json) # Use the new specific function
-      
-                                          if not prepared_uc_config.get("template"): failed_injections.append(f"'{uc_name_stripped}': Template invalide après traitement."); continue # Should be caught by _prepare_newly_injected_use_case_config if it makes template empty
-                                          family_prompts[uc_name_stripped] = prepared_uc_config; successful_injections.append(uc_name_stripped)
-                                          if first_new_uc_name is None: first_new_uc_name = uc_name_stripped
-                                      if successful_injections:
-                                          save_editable_prompts_to_gist(); st.success(f"{len(successful_injections)} cas d'usage injectés avec succès dans '{target_family_name}': {', '.join(successful_injections)}"); st.session_state.injection_json_text = "" 
-                                          if first_new_uc_name: st.session_state.view_mode = "edit"; st.session_state.force_select_family_name = target_family_name; st.session_state.force_select_use_case_name = first_new_uc_name; st.session_state.go_to_config_section = True; st.rerun()
-                                      if failed_injections:
-                                          for fail_msg in failed_injections: st.error(f"Échec d'injection : {fail_msg}")
-                                      if not successful_injections and not failed_injections: st.info("Aucun cas d'usage n'a été trouvé dans le JSON fourni ou tous étaient vides/invalides.")
-                          except json.JSONDecodeError as e: st.error(f"Erreur de parsing JSON : {e}")
-                          except Exception as e: st.error(f"Une erreur inattendue est survenue lors de l'injection : {e}") # pragma: no cover
-              else: st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
-      
-      elif st.session_state.view_mode == "assistant_creation":
-          st.header("✨ Assistant de Création de prompt système")
-          # Phrase d'introduction modifiée comme demandé précédemment
-          st.markdown("Cet assistant vous aide à préparer une **instruction détaillée**. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
-      
-          # Pour le débogage, affichons l'état actuel des valeurs du formulaire au début du rendu
-          # st.write("DEBUG: st.session_state.assistant_form_values AU DEBUT:", st.session_state.assistant_form_values)
-      
-          with st.form(key="assistant_creation_form"):
-              # On utilise un dictionnaire temporaire pour construire les valeurs
-              # qui seront ensuite utilisées pour mettre à jour st.session_state.assistant_form_values
-              # et pour générer le prompt.
-              current_form_input_values = {} 
-      
-              for var_info in ASSISTANT_FORM_VARIABLES:
-                  field_key = f"assistant_form_{var_info['name']}"
-                  # On utilise la valeur de l'état de session pour pré-remplir le widget
-                  value_for_widget = st.session_state.assistant_form_values.get(var_info['name'], var_info['default'])
-      
-                  if var_info["type"] == "text_input":
-                      current_form_input_values[var_info["name"]] = st.text_input(
-                          var_info["label"], 
-                          value=value_for_widget, # Pré-remplissage
-                          key=field_key
-                      )
-                  elif var_info["type"] == "text_area":
-                      current_form_input_values[var_info["name"]] = st.text_area(
-                          var_info["label"], 
-                          value=value_for_widget, # Pré-remplissage
-                          height=var_info.get("height", 100), 
-                          key=field_key
-                      )
-                  elif var_info["type"] == "number_input":
-                      try: 
-                          num_value_for_widget = float(value_for_widget)
-                      except (ValueError, TypeError): 
-                          num_value_for_widget = float(var_info["default"])
-      
-                      current_form_input_values[var_info["name"]] = st.number_input(
-                          var_info["label"], 
-                          value=num_value_for_widget, # Pré-remplissage
-                          min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
-                          max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
-                          step=float(var_info.get("step", 1.0)), 
-                          key=field_key, 
-                          format="%g" 
-                      )
-      
-              submitted_assistant_form = st.form_submit_button("📝 Générer le prompt système")
-      
-              if submitted_assistant_form:
-                  # Lorsque le formulaire est soumis, current_form_input_values contient les dernières valeurs des widgets.
-                  # On met à jour st.session_state.assistant_form_values avec ces nouvelles valeurs.
-                  st.session_state.assistant_form_values = current_form_input_values.copy() # Utiliser une copie
-      
-                  # Pour le débogage, affichons les valeurs qui viennent d'être sauvegardées
-                  # st.write("DEBUG: st.session_state.assistant_form_values APRÈS SOUMISSION:", st.session_state.assistant_form_values)
-      
-                  try:
-                      # On utilise les valeurs fraîchement sauvegardées dans l'état de session pour la génération
-                      populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**st.session_state.assistant_form_values)
-                      st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
-                      st.success("Prompt système généré ! Vous pouvez le copier ci-dessous.")
-                  except KeyError as e: # pragma: no cover
-                      st.error(f"Erreur lors de la construction du prompt système. Clé de formatage manquante : {e}.")
-                  except Exception as e: # pragma: no cover
-                      st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
-                  # Pas de st.rerun() explicite ici, Streamlit gère le re-rendu après la soumission du formulaire.
-                  # L'affichage du prompt généré se fera dans la même exécution du script.
-      
-          if st.session_state.generated_meta_prompt_for_llm:
-              st.subheader("📋 Prompt système Généré (à copier dans votre LLM externe) :")
-              # Modification demandée: utiliser st.code pour l'affichage non éditable et l'icône de copie
-              st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
-              st.markdown("---")
-              st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
-      else: 
-          if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-              st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
-          elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
-              st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
-              st.rerun()
+            st.markdown("---")
+            st.subheader("Actions sur le Cas d'Usage")
+
+            if st.session_state.duplicating_use_case_details and \
+               st.session_state.duplicating_use_case_details["family"] == final_selected_family_edition and \
+               st.session_state.duplicating_use_case_details["use_case"] == final_selected_use_case_edition:
+
+                original_uc_name_for_dup_form = st.session_state.duplicating_use_case_details["use_case"]
+                st.markdown(f"#### Dupliquer '{original_uc_name_for_dup_form}'")
+
+                with st.form(key=f"form_duplicate_name_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"):
+                    suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
+                    suggested_new_name = suggested_new_name_base
+                    temp_copy_count = 1
+                    while suggested_new_name in st.session_state.editable_prompts.get(final_selected_family_edition, {}):
+                        suggested_new_name = f"{suggested_new_name_base} {temp_copy_count}"
+                        temp_copy_count += 1
+
+                    new_duplicated_uc_name_input = st.text_input(
+                        "Nouveau nom pour le cas d'usage dupliqué:", 
+                        value=suggested_new_name,
+                        key=f"new_dup_name_input_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
+                    )
+
+                    submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
+
+                    if submitted_duplicate_form:
+                        new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
+                        family_for_dup = st.session_state.duplicating_use_case_details["family"]
+
+                        if not new_uc_name_val_from_form:
+                            st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
+                        elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(family_for_dup, {}):
+                            st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{family_for_dup}'.")
+                        else:
+                            st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
+                            now_iso_dup_create, now_iso_dup_update = get_default_dates()
+                            st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["created_at"] = now_iso_dup_create
+                            st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
+                            st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["usage_count"] = 0
+                            save_editable_prompts_to_gist()
+                            st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{family_for_dup}'.")
+
+                            st.session_state.duplicating_use_case_details = None 
+                            st.session_state.force_select_family_name = family_for_dup
+                            st.session_state.force_select_use_case_name = new_uc_name_val_from_form
+                            st.session_state.active_generated_prompt = ""
+                            st.session_state.variable_type_to_create = None
+                            st.session_state.editing_variable_info = None
+                            st.session_state.go_to_config_section = True
+                            st.rerun()
+
+                if st.button("❌ Annuler la Duplication", key=f"cancel_dup_process_{final_selected_family_edition.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}", use_container_width=True):
+                    st.session_state.duplicating_use_case_details = None
+                    st.rerun()
+
+            else: 
+                action_cols_manage = st.columns(2)
+                with action_cols_manage[0]: 
+                    dup_key_init = f"initiate_dup_uc_btn_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    if st.button("🔄 Dupliquer ce Cas d'Usage", key=dup_key_init, use_container_width=True):
+                        st.session_state.duplicating_use_case_details = {
+                            "family": final_selected_family_edition,
+                            "use_case": final_selected_use_case_edition
+                        }
+                        st.rerun()
+
+                with action_cols_manage[1]: 
+                    del_uc_key_exp_main = f"del_uc_btn_exp_main_{final_selected_family_edition.replace(' ','_')}_{final_selected_use_case_edition.replace(' ','_')}"
+                    is_confirming_this_uc_delete_main = bool(st.session_state.confirming_delete_details and \
+                                                        st.session_state.confirming_delete_details.get("family") == final_selected_family_edition and \
+                                                        st.session_state.confirming_delete_details.get("use_case") == final_selected_use_case_edition)
+                    if st.button("🗑️ Supprimer Cas d'Usage", key=del_uc_key_exp_main, type="secondary", disabled=is_confirming_this_uc_delete_main, use_container_width=True):
+                        st.session_state.confirming_delete_details = {"family": final_selected_family_edition, "use_case": final_selected_use_case_edition}
+                        st.rerun()
+
+            if st.session_state.get('go_to_config_section'): 
+                st.session_state.go_to_config_section = False 
+    else:
+        if not final_selected_family_edition: 
+            st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Édition) pour commencer.")
+        elif not final_selected_use_case_edition: 
+            st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
+        else: 
+            st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.")
+            st.session_state.use_case_selector_edition = None # pragma: no cover
+
+elif st.session_state.view_mode == "inject_manual": 
+    st.header("💉 Injection Manuelle de Cas d'Usage JSON")
+    st.markdown("""Collez ici un ou plusieurs cas d'usage au format JSON. Le JSON doit être un dictionnaire où chaque clé est le nom du nouveau cas d'usage, et la valeur est sa configuration.""")
+    st.caption("Exemple de structure pour un cas d'usage :")
+    json_example_string = """{
+  "Nom de Mon Nouveau Cas d'Usage": {
+    "template": "Ceci est le {variable_exemple} pour mon prompt.",
+    "variables": [
+      {
+        "name": "variable_exemple",
+        "label": "Variable d'Exemple",
+        "type": "text_input",
+        "default": "texte par défaut"
+      }
+    ],
+    "tags": ["nouveau", "exemple"]
+  }
+}"""
+    st.code(json_example_string, language="json")
+    available_families_for_injection = list(st.session_state.editable_prompts.keys())
+    if not available_families_for_injection: 
+        st.warning("Aucune famille n'existe. Veuillez d'abord créer une famille via l'onglet 'Édition'.")
+    else:
+        selected_family_for_injection = st.selectbox("Choisissez la famille de destination pour l'injection :", options=[""] + available_families_for_injection, index=0, key="injection_family_selector")
+        st.session_state.injection_selected_family = selected_family_for_injection if selected_family_for_injection else None
+        if st.session_state.injection_selected_family:
+            st.subheader(f"Injecter dans la famille : {st.session_state.injection_selected_family}")
+            st.session_state.injection_json_text = st.text_area("Collez le JSON des cas d'usage ici :", value=st.session_state.get("injection_json_text", ""), height=300, key="injection_json_input")
+            if st.button("➕ Injecter les Cas d'Usage", key="submit_injection_btn"):
+                if not st.session_state.injection_json_text.strip(): 
+                    st.error("La zone de texte JSON est vide.")
+                else:
+                    try:
+                        injected_data = json.loads(st.session_state.injection_json_text)
+                        if not isinstance(injected_data, dict): 
+                            st.error("Le JSON fourni doit être un dictionnaire (objet JSON).")
+                        else:
+                            target_family_name = st.session_state.injection_selected_family
+                            if target_family_name not in st.session_state.editable_prompts: 
+                                st.error(f"La famille de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.") 
+                            else:
+                                family_prompts = st.session_state.editable_prompts[target_family_name]
+                                successful_injections = []
+                                failed_injections = []
+                                first_new_uc_name = None
+                                for uc_name, uc_config_json in injected_data.items():
+                                    uc_name_stripped = uc_name.strip()
+                                    if not uc_name_stripped: 
+                                        failed_injections.append(f"Nom de cas d'usage vide ignoré.")
+                                        continue
+                                    if not isinstance(uc_config_json, dict) or "template" not in uc_config_json: 
+                                        failed_injections.append(f"'{uc_name_stripped}': Configuration invalide ou template manquant.")
+                                        continue
+                                    if uc_name_stripped in family_prompts: 
+                                        st.warning(f"Le cas d'usage '{uc_name_stripped}' existe déjà dans la famille '{target_family_name}'. Il a été ignoré.")
+                                        failed_injections.append(f"'{uc_name_stripped}': Existe déjà, ignoré.")
+                                        continue
+
+                                    prepared_uc_config = _prepare_newly_injected_use_case_config(uc_config_json)
+
+                                    if not prepared_uc_config.get("template"): 
+                                        failed_injections.append(f"'{uc_name_stripped}': Template invalide après traitement.")
+                                        continue
+                                    family_prompts[uc_name_stripped] = prepared_uc_config
+                                    successful_injections.append(uc_name_stripped)
+                                    if first_new_uc_name is None: 
+                                        first_new_uc_name = uc_name_stripped
+                                if successful_injections:
+                                    save_editable_prompts_to_gist()
+                                    st.success(f"{len(successful_injections)} cas d'usage injectés avec succès dans '{target_family_name}': {', '.join(successful_injections)}")
+                                    st.session_state.injection_json_text = "" 
+                                    if first_new_uc_name: 
+                                        st.session_state.view_mode = "edit"
+                                        st.session_state.force_select_family_name = target_family_name
+                                        st.session_state.force_select_use_case_name = first_new_uc_name
+                                        st.session_state.go_to_config_section = True
+                                        st.rerun()
+                                if failed_injections:
+                                    for fail_msg in failed_injections: 
+                                        st.error(f"Échec d'injection : {fail_msg}")
+                                if not successful_injections and not failed_injections: 
+                                    st.info("Aucun cas d'usage n'a été trouvé dans le JSON fourni ou tous étaient vides/invalides.")
+                    except json.JSONDecodeError as e: 
+                        st.error(f"Erreur de parsing JSON : {e}")
+                    except Exception as e: 
+                        st.error(f"Une erreur inattendue est survenue lors de l'injection : {e}") # pragma: no cover
+        else: 
+            st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
+
+elif st.session_state.view_mode == "assistant_creation":
+    st.header("✨ Assistant de Création de prompt système")
+    st.markdown("Cet assistant vous aide à préparer une **instruction détaillée**. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
+
+    with st.form(key="assistant_creation_form"):
+        current_form_input_values = {} 
+
+        for var_info in ASSISTANT_FORM_VARIABLES:
+            field_key = f"assistant_form_{var_info['name']}"
+            value_for_widget = st.session_state.assistant_form_values.get(var_info['name'], var_info['default'])
+
+            if var_info["type"] == "text_input":
+                current_form_input_values[var_info["name"]] = st.text_input(
+                    var_info["label"], 
+                    value=value_for_widget,
+                    key=field_key
+                )
+            elif var_info["type"] == "text_area":
+                current_form_input_values[var_info["name"]] = st.text_area(
+                    var_info["label"], 
+                    value=value_for_widget,
+                    height=var_info.get("height", 100), 
+                    key=field_key
+                )
+            elif var_info["type"] == "number_input":
+                try: 
+                    num_value_for_widget = float(value_for_widget)
+                except (ValueError, TypeError): 
+                    num_value_for_widget = float(var_info["default"])
+
+                current_form_input_values[var_info["name"]] = st.number_input(
+                    var_info["label"], 
+                    value=num_value_for_widget,
+                    min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
+                    max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
+                    step=float(var_info.get("step", 1.0)), 
+                    key=field_key, 
+                    format="%g" 
+                )
+
+        submitted_assistant_form = st.form_submit_button("📝 Générer le prompt système")
+
+        if submitted_assistant_form:
+            st.session_state.assistant_form_values = current_form_input_values.copy()
+
+            try:
+                populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**st.session_state.assistant_form_values)
+                st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
+                st.success("Prompt système généré ! Vous pouvez le copier ci-dessous.")
+            except KeyError as e: # pragma: no cover
+                st.error(f"Erreur lors de la construction du prompt système. Clé de formatage manquante : {e}.")
+            except Exception as e: # pragma: no cover
+                st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
+
+    if st.session_state.generated_meta_prompt_for_llm:
+        st.subheader("📋 Prompt système Généré (à copier dans votre LLM externe) :")
+        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
+        st.markdown("---")
+        st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
+else: 
+    if not any(st.session_state.editable_prompts.values()): # pragma: no cover
+        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
+    elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
+        st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
+        st.rerun()
 
 # --- Sidebar Footer ---
 st.sidebar.markdown("---")
