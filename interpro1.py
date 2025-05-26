@@ -839,16 +839,23 @@ elif st.session_state.view_mode == "edit":
             st.caption("Prompt généré (pour relecture et copie manuelle) :"); st.code(st.session_state.active_generated_prompt, language=None) 
 
             # --- Notation du prompt généré ---
+            rating_key = f"has_rated_{final_selected_family_edition}_{final_selected_use_case_edition}"
+            if not st.session_state.get(rating_key, False):
+                current_ratings = current_prompt_config.get("ratings", [])
+                average_rating = current_prompt_config.get("average_rating", 0.0)
+                st.markdown("### Noter ce prompt")
+                user_rating = st.radio("Votre note :", [1, 2, 3, 4, 5], horizontal=True, key=f"rating_{final_selected_family_edition}_{final_selected_use_case_edition}")
+                if st.button("Soumettre la note", key=f"submit_rating_{final_selected_family_edition}_{final_selected_use_case_edition}"):
+                    current_ratings.append(user_rating)
+                    current_prompt_config["ratings"] = current_ratings
+                    current_prompt_config["average_rating"] = sum(current_ratings) / len(current_ratings)
+                    save_editable_prompts_to_gist()
+                    st.session_state[rating_key] = True
+                    st.success(f"Merci pour votre note ! Note moyenne actuelle : {current_prompt_config['average_rating']:.2f}/5")
+            else:
+                st.info("Vous avez déjà noté ce prompt. Merci !")
+            # Affichage de la note globale
             current_ratings = current_prompt_config.get("ratings", [])
-            average_rating = current_prompt_config.get("average_rating", 0.0)
-            st.markdown("### Noter ce prompt")
-            user_rating = st.radio("Votre note :", [1, 2, 3, 4, 5], horizontal=True, key=f"rating_{final_selected_family_edition}_{final_selected_use_case_edition}")
-            if st.button("Soumettre la note", key=f"submit_rating_{final_selected_family_edition}_{final_selected_use_case_edition}"):
-                current_ratings.append(user_rating)
-                current_prompt_config["ratings"] = current_ratings
-                current_prompt_config["average_rating"] = sum(current_ratings) / len(current_ratings)
-                save_editable_prompts_to_gist()
-                st.success(f"Merci pour votre note ! Note moyenne actuelle : {current_prompt_config['average_rating']:.2f}/5")
             if current_ratings:
                 st.info(f"Note moyenne de ce prompt : {current_prompt_config['average_rating']:.2f}/5 ({len(current_ratings)} votes)")
             else:
