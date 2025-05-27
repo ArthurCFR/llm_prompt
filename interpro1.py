@@ -28,7 +28,7 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
 4.  **Guider l'IA sur les informations spécifiques à extraire.** Ces informations sont : `{elements_specifiques_a_extraire}`.
 5.  **Indiquer le format de sortie désiré pour le résultat du prompt cible : `{format_sortie_desire}`. Le résultat obtenu après l'utilisation du prompt cible doit être pensé pour être agréable à lire, harmonieusement présenté, utilisant les styles de texte à bon escient (ex : gras, italique, souligné) "**
 6.  **Inclure des instructions pour gérer les ambiguïtés** ou le manque d'information (par exemple, demander des clarifications ou indiquer les limites).
-7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre {min_var} et {max_var}. Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}` ou `{{detail_du_produit}}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
+7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre 3 et 7. Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **ACCOLADES**, par exemple : `{nom_du_client}` ou `{detail_du_produit}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
 8.  **Spécifier le public cible du résultat de ce prompt : `{public_cible_reponse}`.**
 9.  **Afin d'être identifiés par la fonctionalité MarkDown, les titres des parties générées par le prompt cible doivent être précédés par deux signes # (exemple : ##Objectif Principal)**
 10.  **Faire en sorte que le résultat obtenu par le prompt cible n'ai pas l'air d'avoir été généré à partir d'un LLM, en évitant des appartées contextuelles telles que des phrases : 'basée sur l'input', 'a partir des informations du prompt', etc..**
@@ -74,8 +74,6 @@ ASSISTANT_FORM_VARIABLES = [
     {"name": "doc_source", "label": "Type de document source (ex: PDF, e-mail, texte brut) si applicable (laisser vide si non pertinent) :", "type": "text_input", "default": ""},
     {"name": "elements_specifiques_a_extraire", "label": "Informations spécifiques à extraire ou générer par le prompt cible :", "type": "text_area", "default": "Ex: - Points clés du texte\n- Acteurs concernés\n- Dates importantes", "height": 100},
     {"name": "format_sortie_desire", "label": "Format de sortie souhaité pour le résultat du prompt cible :", "type": "text_area", "default": "Ex: Liste à puces concise, suivi d'un résumé de 3 phrases.", "height": 75},
-    {"name": "min_var", "label": "Nombre minimum de variables pour le prompt cible :", "type": "number_input", "default": 1, "min_value":0, "max_value":10, "step":1},
-    {"name": "max_var", "label": "Nombre maximum de variables pour le prompt cible :", "type": "number_input", "default": 3, "min_value":1, "max_value":15, "step":1},
     {"name": "public_cible_reponse", "label": "Public cible de la réponse générée par le prompt cible :", "type": "text_input", "default": "Experts du domaine"},
 ]
 
