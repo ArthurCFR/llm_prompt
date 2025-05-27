@@ -47,7 +47,7 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
 4.  **Proposer une liste de 3 à 5 mots-clés pertinents** (`"tags"`) pour le "Prompt Cible".
 
 # FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT)
-Tu dois fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON DOIT être structuré comme suit, où la clé principale est le nom suggéré pour le cas d'usage, et la valeur est un objet contenant le template, les variables et les tags :
+Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON DOIT être structuré comme suit, où la clé principale est le nom suggéré pour le cas d'usage, et la valeur est un objet contenant le template, les variables et les tags :
 
 ```json
 {{
