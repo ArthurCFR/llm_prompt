@@ -1060,12 +1060,13 @@ elif st.session_state.view_mode == "edit":
                 button_id = f"copyBtn_{final_selected_family_edition}_{final_selected_use_case_edition}".replace(" ", "_").replace(".", "_")
         
                 button_html = f"""
-                    <button 
-                        id="{button_id}" 
-                        onclick="copyActivePromptToClipboard({prompt_text_escaped_for_js}, '{button_id}')"
-                    >
-                        📋 Copier le Prompt Généré
-                    </button>
+                            <button 
+                                id="{button_id}" 
+                                class="custom-prompt-copy-button" 
+                                onclick="copyActivePromptToClipboard({prompt_text_escaped_for_js}, '{button_id}')"
+                            >
+                                📋 Copier le Prompt Généré
+                            </button>
                 """
                 st.markdown(button_html, unsafe_allow_html=True)
                 st.caption("Cliquez sur le bouton ci-dessus pour copier le prompt dans votre presse-papiers.")
