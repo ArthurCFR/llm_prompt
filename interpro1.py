@@ -144,7 +144,7 @@ ASSISTANT_FORM_VARIABLES = [
     {"name": "doc_source", "label": "Quel(s) types de document(s) sont nécessaire pour la réalisation de votre besoin ? (e.g. PDF, e-mail, texte brut -laisser vide si non pertinent-) :", "type": "text_input", "default": ""},
     {"name": "elements_specifiques_a_extraire", "label": "Quelles sont les informations spécifiques que vous souhaitez identifier / générer ? (e.g. l'ensemble des ID clients, les clauses du contrat) :", "type": "text_area", "default": "", "height": 100},
     {"name": "format_sortie_desire", "label": "Optionnel : sous quel format voulez vous que le prompt produise une réponse ? (e.g. un texte de deux pages, une liste à puces) :", "type": "text_area", "default": "", "height": 75},
-    {"name": "public_cible_reponse", "label": "Optionnel : pour quel public cible s'adressera la réponse du prompt ? (e.g. des profils techniques, le grand public) :", "type": "text_input", "default": ""},
+    {"name": "public_cible_reponse", "label": "Optionnel : pour quel public cible s'adressera le résultat du prompt ? (e.g. des profils techniques, le grand public) :", "type": "text_input", "default": ""},
 ]
 
 def get_default_dates():
