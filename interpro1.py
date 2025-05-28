@@ -724,7 +724,6 @@ if st.session_state.view_mode == "accueil":
 
         En bref, cet outil vous aide à formuler les meilleures demandes possibles aux IA pour qu'elles deviennent de véritables alliées dans votre travail ou vos projets.
     """)
-    st.markdown("---")
 
     cols_accueil = st.columns(2)
     with cols_accueil[0]:
