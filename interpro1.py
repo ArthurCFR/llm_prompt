@@ -21,6 +21,33 @@ st.markdown("""
             display: inline-flex; /* Peut aider à un meilleur alignement et comportement */
             align-items: center;
         }
+                /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
+        button[data-testid="stCodeBlockCopyButton"] {
+            opacity: 0.8 !important;
+            visibility: visible !important;
+            background-color: #f0f2f6 !important;
+            border: 1px solid #d0d0d0 !important;
+            border-radius: 4px !important;
+            padding: 0.2rem 0.4rem !important;
+            transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            right: 0.6rem !important;
+            top: 0.6rem !important;
+        }
+
+        button[data-testid="stCodeBlockCopyButton"]:hover {
+            opacity: 1 !important;
+            background-color: #e0e0e5 !important;
+        }
+
+        button[data-testid="stCodeBlockCopyButton"] svg {
+            transform: scale(1.2) !important; /* Agrandit l'icône */
+        }
+        
+        /* Pour rendre le bouton plus évident au survol du bloc de code entier */
+        div[data-testid="stCodeBlock"]:hover button[data-testid="stCodeBlockCopyButton"] {
+            opacity: 1 !important; /* Devient complètement opaque */
+        }
+        /* === FIN DES NOUVELLES RÈGLES === */
 
     </style>
 """, unsafe_allow_html=True)
