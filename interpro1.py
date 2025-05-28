@@ -814,7 +814,7 @@ elif st.session_state.view_mode == "library":
                     created_at_str = prompt_config_display.get('created_at', get_default_dates()[0])
                     updated_at_str = prompt_config_display.get('updated_at', get_default_dates()[1])
                     st.caption(f"Créé le: {datetime.fromisoformat(created_at_str).strftime('%d/%m/%Y %H:%M')} | Modifié le: {datetime.fromisoformat(updated_at_str).strftime('%d/%m/%Y %H:%M')}")
-                    st.markdown("---")
+
                     col_btn_lib1, col_btn_lib2 = st.columns(2)
                     with col_btn_lib1:
                         if st.button(f"✍️ Utiliser ce modèle", key=f"main_lib_use_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
