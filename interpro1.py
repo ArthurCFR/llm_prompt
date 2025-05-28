@@ -739,6 +739,9 @@ if st.session_state.view_mode == "accueil":
             st.rerun()
 
 elif st.session_state.view_mode == "select_family_for_library":
+    if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_select_family"):
+        st.session_state.view_mode = "accueil"
+        st.rerun()
     st.header("📚 Explorer les Prompts par Famille")
     st.markdown("Cliquez sur le nom d'une famille pour afficher les prompts qu'elle contient.")
     st.markdown("---")
@@ -749,9 +752,7 @@ elif st.session_state.view_mode == "select_family_for_library":
         st.info("Aucune famille de prompts n'a été créée pour le moment.")
         st.markdown("Vous pouvez en créer via l'onglet **Édition** dans le menu latéral (accessible via l'icône Menu en haut à gauche).")
         st.markdown("---")
-        if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_select_family"):
-            st.session_state.view_mode = "accueil"
-            st.rerun()
+
     else:
         sorted_families = sorted(available_families)
         
@@ -766,11 +767,11 @@ elif st.session_state.view_mode == "select_family_for_library":
                     st.rerun()
         
         st.markdown("---")
-        if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_select_family_list"):
-            st.session_state.view_mode = "accueil"
-            st.rerun()
 
 elif st.session_state.view_mode == "library":
+    if st.button("⬅️ Retour à la sélection des familles", key="back_to_select_family_from_library"):
+        st.session_state.view_mode = "select_family_for_library"
+        st.rerun()
     if not library_family_to_display:
         st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
         available_families_main_display = list(st.session_state.editable_prompts.keys())
@@ -835,6 +836,11 @@ elif st.session_state.view_mode == "library":
         if not available_families_check : st.warning("La bibliothèque est entièrement vide. Veuillez créer des familles et des prompts.")
 
 elif st.session_state.view_mode == "edit":
+    if st.button(f"⬅️ Retour à la bibliothèque ({current_family_of_edited_prompt or 'Famille'})", key="back_to_library_from_edit"):
+        if current_family_of_edited_prompt:
+            st.session_state.library_selected_family_for_display = current_family_of_edited_prompt
+        st.session_state.view_mode = "library"
+        st.rerun()
     if not final_selected_family_edition : st.info("Sélectionnez une famille dans la barre latérale (onglet Édition) ou créez-en une pour commencer.")
     elif not final_selected_use_case_edition: st.info(f"Sélectionnez un cas d'usage dans la famille '{final_selected_family_edition}' ou créez-en un nouveau pour commencer.")
     elif final_selected_family_edition in st.session_state.editable_prompts and final_selected_use_case_edition in st.session_state.editable_prompts[final_selected_family_edition]:
@@ -1202,6 +1208,9 @@ elif st.session_state.view_mode == "edit":
             st.session_state.use_case_selector_edition = None # pragma: no cover
 
 elif st.session_state.view_mode == "inject_manual": 
+    if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_inject"):
+        st.session_state.view_mode = "accueil"
+        st.rerun()
     st.header("💉 Injection Manuelle de Cas d'Usage JSON")
     st.markdown("""Collez ici un ou plusieurs cas d'usage au format JSON. Le JSON doit être un dictionnaire où chaque clé est le nom du nouveau cas d'usage, et la valeur est sa configuration.""")
     st.caption("Exemple de structure pour un cas d'usage :")
@@ -1291,6 +1300,9 @@ elif st.session_state.view_mode == "inject_manual":
             st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
 
 elif st.session_state.view_mode == "assistant_creation":
+    if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_assistant"):
+        st.session_state.view_mode = "accueil"
+        st.rerun()
     st.header("✨ Assistant de création de prompt système")
     st.markdown("Cet assistant vous aide à préparer une **instruction détaillée**. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
 
