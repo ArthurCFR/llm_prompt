@@ -404,9 +404,6 @@ if 'assistant_form_values' not in st.session_state:
 if 'generated_meta_prompt_for_llm' not in st.session_state: 
     st.session_state.generated_meta_prompt_for_llm = ""
 
-# --- Main App UI ---
-st.title(f"🛠️ L'atelier des prompts IA")
-
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
 tab_bibliotheque, tab_edition_generation, tab_injection = st.sidebar.tabs([
