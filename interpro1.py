@@ -808,15 +808,7 @@ elif st.session_state.view_mode == "library":
                 exp_title = f"{use_case_name_display}"
                 if prompt_config_display.get("usage_count", 0) > 0: exp_title += f" (Utilisé {prompt_config_display.get('usage_count')} fois)"
                 with st.expander(exp_title, expanded=False):
-                    st.markdown(f"##### Template pour : {use_case_name_display}")
-                    st.code(template_display, language=None)
-                    variables_display = prompt_config_display.get("variables", [])
-                    if variables_display:
-                        st.markdown("**Variables associées:**")
-                        var_details_list_display = [f"- `{v.get('name', 'N/A')}` ({v.get('label', 'N/A')})" for v in variables_display if isinstance(v, dict)]
-                        if var_details_list_display: st.markdown("\n".join(var_details_list_display))
-                        else: st.caption("_Aucune variable correctement définie._") # pragma: no cover
-                    else: st.caption("_Aucune variable spécifique définie._")
+                    
                     tags_display = prompt_config_display.get("tags", [])
                     if tags_display: st.markdown(f"**Tags :** {', '.join([f'`{tag}`' for tag in tags_display])}")
                     created_at_str = prompt_config_display.get('created_at', get_default_dates()[0])
