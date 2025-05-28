@@ -1435,7 +1435,7 @@ elif st.session_state.view_mode == "assistant_creation":
         st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
         
         # Cette caption est toujours utile pour indiquer comment utiliser l'icône de copie du bloc st.code
-        st.caption("<span style='color:gray; font-size:0.9em;'>Utilisez l'icône 📋 en haut à droite du bloc de code pour copier le prompt système.</span>", unsafe_allow_html=True)
+        st.caption("<span style='color:gray; font-size:0.9em;'>Utilisez l'icône en haut à droite du bloc de code pour copier le prompt système.</span>", unsafe_allow_html=True)
 
         st.markdown("---")
         st.info("Une fois que LaPoste GPT (ou votre LLM externe) a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
