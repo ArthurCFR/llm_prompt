@@ -21,16 +21,33 @@ st.markdown("""
             display: inline-flex; /* Peut aider à un meilleur alignement et comportement */
             align-items: center;
         }
-        div[data-testid="stCodeBlock"] pre {
-            max-height: 120px !important; /* Hauteur max pour le contenu du code */
+        div[data-testid="stCodeBlock"] pre,
+        pre.st-emotion-cache-1nqbjoj /* Cible spécifique à votre HTML, attention à sa stabilité */
+        {
+            height: 120px !important;    /* Hauteur fixe souhaitée */
+            max-height: 120px !important;
             overflow-y: auto !important;
-            font-size: 0.875em !important; /* Police légèrement plus petite pour plus de contenu visible */
+            font-size: 0.875em !important;
+            /* Assurez-vous qu'il n'est pas caché par autre chose */
+            display: block !important; 
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
-        /* Cible le conteneur direct du <pre> à l'intérieur du stCodeBlock */
-        /* Ce div est souvent celui qui gère le défilement dans les versions récentes de Streamlit */
+        /* Cible le div conteneur direct à l'intérieur de stCodeBlock s'il existe et gère le scroll */
         div[data-testid="stCodeBlock"] > div:first-child {
-            max-height: 120px !important; /* Assurez-vous que cette valeur correspond à celle de pre */
+            height: 120px !important; /* Doit correspondre à la valeur ci-dessus */
+            max-height: 120px !important;
+            overflow-y: auto !important;
+             display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Si le div interne au <pre> doit gérer le scroll */
+        pre.st-emotion-cache-1nqbjoj > div[style*="background-color: transparent;"] {
+            height: auto !important; 
+            max-height: 100% !important; 
             overflow-y: auto !important;
         }
                 /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
