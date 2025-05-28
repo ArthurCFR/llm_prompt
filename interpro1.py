@@ -535,7 +535,7 @@ with tab_edition_generation:
             with st.form("rename_family_form_sidebar"):
                 st.write(f"Renommer la famille : **{current_selected_family_for_edit_logic}**")
                 renamed_family_name_input = st.text_input("Nouveau nom :", value=current_selected_family_for_edit_logic, key="ren_fam_name_sidebar")
-                submitted_rename_family = st.form_submit_("✏️ Renommer")
+                submitted_rename_family = st.form_submit_button("✏️ Renommer")
                 if submitted_rename_family and renamed_family_name_input.strip():
                     renamed_family_name = renamed_family_name_input.strip()
                     if renamed_family_name == current_selected_family_for_edit_logic:
