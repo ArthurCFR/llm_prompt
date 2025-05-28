@@ -442,15 +442,15 @@ with tab_edition_generation:
         default_family_idx_edit = 0 
 
     if not available_families:
-        st.info("Aucune famille de cas d'usage. Créez-en une via les options ci-dessous.")
+        st.info("Aucune famille de métier de cas d'usage. Créez-en une via les options ci-dessous.")
     else:
         prev_family_selection_edit = st.session_state.get('family_selector_edition') 
         selected_family_ui_edit = st.selectbox(
-            "Famille :",
+            "Métier :",
             options=available_families,
             index=default_family_idx_edit, 
             key='family_selectbox_widget_edit',
-            help="Sélectionnez une famille pour voir ses cas d'usage."
+            help="Sélectionnez une métier pour voir ses cas d'usage."
         )
         if st.session_state.family_selector_edition != selected_family_ui_edit :
              st.session_state.family_selector_edition = selected_family_ui_edit
@@ -511,28 +511,28 @@ with tab_edition_generation:
     if st.session_state.force_select_use_case_name: st.session_state.force_select_use_case_name = None
     st.markdown("---")
 
-    with st.expander("🗂️ Gérer les Familles", expanded=False):
+    with st.expander("🗂️ Gérer les familles de prompts par métier", expanded=False):
         with st.form("new_family_form_sidebar", clear_on_submit=True):
-            new_family_name = st.text_input("Nom de la nouvelle famille:", key="new_fam_name_sidebar")
-            submitted_new_family = st.form_submit_button("➕ Créer Famille")
+            new_family_name = st.text_input("Nom du nouveau métier:", key="new_fam_name_sidebar")
+            submitted_new_family = st.form_submit_button("➕ Créer métier")
             if submitted_new_family and new_family_name.strip():
                 if new_family_name.strip() in st.session_state.editable_prompts:
-                    st.error(f"La famille '{new_family_name.strip()}' existe déjà.")
+                    st.error(f"Le métier '{new_family_name.strip()}' existe déjà.")
                 else:
                     st.session_state.editable_prompts[new_family_name.strip()] = {}
                     save_editable_prompts_to_gist()
-                    st.success(f"Famille '{new_family_name.strip()}' créée.")
+                    st.success(f"Métier '{new_family_name.strip()}' créée.")
                     st.session_state.force_select_family_name = new_family_name.strip() 
                     st.session_state.use_case_selector_edition = None 
                     st.session_state.view_mode = "edit"
                     st.rerun()
             elif submitted_new_family:
-                st.error("Le nom de la famille ne peut pas être vide.")
+                st.error("Le nom du métier ne peut pas être vide.")
 
         if available_families and current_selected_family_for_edit_logic :
             st.markdown("---")
             with st.form("rename_family_form_sidebar"):
-                st.write(f"Renommer la famille : **{current_selected_family_for_edit_logic}**")
+                st.write(f"Renommer le métier : **{current_selected_family_for_edit_logic}**")
                 renamed_family_name_input = st.text_input("Nouveau nom :", value=current_selected_family_for_edit_logic, key="ren_fam_name_sidebar")
                 submitted_rename_family = st.form_submit_button("✏️ Renommer")
                 if submitted_rename_family and renamed_family_name_input.strip():
@@ -540,21 +540,21 @@ with tab_edition_generation:
                     if renamed_family_name == current_selected_family_for_edit_logic:
                         st.info("Le nouveau nom est identique à l'ancien.")
                     elif renamed_family_name in st.session_state.editable_prompts:
-                        st.error(f"Une famille nommée '{renamed_family_name}' existe déjà.")
+                        st.error(f"Un métier nommé '{renamed_family_name}' existe déjà.")
                     else:
                         st.session_state.editable_prompts[renamed_family_name] = st.session_state.editable_prompts.pop(current_selected_family_for_edit_logic)
                         save_editable_prompts_to_gist()
-                        st.success(f"Famille '{current_selected_family_for_edit_logic}' renommée en '{renamed_family_name}'.")
+                        st.success(f"Métier '{current_selected_family_for_edit_logic}' renommé en '{renamed_family_name}'.")
                         st.session_state.force_select_family_name = renamed_family_name 
                         if st.session_state.library_selected_family_for_display == current_selected_family_for_edit_logic:
                            st.session_state.library_selected_family_for_display = renamed_family_name
                         st.session_state.view_mode = "edit"
                         st.rerun()
                 elif submitted_rename_family:
-                    st.error("Le nouveau nom de la famille ne peut pas être vide.")
+                    st.error("Le nouveau nom du métier ne peut pas être vide.")
 
             st.markdown("---")
-            st.write(f"Supprimer la famille : **{current_selected_family_for_edit_logic}**")
+            st.write(f"Supprimer le métier : **{current_selected_family_for_edit_logic}**")
             if st.session_state.confirming_delete_family_name == current_selected_family_for_edit_logic:
                 st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
 
@@ -563,7 +563,7 @@ with tab_edition_generation:
                     deleted_fam_name = current_selected_family_for_edit_logic 
                     del st.session_state.editable_prompts[current_selected_family_for_edit_logic]
                     save_editable_prompts_to_gist()
-                    st.success(f"Famille '{deleted_fam_name}' supprimée.")
+                    st.success(f"Métier '{deleted_fam_name}' supprimée.")
                     st.session_state.confirming_delete_family_name = None
                     st.session_state.family_selector_edition = None 
                     st.session_state.use_case_selector_edition = None
@@ -577,20 +577,20 @@ with tab_edition_generation:
                     st.session_state.view_mode = "edit"
                     st.rerun()
             else:
-                if st.button(f"🗑️ Supprimer Famille Sélectionnée", key=f"del_fam_btn_sb_{current_selected_family_for_edit_logic}"):
+                if st.button(f"🗑️ Supprimer le métier Sélectionnée", key=f"del_fam_btn_sb_{current_selected_family_for_edit_logic}"):
                     st.session_state.confirming_delete_family_name = current_selected_family_for_edit_logic
                     st.session_state.view_mode = "edit"
                     st.rerun()
         elif not available_families:
-            st.caption("Créez une famille pour pouvoir la gérer.")
+            st.caption("Créez un métier pour pouvoir le gérer.")
         else: 
-            st.caption("Sélectionnez une famille (ci-dessus) pour la gérer.")
+            st.caption("Sélectionnez un métier (ci-dessus) pour le gérer.")
 
     st.markdown("---")
 
     with st.expander("➕ Créer un Cas d'Usage", expanded=st.session_state.get('show_create_new_use_case_form', False)):
         if not available_families:
-            st.caption("Veuillez d'abord créer une famille pour y ajouter des cas d'usage.")
+            st.caption("Veuillez d'abord créer une famille de métier pour y ajouter des cas d'usage.")
         else: 
             if st.button("Afficher/Masquer Formulaire de Création de Cas d'Usage", key="toggle_create_uc_form_in_exp"):
                 st.session_state.show_create_new_use_case_form = not st.session_state.get('show_create_new_use_case_form', False)
@@ -603,7 +603,7 @@ with tab_edition_generation:
                         default_create_family_idx_tab = available_families.index(current_selected_family_for_edit_logic)
 
                     uc_parent_family = st.selectbox(
-                        "Famille Parente du nouveau cas d'usage:",
+                        "Métier parent du nouveau cas d'usage:",
                         options=available_families,
                         index=default_create_family_idx_tab,
                         key="new_uc_parent_fam_in_exp"
@@ -620,7 +620,7 @@ with tab_edition_generation:
                         if not uc_name_val: 
                             st.error("Le nom du cas d'usage ne peut pas être vide.")
                         elif uc_name_val in st.session_state.editable_prompts.get(parent_family_val, {}):
-                            st.error(f"Le cas d'usage '{uc_name_val}' existe déjà dans la famille '{parent_family_val}'.")
+                            st.error(f"Le cas d'usage '{uc_name_val}' existe déjà dans le métier '{parent_family_val}'.")
                         else:
                             now_iso_create, now_iso_update = get_default_dates()
                             st.session_state.editable_prompts[parent_family_val][uc_name_val] = {
@@ -666,7 +666,7 @@ with tab_bibliotheque:
            st.session_state.library_selected_family_for_display not in sorted_families_bib:
             st.session_state.library_selected_family_for_display = sorted_families_bib[0] if sorted_families_bib else None
 
-        st.write("Sélectionner une famille à afficher :")
+        st.write("Sélectionner un métier à afficher :")
         for family_name_bib in sorted_families_bib:
             button_key = f"lib_family_btn_{family_name_bib.replace(' ', '_').replace('&', '_')}"
             is_selected_family = (st.session_state.library_selected_family_for_display == family_name_bib)
@@ -742,14 +742,14 @@ elif st.session_state.view_mode == "select_family_for_library":
     if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_select_family"):
         st.session_state.view_mode = "accueil"
         st.rerun()
-    st.header("📚 Explorer les Prompts par Famille")
-    st.markdown("Cliquez sur le nom d'une famille pour afficher les prompts qu'elle contient.")
+    st.header("📚 Explorer les prompts par métier")
+    st.markdown("Cliquez sur le nom d'un métier pour afficher les prompts qu'elle contient.")
     st.markdown("---")
 
     available_families = list(st.session_state.editable_prompts.keys())
 
     if not available_families:
-        st.info("Aucune famille de prompts n'a été créée pour le moment.")
+        st.info("Aucun métier de prompts n'a été créé pour le moment.")
         st.markdown("Vous pouvez en créer via l'onglet **Édition** dans le menu latéral (accessible via l'icône Menu en haut à gauche).")
         st.markdown("---")
 
@@ -761,7 +761,7 @@ elif st.session_state.view_mode == "select_family_for_library":
         cols = st.columns(num_cols)
         for i, family_name in enumerate(sorted_families):
             with cols[i % num_cols]:
-                if st.button(f"{family_name}", key=f"select_family_for_lib_btn_{family_name}", use_container_width=True, help=f"Voir les prompts de la famille '{family_name}'"):
+                if st.button(f"{family_name}", key=f"select_family_for_lib_btn_{family_name}", use_container_width=True, help=f"Voir les prompts du métier '{family_name}'"):
                     st.session_state.library_selected_family_for_display = family_name
                     st.session_state.view_mode = "library" # Redirige vers la bibliothèque avec la famille sélectionnée
                     st.rerun()
@@ -769,19 +769,19 @@ elif st.session_state.view_mode == "select_family_for_library":
         st.markdown("---")
 
 elif st.session_state.view_mode == "library":
-    if st.button("⬅️ Retour à la sélection des familles", key="back_to_select_family_from_library"):
+    if st.button("⬅️ Retour à la sélection des métiers", key="back_to_select_family_from_library"):
         st.session_state.view_mode = "select_family_for_library"
         st.rerun()
     if not library_family_to_display:
-        st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
+        st.info("Veuillez sélectionner un métier dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
         available_families_main_display = list(st.session_state.editable_prompts.keys())
         if available_families_main_display:
             st.session_state.library_selected_family_for_display = available_families_main_display[0]
             st.rerun()
         elif not any(st.session_state.editable_prompts.values()): 
-             st.warning("Aucune famille de cas d'usage n'est configurée. Créez-en via l'onglet 'Édition'.")
+             st.warning("Aucun métier de cas d'usage n'est configurée. Créez-en via l'onglet 'Édition'.")
     elif library_family_to_display in st.session_state.editable_prompts:
-        st.header(f"Bibliothèque - Famille : {library_family_to_display}")
+        st.header(f"Bibliothèque - métier : {library_family_to_display}")
         use_cases_in_family_display = st.session_state.editable_prompts[library_family_to_display]
         filtered_use_cases = {}
         search_term_lib = st.session_state.get("library_search_term", "").strip().lower()
@@ -798,8 +798,8 @@ elif st.session_state.view_mode == "library":
                 if selected_tags_lib: match_tags = all(tag in uc_config.get("tags", []) for tag in selected_tags_lib)
                 if match_search and match_tags: filtered_use_cases[uc_name] = uc_config
         if not filtered_use_cases:
-            if not use_cases_in_family_display: st.info(f"La famille '{library_family_to_display}' ne contient actuellement aucun prompt.")
-            else: st.info("Aucun prompt ne correspond à vos critères de recherche/filtre dans cette famille.")
+            if not use_cases_in_family_display: st.info(f"Le métier '{library_family_to_display}' ne contient actuellement aucun prompt.")
+            else: st.info("Aucun prompt ne correspond à vos critères de recherche/filtre dans cette métier.")
         else:
             sorted_use_cases_display = sorted(list(filtered_use_cases.keys()))
             for use_case_name_display in sorted_use_cases_display:
@@ -831,23 +831,23 @@ elif st.session_state.view_mode == "library":
                         if st.button(f"⚙️ Éditer ce prompt", key=f"main_lib_edit_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
                             st.session_state.view_mode = "edit"; st.session_state.force_select_family_name = library_family_to_display; st.session_state.force_select_use_case_name = use_case_name_display; st.session_state.go_to_config_section = True; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.session_state.confirming_delete_details = None; st.rerun()
     else: 
-        st.info("Aucune famille n'est actuellement sélectionnée dans la bibliothèque ou la famille sélectionnée n'existe plus.")
+        st.info("Aucun métier n'est actuellement sélectionnée dans la bibliothèque ou le métier sélectionné n'existe plus.")
         available_families_check = list(st.session_state.editable_prompts.keys())
-        if not available_families_check : st.warning("La bibliothèque est entièrement vide. Veuillez créer des familles et des prompts.")
+        if not available_families_check : st.warning("La bibliothèque est entièrement vide. Veuillez créer des métiers et des prompts.")
 
 elif st.session_state.view_mode == "edit":
-    if st.button(f"⬅️ Retour à la bibliothèque ({current_family_of_edited_prompt or 'Famille'})", key="back_to_library_from_edit"):
+    if st.button(f"⬅️ Retour à la bibliothèque ({current_family_of_edited_prompt or 'Métier'})", key="back_to_library_from_edit"):
         if current_family_of_edited_prompt:
             st.session_state.library_selected_family_for_display = current_family_of_edited_prompt
         st.session_state.view_mode = "library"
         st.rerun()
-    if not final_selected_family_edition : st.info("Sélectionnez une famille dans la barre latérale (onglet Édition) ou créez-en une pour commencer.")
-    elif not final_selected_use_case_edition: st.info(f"Sélectionnez un cas d'usage dans la famille '{final_selected_family_edition}' ou créez-en un nouveau pour commencer.")
+    if not final_selected_family_edition : st.info("Sélectionnez un métier dans la barre latérale (onglet Édition) ou créez-en un pour commencer.")
+    elif not final_selected_use_case_edition: st.info(f"Sélectionnez un cas d'usage dans le métier '{final_selected_family_edition}' ou créez-en un nouveau pour commencer.")
     elif final_selected_family_edition in st.session_state.editable_prompts and final_selected_use_case_edition in st.session_state.editable_prompts[final_selected_family_edition]:
         current_prompt_config = st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]
         st.header(f"Cas d'usage: {final_selected_use_case_edition}")
         created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0]); updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
-        st.caption(f"Famille: {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
+        st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
         st.markdown("---")
         st.subheader(f"🚀 Générer le Prompt")
         gen_form_values = {}
@@ -1153,7 +1153,7 @@ elif st.session_state.view_mode == "edit":
                         if not new_uc_name_val_from_form:
                             st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
                         elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(family_for_dup, {}):
-                            st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{family_for_dup}'.")
+                            st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans le métier '{family_for_dup}'.")
                         else:
                             st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
                             now_iso_dup_create, now_iso_dup_update = get_default_dates()
@@ -1161,7 +1161,7 @@ elif st.session_state.view_mode == "edit":
                             st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
                             st.session_state.editable_prompts[family_for_dup][new_uc_name_val_from_form]["usage_count"] = 0
                             save_editable_prompts_to_gist()
-                            st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{family_for_dup}'.")
+                            st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans le métier '{family_for_dup}'.")
 
                             st.session_state.duplicating_use_case_details = None 
                             st.session_state.force_select_family_name = family_for_dup
@@ -1200,11 +1200,11 @@ elif st.session_state.view_mode == "edit":
                 st.session_state.go_to_config_section = False 
     else:
         if not final_selected_family_edition: 
-            st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Édition) pour commencer.")
+            st.info("Veuillez sélectionner un métier dans la barre latérale (onglet Édition) pour commencer.")
         elif not final_selected_use_case_edition: 
-            st.info(f"Veuillez sélectionner un cas d'usage pour la famille '{final_selected_family_edition}' ou en créer un.")
+            st.info(f"Veuillez sélectionner un cas d'usage pour le métier '{final_selected_family_edition}' ou en créer un.")
         else: 
-            st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans la famille '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.")
+            st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans le métier '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.")
             st.session_state.use_case_selector_edition = None # pragma: no cover
 
 elif st.session_state.view_mode == "inject_manual": 
@@ -1231,12 +1231,12 @@ elif st.session_state.view_mode == "inject_manual":
     st.code(json_example_string, language="json")
     available_families_for_injection = list(st.session_state.editable_prompts.keys())
     if not available_families_for_injection: 
-        st.warning("Aucune famille n'existe. Veuillez d'abord créer une famille via l'onglet 'Édition'.")
+        st.warning("Aucun métier n'existe. Veuillez d'abord créer un métier via l'onglet 'Édition'.")
     else:
-        selected_family_for_injection = st.selectbox("Choisissez la famille de destination pour l'injection :", options=[""] + available_families_for_injection, index=0, key="injection_family_selector")
+        selected_family_for_injection = st.selectbox("Choisissez le métier de destination pour l'injection :", options=[""] + available_families_for_injection, index=0, key="injection_family_selector")
         st.session_state.injection_selected_family = selected_family_for_injection if selected_family_for_injection else None
         if st.session_state.injection_selected_family:
-            st.subheader(f"Injecter dans la famille : {st.session_state.injection_selected_family}")
+            st.subheader(f"Injecter dans le métier : {st.session_state.injection_selected_family}")
             st.session_state.injection_json_text = st.text_area("Collez le JSON des cas d'usage ici :", value=st.session_state.get("injection_json_text", ""), height=300, key="injection_json_input")
             if st.button("➕ Injecter les Cas d'Usage", key="submit_injection_btn"):
                 if not st.session_state.injection_json_text.strip(): 
@@ -1249,7 +1249,7 @@ elif st.session_state.view_mode == "inject_manual":
                         else:
                             target_family_name = st.session_state.injection_selected_family
                             if target_family_name not in st.session_state.editable_prompts: 
-                                st.error(f"La famille de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.") 
+                                st.error(f"Le métier de destination '{target_family_name}' n'existe plus ou n'a pas été correctement sélectionnée.") 
                             else:
                                 family_prompts = st.session_state.editable_prompts[target_family_name]
                                 successful_injections = []
@@ -1264,7 +1264,7 @@ elif st.session_state.view_mode == "inject_manual":
                                         failed_injections.append(f"'{uc_name_stripped}': Configuration invalide ou template manquant.")
                                         continue
                                     if uc_name_stripped in family_prompts: 
-                                        st.warning(f"Le cas d'usage '{uc_name_stripped}' existe déjà dans la famille '{target_family_name}'. Il a été ignoré.")
+                                        st.warning(f"Le cas d'usage '{uc_name_stripped}' existe déjà dans le métier '{target_family_name}'. Il a été ignoré.")
                                         failed_injections.append(f"'{uc_name_stripped}': Existe déjà, ignoré.")
                                         continue
 
@@ -1297,7 +1297,7 @@ elif st.session_state.view_mode == "inject_manual":
                     except Exception as e: 
                         st.error(f"Une erreur inattendue est survenue lors de l'injection : {e}") # pragma: no cover
         else: 
-            st.info("Veuillez sélectionner une famille de destination pour commencer l'injection.")
+            st.info("Veuillez sélectionner un métier de destination pour commencer l'injection.")
 
 elif st.session_state.view_mode == "assistant_creation":
     if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_assistant"):
@@ -1363,7 +1363,7 @@ elif st.session_state.view_mode == "assistant_creation":
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
 else: 
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
-        st.warning("Aucune famille de cas d'usage n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
+        st.warning("Aucun groupement de cas d'usage métier n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
     elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
         st.session_state.view_mode = "library" if list(st.session_state.editable_prompts.keys()) else "edit"
         st.rerun()
