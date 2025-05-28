@@ -141,7 +141,7 @@ Assure-toi que le JSON que tu génères est valide. Les variables dans le templa
 
 ASSISTANT_FORM_VARIABLES = [
     {"name": "problematique", "label": "Décrivez la problématique ou la tâche que le prompt cible doit résoudre :", "type": "text_area", "default": "", "height": 100},
-    {"name": "doc_source", "label": "Votre usage nécessite t'il l'étude d'un document ? (e.g. PDF, e-mail, texte brut) si applicable (laisser vide si non pertinent) :", "type": "text_input", "default": ""},
+    {"name": "doc_source", "label": "Votre usage nécessite t'il l'étude d'un document ? (e.g. PDF, e-mail, texte brut -laisser vide si non pertinent-):", "type": "text_input", "default": ""},
     {"name": "elements_specifiques_a_extraire", "label": "Quelles sont les informations spécifiques que vous souhaitez obtenir ? :", "type": "text_area", "default": "Ex:\n - Points clés du texte\n- Acteurs concernés\n- Dates importantes", "height": 100},
     {"name": "format_sortie_desire", "label": "Optionnel : sous quel format voulez vous que le prompt produise une réponse?", "type": "text_area", "default": "", "height": 75},
     {"name": "public_cible_reponse", "label": "Optionnel : pour quel public cible s'adressera la réponse du prompt? (e.g. des profils techniques, le grand public):", "type": "text_input", "default": ""},
