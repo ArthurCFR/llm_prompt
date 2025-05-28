@@ -747,7 +747,7 @@ if st.session_state.view_mode == "accueil":
             st.session_state.generated_meta_prompt_for_llm = ""
             st.rerun()
 
-if st.session_state.view_mode == "library":
+elif st.session_state.view_mode == "library":
     if not library_family_to_display:
         st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
         available_families_main_display = list(st.session_state.editable_prompts.keys())
