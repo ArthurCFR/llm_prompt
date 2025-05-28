@@ -371,11 +371,12 @@ def load_editable_prompts_from_gist():
 if 'editable_prompts' not in st.session_state:
     st.session_state.editable_prompts = load_editable_prompts_from_gist()
 if 'view_mode' not in st.session_state:
-    st.session_state.view_mode = "library"
+    st.session_state.view_mode = "accueil" # Nouvelle vue par défaut
 
-if 'library_selected_family_for_display' not in st.session_state: 
+if 'library_selected_family_for_display' not in st.session_state:
     available_families = list(st.session_state.editable_prompts.keys())
     st.session_state.library_selected_family_for_display = available_families[0] if available_families else None
+    
 if 'family_selector_edition' not in st.session_state:
     available_families = list(st.session_state.editable_prompts.keys())
     st.session_state.family_selector_edition = available_families[0] if available_families else None
@@ -703,6 +704,48 @@ with tab_injection:
 final_selected_family_edition = st.session_state.get('family_selector_edition')
 final_selected_use_case_edition = st.session_state.get('use_case_selector_edition')
 library_family_to_display = st.session_state.get('library_selected_family_for_display')
+
+# NOUVELLE SECTION POUR LA PAGE D'ACCUEIL
+if st.session_state.view_mode == "accueil":
+    st.image("https://images.unsplash.com/photo-1589254065878-42c9da997008?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80", width=200) # Image illustrative facultative
+    st.header("Bienvenue à l'Atelier des Prompts IA ! 💡")
+
+    st.markdown("""
+        Vous êtes au bon endroit pour maîtriser l'art de "parler" aux Intelligences Artificielles (IA) et obtenir d'elles exactement ce dont vous avez besoin !
+
+        **Qu'est-ce qu'un "prompt" ?**
+        Imaginez que vous donnez des instructions à un assistant très intelligent mais qui a besoin de consignes claires. Un "prompt", c'est simplement cette instruction, cette question ou cette consigne que vous formulez à l'IA.
+        Plus votre instruction est précise et bien pensée, plus l'IA vous fournira une réponse utile et pertinente.
+
+        **Que pouvez-vous faire avec cette application ?**
+
+        Cet atelier est conçu pour vous simplifier la vie, que vous soyez novice ou plus expérimenté :
+
+        * **Découvrir et utiliser des modèles d'instructions prêts à l'emploi** : Explorez une collection de "prompts" déjà conçus pour diverses tâches (comme rédiger un email, résumer un document, analyser une situation, etc.). Vous pourrez les utiliser tels quels ou les adapter facilement.
+        * **Créer vos propres instructions sur mesure** : Vous avez une idée précise en tête ? Notre assistant vous guide pas à pas pour construire le "prompt" parfait, même si vous n'avez aucune connaissance technique. L'objectif est de transformer votre besoin en une instruction claire pour l'IA.
+        * **Organiser et améliorer vos instructions** : Conservez vos meilleurs "prompts", modifiez-les et perfectionnez-les au fil du temps.
+
+        En bref, cet outil vous aide à formuler les meilleures demandes possibles aux IA pour qu'elles deviennent de véritables alliées dans votre travail ou vos projets personnels.
+    """)
+    st.markdown("---")
+
+    cols_accueil = st.columns(2)
+    with cols_accueil[0]:
+        if st.button("📚 Je souhaite utiliser / modifier un prompt existant", use_container_width=True, type="primary"):
+            st.session_state.view_mode = "library"
+            # S'assurer qu'une famille est sélectionnée par défaut pour la bibliothèque si elle n'est pas vide
+            if not st.session_state.get('library_selected_family_for_display'):
+                available_families = list(st.session_state.editable_prompts.keys())
+                if available_families:
+                    st.session_state.library_selected_family_for_display = available_families[0]
+            st.rerun()
+    with cols_accueil[1]:
+        if st.button("✨ Je souhaite créer un prompt à partir de mon besoin", use_container_width=True, type="primary"):
+            st.session_state.view_mode = "assistant_creation"
+            # Réinitialiser les valeurs du formulaire de l'assistant et le prompt généré
+            st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES}
+            st.session_state.generated_meta_prompt_for_llm = ""
+            st.rerun()
 
 if st.session_state.view_mode == "library":
     if not library_family_to_display:
