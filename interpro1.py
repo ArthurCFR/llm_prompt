@@ -728,12 +728,7 @@ if st.session_state.view_mode == "accueil":
     cols_accueil = st.columns(2)
     with cols_accueil[0]:
         if st.button("📚 Je souhaite utiliser / modifier un prompt existant", use_container_width=True, type="primary"):
-            st.session_state.view_mode = "library"
-            # S'assurer qu'une famille est sélectionnée par défaut pour la bibliothèque si elle n'est pas vide
-            if not st.session_state.get('library_selected_family_for_display'):
-                available_families = list(st.session_state.editable_prompts.keys())
-                if available_families:
-                    st.session_state.library_selected_family_for_display = available_families[0]
+            st.session_state.view_mode = "select_family_for_library"
             st.rerun()
     with cols_accueil[1]:
         if st.button("✨ Je souhaite créer un prompt à partir de mon besoin", use_container_width=True, type="primary"):
@@ -743,6 +738,39 @@ if st.session_state.view_mode == "accueil":
             st.session_state.generated_meta_prompt_for_llm = ""
             st.rerun()
 
+elif st.session_state.view_mode == "select_family_for_library":
+    st.header("📚 Explorer les Prompts par Famille")
+    st.markdown("Cliquez sur le nom d'une famille pour afficher les prompts qu'elle contient.")
+    st.markdown("---")
+
+    available_families = list(st.session_state.editable_prompts.keys())
+
+    if not available_families:
+        st.info("Aucune famille de prompts n'a été créée pour le moment.")
+        st.markdown("Vous pouvez en créer via l'onglet **Édition** dans le menu latéral (accessible via l'icône Menu en haut à gauche).")
+        st.markdown("---")
+        if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_select_family"):
+            st.session_state.view_mode = "accueil"
+            st.rerun()
+    else:
+        sorted_families = sorted(available_families)
+        
+        # Vous pouvez ajuster le nombre de colonnes si vous avez beaucoup de familles
+        num_cols = 3 
+        cols = st.columns(num_cols)
+        for i, family_name in enumerate(sorted_families):
+            with cols[i % num_cols]:
+                if st.button(f"{family_name}", key=f"select_family_for_lib_btn_{family_name}", use_container_width=True, help=f"Voir les prompts de la famille '{family_name}'"):
+                    st.session_state.library_selected_family_for_display = family_name
+                    st.session_state.view_mode = "library" # Redirige vers la bibliothèque avec la famille sélectionnée
+                    st.rerun()
+        
+        st.markdown("---")
+        if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_select_family_list"):
+            st.session_state.view_mode = "accueil"
+            st.rerun()
+
+elif st.session_state.view_mode == "library":
 elif st.session_state.view_mode == "library":
     if not library_family_to_display:
         st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
