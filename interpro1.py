@@ -515,7 +515,7 @@ with tab_edition_generation:
     with st.expander("🗂️ Gérer les Familles", expanded=False):
         with st.form("new_family_form_sidebar", clear_on_submit=True):
             new_family_name = st.text_input("Nom de la nouvelle famille:", key="new_fam_name_sidebar")
-            submitted_new_family = st.form_submit_("➕ Créer Famille")
+            submitted_new_family = st.form_submit_button("➕ Créer Famille")
             if submitted_new_family and new_family_name.strip():
                 if new_family_name.strip() in st.session_state.editable_prompts:
                     st.error(f"La famille '{new_family_name.strip()}' existe déjà.")
