@@ -716,7 +716,7 @@ if st.session_state.view_mode == "accueil":
 
         **Que pouvez-vous faire avec cette application ?**
 
-        Cet atelier est conçu pour vous simplifier la vie, que vous soyez novice ou plus expérimenté :
+        Cet outil est conçu pour vous simplifier la vie, que vous soyez novice ou plus expérimenté :
 
         * **Découvrir et utiliser des modèles d'instructions prêts à l'emploi** : Explorez une collection de "prompts" déjà conçus pour diverses tâches (comme rédiger un email, résumer un document, analyser une situation, etc.). Vous pourrez les utiliser tels quels ou les adapter facilement.
         * **Créer vos propres instructions sur mesure** : Vous avez une idée précise en tête ? Notre assistant vous guide pas à pas pour construire le "prompt" parfait, même si vous n'avez aucune connaissance technique. L'objectif est de transformer votre besoin en une instruction claire pour l'IA.
