@@ -22,93 +22,32 @@ st.markdown("""
             align-items: center;
         }
                 /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
-        /* Style de base pour le bouton de copie (toujours pleinement visible) */
         button[data-testid="stCodeCopyButton"] {
-            opacity: 1 !important; 
+            opacity: 0.85 !important;
             visibility: visible !important;
-            background-color: #e6e8eb !important; 
-            border: 1px solid #b0b0b0 !important; 
+            background-color: #f0f2f6 !important;
+            border: 1px solid #cccccc !important;
             border-radius: 4px !important;
-            padding: 4px 6px !important;
-            cursor: pointer !important;
-            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Transition pour le :hover */
-            /* top: 2px !important; */ 
-            /* right: 2px !important; */ 
-        }
-
-        button[data-testid="stCodeCopyButton"] svg {
-            transform: scale(1.25);
-            vertical-align: middle;
-            /* Important: pour que la couleur du SVG change avec le bouton */
-            stroke: currentColor !important; 
+            padding: 3px 5px !important;
+            transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+            /* top: 2px !important; */
+            /* right: 2px !important; */
         }
 
         button[data-testid="stCodeCopyButton"]:hover {
-            background-color: #dde0e5 !important; 
+            opacity: 1 !important;
+            background-color: #e6e8eb !important;
+            border-color: #b0b0b0 !important;
         }
 
-        /* NOUVEAU: Style pour le bouton une fois cliqué (état "copié") */
-        button[data-testid="stCodeCopyButton"].just-copied {
-            background-color: #28a745 !important; /* Vert succès */
-            border-color: #1e7e34 !important;   /* Bordure vert foncé */
-            color: white !important;            /* Icône/texte en blanc */
-        }
-        
-        /* Assure que le SVG hérite de la couleur blanche quand .just-copied est actif */
-        button[data-testid="stCodeCopyButton"].just-copied svg {
-             /* stroke: white !important; /* Ou fill, selon votre SVG. CurrentColor devrait marcher si color:white est sur le bouton */
-        }
-
-    </style>
-
-    <script>
-        // Enveloppez dans une fonction pour éviter les conflits et faciliter la ré-exécution si nécessaire
-        function initializeCopyButtonFeedback() {
-            // Utilise la délégation d'événements sur document.body pour gérer les boutons
-            // qui pourraient être ajoutés/supprimés dynamiquement par Streamlit lors des re-renderings.
-            document.body.addEventListener('click', function(event) {
-                // Remonte du event.target pour trouver le bouton si le clic était sur le SVG à l'intérieur
-                const button = event.target.closest('button[data-testid="stCodeCopyButton"]');
-
-                if (button) { // Si un bouton de copie correspondant a été cliqué
-                    // Vérifie si l'animation est déjà en cours pour éviter des déclenchements multiples rapides
-                    if (button.classList.contains('just-copied')) {
-                        return; 
-                    }
-
-                    // Streamlit s'occupe de la copie réelle dans le presse-papiers.
-                    // Notre rôle ici est juste le feedback visuel.
-                    button.classList.add('just-copied');
-                    // console.log("Classe 'just-copied' ajoutée"); // Pour débogage
-
-                    setTimeout(() => {
-                        button.classList.remove('just-copied');
-                        // console.log("Classe 'just-copied' retirée"); // Pour débogage
-                    }, 1500); // Le bouton reste vert pendant 1.5 secondes
-                }
-            });
-            // console.log("Écouteur d'événements pour feedback de copie initialisé."); // Pour débogage
-        }
-
-        // Exécute la fonction une fois que le DOM initial est chargé.
-        // Pour Streamlit, qui re-rend dynamiquement, cette initialisation unique via DOMContentLoaded
-        // pourrait ne pas suffire pour les éléments qui apparaissent plus tard.
-        // La délégation d'événement sur document.body ci-dessus est plus robuste.
-        if (document.readyState === 'loading') { // Évite d'exécuter trop tôt
-            document.addEventListener('DOMContentLoaded', initializeCopyButtonFeedback);
-        } else {
-            // initializeCopyButtonFeedback(); // Si déjà chargé, exécute. La délégation sur body est clé.
-            // En fait, pour la délégation sur body, on n'a pas besoin de DOMContentLoaded,
-            // car body existe toujours. On peut donc simplifier.
+        button[data-testid="stCodeCopyButton"] svg {
+            transform: scale(1.2); 
+            vertical-align: middle;
         }
         
-        // Version simplifiée et plus directe pour la délégation d'événement sur body :
-        // Pas besoin de initializeCopyButtonFeedback() ni de DOMContentLoaded.
-        // L'écouteur est attaché directement.
-        // (Le code ci-dessus dans initializeCopyButtonFeedback avec document.body.addEventListener est déjà bon)
-
-        /* === FIN DES NOUVELLES RÈGLES === */
-
+        div[data-testid="stCodeBlock"]:hover button[data-testid="stCodeCopyButton"] {
+            opacity: 1 !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
