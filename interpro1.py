@@ -21,42 +21,9 @@ st.markdown("""
             display: inline-flex; /* Peut aider à un meilleur alignement et comportement */
             align-items: center;
         }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT AND REDUCING TOP SPACE ---
-st.markdown("""
-    <style>
-        /* Style pour le texte "Menu" à côté de la flèche de la sidebar */
-        button[data-testid="stBaseButton-headerNoPadding"]::after {
-            content: " Menu";
-            margin-left: 8px;
-            font-size: 0.9em;
-            vertical-align: middle;
-            color: inherit;
-            font-weight: normal;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        /* NOUVELLE RÈGLE CSS pour réduire l'espace au-dessus du contenu principal */
-        /* Cible le conteneur principal du "block" de l'application Streamlit */
-        /* La valeur de padding-top par défaut est souvent de 5rem ou 6rem. */
-        /* Ajustez la valeur de '1rem' ci-dessous selon vos préférences. */
-        /* Vous pouvez essayer 0rem, 0.5rem, 1rem, 1.5rem, etc. */
         div[data-testid="stAppViewBlockContainer"] {
-            padding-top: 0rem !important; /* Réduit l'espace en haut */
+            padding-top: 1.5rem !important;
         }
-
-        /* Alternative si le sélecteur ci-dessus n'a pas assez d'effet,
-           ou si le titre H1 lui-même a une grande marge supérieure.
-           Décommentez pour essayer :
-        */
-        /*
-        h1:first-of-type {
-            margin-top: 0rem !important;
-        }
-        */
     </style>
 """, unsafe_allow_html=True)
 
