@@ -841,8 +841,6 @@ elif st.session_state.view_mode == "edit":
         st.header(f"Cas d'usage: {final_selected_use_case_edition}")
         created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0]); updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
         st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
-        st.markdown("---")
-        st.subheader(f"🚀 Générer le Prompt")
         st.markdown("""
         <div style="border: 1px solid #e0e0e0; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
             <h4 style="margin-top:0;">Comment ça marche ?</h4>
