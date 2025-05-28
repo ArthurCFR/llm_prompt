@@ -705,7 +705,7 @@ library_family_to_display = st.session_state.get('library_selected_family_for_di
 
 # NOUVELLE SECTION POUR LA PAGE D'ACCUEIL
 if st.session_state.view_mode == "accueil":
-    st.header("Bienvenue à l'Atelier des Prompts IA ! 💡")
+    st.header("Bienvenue sur l'étagère des Prompts IA ! 💡")
 
     st.markdown("""
         Vous êtes au bon endroit pour maîtriser l'art de "parler" aux Intelligences Artificielles (IA) et obtenir d'elles exactement ce dont vous avez besoin !
