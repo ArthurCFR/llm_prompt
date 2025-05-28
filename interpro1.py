@@ -7,6 +7,34 @@ import requests
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA", initial_sidebar_state="collapsed" )
 
+# --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
+# Essayez de cibler le bouton de la barre latérale.
+# Le sélecteur exact peut varier légèrement avec les versions de Streamlit ou la structure.
+# `button[data-testid="stSidebarNavToggler"]` est souvent utilisé pour le bouton qui ouvre la navigation principale
+# lorsque les pages sont dans un dossier `pages/`.
+# Si vous utilisez `st.sidebar` directement pour remplir le contenu, le mécanisme peut être différent.
+# Le plus simple est souvent de cibler le bouton via son `kind` ou un sélecteur plus générique
+# si vous n'utilisez pas la navigation multi-pages.
+# Pour la barre latérale standard togglée par la flèche en haut à gauche :
+st.markdown("""
+    <style>
+        /* Cible le bouton qui contient la flèche pour ouvrir/fermer la barre latérale */
+        button[data-testid="stSidebarNavToggler"]::after {
+            content: " Menu"; /* Ajoute le texte " Menu" après le contenu existant du bouton (la flèche) */
+            margin-left: 6px; /* Espace entre la flèche et le texte */
+            font-size: 0.9em; /* Ajustez la taille si nécessaire */
+            vertical-align: middle; /* Aide à l'alignement vertical */
+            color: inherit; /* Hérite de la couleur du thème actuel */
+        }
+        /* Si le sélecteur ci-dessus ne fonctionne pas, vous pouvez essayer un autre plus générique,
+           mais cela pourrait être moins précis. Vous devrez peut-être inspecter l'élément
+           dans votre navigateur pour trouver le bon sélecteur pour votre version/configuration Streamlit.
+           Exemple alternatif (moins spécifique) :
+           section[data-testid="stSidebar"] > div:first-child > div:first-child > button::after { ... }
+        */
+    </style>
+""", unsafe_allow_html=True)
+
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = datetime.now().year
 GIST_DATA_FILENAME = "prompt_templates_data_v3.json"
