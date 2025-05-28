@@ -707,7 +707,6 @@ library_family_to_display = st.session_state.get('library_selected_family_for_di
 
 # NOUVELLE SECTION POUR LA PAGE D'ACCUEIL
 if st.session_state.view_mode == "accueil":
-    st.image("https://images.unsplash.com/photo-1589254065878-42c9da997008?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80", width=200) # Image illustrative facultative
     st.header("Bienvenue à l'Atelier des Prompts IA ! 💡")
 
     st.markdown("""
