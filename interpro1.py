@@ -8,30 +8,19 @@ import requests
 st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA", initial_sidebar_state="collapsed" )
 
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
-# Essayez de cibler le bouton de la barre latérale.
-# Le sélecteur exact peut varier légèrement avec les versions de Streamlit ou la structure.
-# `button[data-testid="stSidebarNavToggler"]` est souvent utilisé pour le bouton qui ouvre la navigation principale
-# lorsque les pages sont dans un dossier `pages/`.
-# Si vous utilisez `st.sidebar` directement pour remplir le contenu, le mécanisme peut être différent.
-# Le plus simple est souvent de cibler le bouton via son `kind` ou un sélecteur plus générique
-# si vous n'utilisez pas la navigation multi-pages.
-# Pour la barre latérale standard togglée par la flèche en haut à gauche :
 st.markdown("""
     <style>
-        /* Cible le bouton qui contient la flèche pour ouvrir/fermer la barre latérale */
-        button[data-testid="stSidebarNavToggler"]::after {
-            content: " Menu"; /* Ajoute le texte " Menu" après le contenu existant du bouton (la flèche) */
-            margin-left: 6px; /* Espace entre la flèche et le texte */
-            font-size: 0.9em; /* Ajustez la taille si nécessaire */
-            vertical-align: middle; /* Aide à l'alignement vertical */
-            color: inherit; /* Hérite de la couleur du thème actuel */
+        /* Cible le bouton spécifique que vous avez identifié */
+        button[data-testid="stBaseButton-headerNoPadding"]::after {
+            content: " Menu";      /* Le texte à ajouter */
+            margin-left: 8px;     /* Espace entre la flèche et le texte (ajustez si besoin) */
+            font-size: 0.9em;     /* Taille du texte (ajustez si besoin) */
+            vertical-align: middle; /* Aide à l'alignement vertical avec l'icône */
+            color: inherit;       /* Hérite de la couleur du thème (bon pour thèmes clair/sombre) */
+            font-weight: normal;  /* Assure que le texte n'est pas en gras par défaut */
+            display: inline-flex; /* Peut aider à un meilleur alignement et comportement */
+            align-items: center;
         }
-        /* Si le sélecteur ci-dessus ne fonctionne pas, vous pouvez essayer un autre plus générique,
-           mais cela pourrait être moins précis. Vous devrez peut-être inspecter l'élément
-           dans votre navigateur pour trouver le bon sélecteur pour votre version/configuration Streamlit.
-           Exemple alternatif (moins spécifique) :
-           section[data-testid="stSidebar"] > div:first-child > div:first-child > button::after { ... }
-        */
     </style>
 """, unsafe_allow_html=True)
 
@@ -526,7 +515,7 @@ with tab_edition_generation:
     with st.expander("🗂️ Gérer les Familles", expanded=False):
         with st.form("new_family_form_sidebar", clear_on_submit=True):
             new_family_name = st.text_input("Nom de la nouvelle famille:", key="new_fam_name_sidebar")
-            submitted_new_family = st.form_submit_button("➕ Créer Famille")
+            submitted_new_family = st.form_submit_("➕ Créer Famille")
             if submitted_new_family and new_family_name.strip():
                 if new_family_name.strip() in st.session_state.editable_prompts:
                     st.error(f"La famille '{new_family_name.strip()}' existe déjà.")
@@ -546,7 +535,7 @@ with tab_edition_generation:
             with st.form("rename_family_form_sidebar"):
                 st.write(f"Renommer la famille : **{current_selected_family_for_edit_logic}**")
                 renamed_family_name_input = st.text_input("Nouveau nom :", value=current_selected_family_for_edit_logic, key="ren_fam_name_sidebar")
-                submitted_rename_family = st.form_submit_button("✏️ Renommer")
+                submitted_rename_family = st.form_submit_("✏️ Renommer")
                 if submitted_rename_family and renamed_family_name_input.strip():
                     renamed_family_name = renamed_family_name_input.strip()
                     if renamed_family_name == current_selected_family_for_edit_logic:
@@ -570,7 +559,7 @@ with tab_edition_generation:
             if st.session_state.confirming_delete_family_name == current_selected_family_for_edit_logic:
                 st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
 
-                button_text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
+                _text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
                 if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     deleted_fam_name = current_selected_family_for_edit_logic 
                     del st.session_state.editable_prompts[current_selected_family_for_edit_logic]
