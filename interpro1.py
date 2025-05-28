@@ -843,17 +843,17 @@ elif st.session_state.view_mode == "edit":
         st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
         st.markdown("---")
         st.subheader(f"🚀 Générer le Prompt")
-            st.markdown("""
-            <div style="border: 1px solid #e0e0e0; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
-                <h4 style="margin-top:0;">Comment ça marche ?</h4>
-                <ol>
-                    <li><strong>Remplissez les champs ci-dessous :</strong> Chaque champ correspond à une information variable (comme un nom, une date, un sujet spécifique) que vous souhaitez insérer dans votre instruction finale pour l'IA.</li>
-                    <li><strong>Cliquez sur "🚀 Générer Prompt" :</strong> L'application prendra le modèle de base de ce prompt et y insérera les informations que vous avez fournies.</li>
-                    <li><strong>Utilisez votre prompt :</strong> Le prompt complet et personnalisé apparaîtra plus bas. Vous pourrez le copier pour l'utiliser avec l'outil d'IA de votre choix.</li>
-                </ol>
-                <p>💡 <strong>Bon à savoir :</strong> Le modèle de base de ce prompt (le "template") ainsi que la liste des variables demandées sont entièrement personnalisables ! Vous pouvez les modifier dans la section "<strong>⚙️ Paramétrage du Prompt</strong>" qui se trouve plus bas sur cette même page (dans le menu déroulant).</p>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown("""
+        <div style="border: 1px solid #e0e0e0; border-radius: 5px; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9;">
+            <h4 style="margin-top:0;">Comment ça marche ?</h4>
+            <ol>
+                <li><strong>Remplissez les champs ci-dessous :</strong> Chaque champ correspond à une information variable (comme un nom, une date, un sujet spécifique) que vous souhaitez insérer dans votre instruction finale pour l'IA.</li>
+                <li><strong>Cliquez sur "🚀 Générer Prompt" :</strong> L'application prendra le modèle de base de ce prompt et y insérera les informations que vous avez fournies.</li>
+                <li><strong>Utilisez votre prompt :</strong> Le prompt complet et personnalisé apparaîtra plus bas. Vous pourrez le copier pour l'utiliser avec l'outil d'IA de votre choix.</li>
+            </ol>
+            <p>💡 <strong>Bon à savoir :</strong> Le modèle de base de ce prompt (le "template") ainsi que la liste des variables demandées sont entièrement personnalisables ! Vous pouvez les modifier dans la section "<strong>⚙️ Paramétrage du Prompt</strong>" qui se trouve plus bas sur cette même page (dans le menu déroulant).</p>
+        </div>
+        """, unsafe_allow_html=True)
         gen_form_values = {}
         with st.form(key=f"gen_form_{final_selected_family_edition}_{final_selected_use_case_edition}"):
             if not current_prompt_config.get("variables"): st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
