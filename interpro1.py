@@ -24,6 +24,9 @@ st.markdown("""
         div[data-testid="stAppViewBlockContainer"] {
             padding-top: 1.5rem !important;
         }
+        h1:first-of-type {
+            margin-top: 0rem !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
