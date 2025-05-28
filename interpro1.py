@@ -1004,7 +1004,7 @@ elif st.session_state.view_mode == "edit":
             with col_caption:
                 st.caption("Prompt généré (pour relecture et copie manuelle) :")
             with col_indicator:
-                st.markdown("<div style='color:red; text-align:right; font-size:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
+                st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
     
 
             if st.session_state.active_generated_prompt:
