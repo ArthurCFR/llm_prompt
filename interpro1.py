@@ -25,7 +25,7 @@ st.markdown("""
         pre.st-emotion-cache-1nqbjoj /* Cible spécifique à votre HTML, attention à sa stabilité */
         {
 
-            max-height: 320px !important;
+            max-height: 520px !important;
             overflow-y: auto !important;
             font-size: 0.875em !important;
             /* Assurez-vous qu'il n'est pas caché par autre chose */
