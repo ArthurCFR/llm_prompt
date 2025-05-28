@@ -23,30 +23,24 @@ st.markdown("""
         }
                 /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
         button[data-testid="stCodeCopyButton"] {
-            opacity: 0.85 !important;
+            opacity: 1 !important; /* Pleinement visible */
             visibility: visible !important;
-            background-color: #f0f2f6 !important;
-            border: 1px solid #cccccc !important;
+            background-color: #e6e8eb !important; /* État "actif" par défaut */
+            border: 1px solid #b0b0b0 !important; /* État "actif" par défaut */
             border-radius: 4px !important;
-            padding: 3px 5px !important;
-            transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
-            /* top: 2px !important; */
-            /* right: 2px !important; */
-        }
-
-        button[data-testid="stCodeCopyButton"]:hover {
-            opacity: 1 !important;
-            background-color: #e6e8eb !important;
-            border-color: #b0b0b0 !important;
+            padding: 4px 6px !important;
+            cursor: pointer !important;
+            /* top: 2px !important; */ /* Décommentez et ajustez si besoin */
+            /* right: 2px !important; */ /* Décommentez et ajustez si besoin */
         }
 
         button[data-testid="stCodeCopyButton"] svg {
-            transform: scale(1.2); 
+            transform: scale(1.25);
             vertical-align: middle;
         }
-        
-        div[data-testid="stCodeBlock"]:hover button[data-testid="stCodeCopyButton"] {
-            opacity: 1 !important;
+
+        button[data-testid="stCodeCopyButton"]:hover {
+            background-color: #dde0e5 !important; /* Effet de survol très subtil */
         }
         /* === FIN DES NOUVELLES RÈGLES === */
 
