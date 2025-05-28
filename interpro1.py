@@ -45,7 +45,7 @@ st.markdown("""
         /* Ajustez la valeur de '1rem' ci-dessous selon vos préférences. */
         /* Vous pouvez essayer 0rem, 0.5rem, 1rem, 1.5rem, etc. */
         div[data-testid="stAppViewBlockContainer"] {
-            padding-top: 1.5rem !important; /* Réduit l'espace en haut */
+            padding-top: 0rem !important; /* Réduit l'espace en haut */
         }
 
         /* Alternative si le sélecteur ci-dessus n'a pas assez d'effet,
