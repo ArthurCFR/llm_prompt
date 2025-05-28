@@ -5,7 +5,7 @@ import json
 import requests
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
-st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA")
+st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA", initial_sidebar_state="collapsed" )
 
 # --- Initial Data Structure & Constants ---
 CURRENT_YEAR = datetime.now().year
