@@ -21,6 +21,18 @@ st.markdown("""
             display: inline-flex; /* Peut aider à un meilleur alignement et comportement */
             align-items: center;
         }
+        div[data-testid="stCodeBlock"] pre {
+            max-height: 120px !important; /* Hauteur max pour le contenu du code */
+            overflow-y: auto !important;
+            font-size: 0.875em !important; /* Police légèrement plus petite pour plus de contenu visible */
+        }
+
+        /* Cible le conteneur direct du <pre> à l'intérieur du stCodeBlock */
+        /* Ce div est souvent celui qui gère le défilement dans les versions récentes de Streamlit */
+        div[data-testid="stCodeBlock"] > div:first-child {
+            max-height: 120px !important; /* Assurez-vous que cette valeur correspond à celle de pre */
+            overflow-y: auto !important;
+        }
                 /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
         button[data-testid="stCodeCopyButton"] {
             opacity: 0.85 !important;
@@ -988,22 +1000,6 @@ elif st.session_state.view_mode == "edit":
                 st.markdown("---") # Un petit séparateur
 
                 prompt_text_escaped_for_js = json.dumps(st.session_state.active_generated_prompt)
-                
-                # Générer un ID unique pour le bouton pour chaque instance de prompt/page
-                # Cela évite les conflits si plusieurs boutons de copie étaient sur la même "page" Streamlit virtuelle.
-                button_id = f"copyBtn_{final_selected_family_edition}_{final_selected_use_case_edition}".replace(" ", "_").replace(".", "_")
-        
-                button_html = f"""
-                            <button 
-                                id="{button_id}" 
-                                class="custom-prompt-copy-button" 
-                                onclick="copyActivePromptToClipboard({prompt_text_escaped_for_js}, '{button_id}')"
-                            >
-                                📋 Copier le Prompt Généré
-                            </button>
-                """
-                st.markdown(button_html, unsafe_allow_html=True)
-                st.caption("Cliquez sur le bouton ci-dessus pour copier le prompt dans votre presse-papiers.")
 
         
         if st.session_state.confirming_delete_details and st.session_state.confirming_delete_details["family"] == final_selected_family_edition and st.session_state.confirming_delete_details["use_case"] == final_selected_use_case_edition:
