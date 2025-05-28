@@ -1357,7 +1357,7 @@ elif st.session_state.view_mode == "assistant_creation":
                 st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
 
     if st.session_state.generated_meta_prompt_for_llm:
-        st.subheader("📋 Prompt système Généré (à copier dans votre LLM externe) :")
+        st.subheader("📋 Prompt système Généré (à copier dans LaPosteGPT) :")
         st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
         st.markdown("---")
         st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
