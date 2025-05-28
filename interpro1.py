@@ -20,10 +20,7 @@ st.markdown("""
             font-weight: normal;  /* Assure que le texte n'est pas en gras par défaut */
             display: inline-flex; /* Peut aider à un meilleur alignement et comportement */
             align-items: center;
-        }
-        div[data-testid="stAppViewBlockContainer"] {
-            padding-top: 1.5rem !important;
-        }
+
         h1:first-of-type {
             margin-top: 0rem !important;
         }
