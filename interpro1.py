@@ -711,8 +711,8 @@ if st.session_state.view_mode == "accueil":
         Vous êtes au bon endroit pour maîtriser l'art de "parler" aux Intelligences Artificielles (IA) et obtenir d'elles exactement ce dont vous avez besoin !
 
         **Qu'est-ce qu'un "prompt" ?**
-        Imaginez que vous donnez des instructions à un assistant très intelligent mais qui a besoin de consignes claires. Un "prompt", c'est simplement cette instruction, cette question ou cette consigne que vous formulez à l'IA.
-        Plus votre instruction est précise et bien pensée, plus l'IA vous fournira une réponse utile et pertinente.
+        Imaginez donner des instructions à un assistant virtuel intelligent, mais qui a besoin de consignes claires. Un "prompt", c'est simplement cette instruction, cette question ou cette consigne que vous formulez à l'IA.
+        Plus votre instruction est bien pensée, plus l'IA vous fournira une réponse utile et pertinente.
 
         **Que pouvez-vous faire avec cette application ?**
 
@@ -722,7 +722,7 @@ if st.session_state.view_mode == "accueil":
         * **Créer vos propres instructions sur mesure** : Vous avez une idée précise en tête ? Notre assistant vous guide pas à pas pour construire le "prompt" parfait, même si vous n'avez aucune connaissance technique. L'objectif est de transformer votre besoin en une instruction claire pour l'IA.
         * **Organiser et améliorer vos instructions** : Conservez vos meilleurs "prompts", modifiez-les et perfectionnez-les au fil du temps.
 
-        En bref, cet outil vous aide à formuler les meilleures demandes possibles aux IA pour qu'elles deviennent de véritables alliées dans votre travail ou vos projets personnels.
+        En bref, cet outil vous aide à formuler les meilleures demandes possibles aux IA pour qu'elles deviennent de véritables alliées dans votre travail ou vos projets.
     """)
     st.markdown("---")
 
