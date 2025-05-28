@@ -1430,7 +1430,7 @@ elif st.session_state.view_mode == "assistant_creation":
         with col_indicator_assist:
             # Ajout d'un peu de padding-top pour un meilleur alignement vertical avec le st.subheader
             # Vous pourriez avoir besoin d'ajuster la valeur de padding-top.
-            st.markdown("<div style='color:red; text-align:left; font-size:0.9em; padding-top:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
+            st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-top:1.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
             
         st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
         
