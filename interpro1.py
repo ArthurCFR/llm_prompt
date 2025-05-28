@@ -3,7 +3,6 @@ from datetime import datetime, date
 import copy
 import json
 import requests
-import css
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA", initial_sidebar_state="collapsed" )
