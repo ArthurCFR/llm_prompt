@@ -22,7 +22,7 @@ st.markdown("""
             align-items: center;
         }
         div[data-testid="stAppViewBlockContainer"] {
-            padding-top: 1.5rem !important;
+            padding-top: 0rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
