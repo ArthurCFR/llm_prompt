@@ -48,79 +48,79 @@ st.markdown("""
         div[data-testid="stCodeBlock"]:hover button[data-testid="stCodeCopyButton"] {
             opacity: 1 !important;
         }
-    button.prompt-copy-button-copied {
-        background-color: #28a745 !important; /* Vert succès */
-        border-color: #1e7e34 !important;   /* Bordure vert foncé */
-        color: white !important;            /* Texte en blanc */
-    }
+        button.prompt-copy-button-copied {
+            background-color: #28a745 !important; /* Vert succès */
+            border-color: #1e7e34 !important;   /* Bordure vert foncé */
+            color: white !important;            /* Texte en blanc */
+        }
 
-    /* Style de base pour votre bouton de copie personnalisé (optionnel, vous pouvez aussi le styler inline) */
-    .custom-prompt-copy-button {
-        padding: 0.5em 1em;
-        font-size: 1em;
-        cursor: pointer;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #f0f0f0;
-        color: #333;
-        margin-top: 10px; /* Un peu d'espace au-dessus */
-    }
-    .custom-prompt-copy-button:hover {
-        background-color: #e0e0e0;
-    }
-    </style>
+        /* Style de base pour votre bouton de copie personnalisé (optionnel, vous pouvez aussi le styler inline) */
+        .custom-prompt-copy-button {
+            padding: 0.5em 1em;
+            font-size: 1em;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            color: #333;
+            margin-top: 10px; /* Un peu d'espace au-dessus */
+        }
+        .custom-prompt-copy-button:hover {
+            background-color: #e0e0e0;
+        }
+        </style>
     
-    <script>
-    function copyActivePromptToClipboard(textToCopy, buttonId) {
-        const buttonElement = document.getElementById(buttonId);
-    
-        if (!navigator.clipboard) {
-            // Fallback pour anciens navigateurs ou contextes non sécurisés (http)
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = textToCopy;
-                textArea.style.position = "fixed"; // Empêche le défilement
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
+        <script>
+        function copyActivePromptToClipboard(textToCopy, buttonId) {
+            const buttonElement = document.getElementById(buttonId);
+        
+            if (!navigator.clipboard) {
+                // Fallback pour anciens navigateurs ou contextes non sécurisés (http)
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+                    textArea.style.position = "fixed"; // Empêche le défilement
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (buttonElement) {
+                        const originalText = buttonElement.innerText;
+                        buttonElement.innerText = 'Copié ! (fallback)';
+                        // Pas de changement de classe facile ici pour le fallback sans plus de complexité
+                        setTimeout(() => { buttonElement.innerText = originalText; }, 2000);
+                    } else {
+                        // Fallback si pas d'élément bouton (ne devrait pas arriver ici)
+                    }
+                } catch (err) {
+                    console.error('Erreur de copie Fallback: ', err);
+                    if (buttonElement) buttonElement.innerText = 'Erreur copie';
+                }
+                return;
+            }
+        
+            navigator.clipboard.writeText(textToCopy).then(function() {
                 if (buttonElement) {
                     const originalText = buttonElement.innerText;
-                    buttonElement.innerText = 'Copié ! (fallback)';
-                    // Pas de changement de classe facile ici pour le fallback sans plus de complexité
-                    setTimeout(() => { buttonElement.innerText = originalText; }, 2000);
-                } else {
-                    // Fallback si pas d'élément bouton (ne devrait pas arriver ici)
+                    buttonElement.innerText = '✅ Copié !';
+                    buttonElement.classList.add('prompt-copy-button-copied'); // Ajoute la classe pour le style vert
+        
+                    setTimeout(() => {
+                        buttonElement.innerText = originalText;
+                        buttonElement.classList.remove('prompt-copy-button-copied'); // Retire la classe
+                    }, 2000); // Le bouton revient à la normale après 2 secondes
                 }
-            } catch (err) {
-                console.error('Erreur de copie Fallback: ', err);
-                if (buttonElement) buttonElement.innerText = 'Erreur copie';
-            }
-            return;
+            }).catch(function(err) {
+                console.error('Erreur de copie dans le presse-papiers: ', err);
+                if (buttonElement) {
+                    const originalText = buttonElement.innerText;
+                    buttonElement.innerText = '⚠️ Échec copie';
+                     setTimeout(() => { buttonElement.innerText = originalText; }, 2500);
+                }
+            });
         }
-    
-        navigator.clipboard.writeText(textToCopy).then(function() {
-            if (buttonElement) {
-                const originalText = buttonElement.innerText;
-                buttonElement.innerText = '✅ Copié !';
-                buttonElement.classList.add('prompt-copy-button-copied'); // Ajoute la classe pour le style vert
-    
-                setTimeout(() => {
-                    buttonElement.innerText = originalText;
-                    buttonElement.classList.remove('prompt-copy-button-copied'); // Retire la classe
-                }, 2000); // Le bouton revient à la normale après 2 secondes
-            }
-        }).catch(function(err) {
-            console.error('Erreur de copie dans le presse-papiers: ', err);
-            if (buttonElement) {
-                const originalText = buttonElement.innerText;
-                buttonElement.innerText = '⚠️ Échec copie';
-                 setTimeout(() => { buttonElement.innerText = originalText; }, 2500);
-            }
-        });
-    }
-    </script>
+        </script>
 """, unsafe_allow_html=True)
 
 # --- Initial Data Structure & Constants ---
