@@ -1422,18 +1422,23 @@ elif st.session_state.view_mode == "assistant_creation":
                 st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
 
     if st.session_state.generated_meta_prompt_for_llm:
-        st.subheader("📋 Prompt système Généré (à coller dans LaPosteGPT) :")
-        if edited_prompt_value != st.session_state.active_generated_prompt: 
-            st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
-        col_caption, col_indicator = st.columns([1.8, 0.2]) # Ajustez les proportions si nécessaire
-        with col_caption:
-            st.caption("")
-        with col_indicator:
-            st.markdown("<div style='color:red; text-align:left; font-size:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
+        col_subheader_assist, col_indicator_assist = st.columns([0.85, 0.15]) # Ajustez les proportions si besoin
+
+        with col_subheader_assist:
+            st.subheader("📋 Prompt système Généré (à coller dans LaPosteGPT) :")
+        
+        with col_indicator_assist:
+            # Ajout d'un peu de padding-top pour un meilleur alignement vertical avec le st.subheader
+            # Vous pourriez avoir besoin d'ajuster la valeur de padding-top.
+            st.markdown("<div style='color:red; text-align:left; font-size:0.9em; padding-top:0.6em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
+            
         st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
+        
+        # Cette caption est toujours utile pour indiquer comment utiliser l'icône de copie du bloc st.code
+        st.caption("<span style='color:gray; font-size:0.9em;'>Utilisez l'icône 📋 en haut à droite du bloc de code pour copier le prompt système.</span>", unsafe_allow_html=True)
+
         st.markdown("---")
-        st.info("Une fois que votre LLM externe a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
-else: 
+        st.info("Une fois que LaPoste GPT (ou votre LLM externe) a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
         st.warning("Aucun groupement de cas d'usage métier n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
     elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
