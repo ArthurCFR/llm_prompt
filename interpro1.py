@@ -1005,10 +1005,7 @@ elif st.session_state.view_mode == "edit":
             with col_indicator:
                 st.markdown("<div style='color:red; text-align:left; font-size:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
     
-            if st.session_state.active_generated_prompt: # Cette condition est un peu redondante si on est déjà dans le bloc externe du même nom
-                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
-            else: # Normalement, ce 'else' ne devrait pas être atteint si le 'if' externe est vrai
-                st.markdown("*Aucun prompt généré à afficher.*")
+
             if st.session_state.active_generated_prompt:
                 st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
             else:
