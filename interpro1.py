@@ -771,7 +771,6 @@ elif st.session_state.view_mode == "select_family_for_library":
             st.rerun()
 
 elif st.session_state.view_mode == "library":
-elif st.session_state.view_mode == "library":
     if not library_family_to_display:
         st.info("Veuillez sélectionner une famille dans la barre latérale (onglet Bibliothèque) pour afficher les prompts.")
         available_families_main_display = list(st.session_state.editable_prompts.keys())
