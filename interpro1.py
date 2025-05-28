@@ -828,6 +828,7 @@ elif st.session_state.view_mode == "library":
         if not available_families_check : st.warning("La bibliothèque est entièrement vide. Veuillez créer des métiers et des prompts.")
 
 elif st.session_state.view_mode == "edit":
+    current_family_of_edited_prompt = st.session_state.get('family_selector_edition') # ou 'métier_selector_edition' si vous avez renommé cette clé de session_state
     if st.button(f"⬅️ Retour à la bibliothèque ({current_family_of_edited_prompt or 'Métier'})", key="back_to_library_from_edit"):
         if current_family_of_edited_prompt:
             st.session_state.library_selected_family_for_display = current_family_of_edited_prompt
