@@ -1351,6 +1351,7 @@ elif st.session_state.view_mode == "inject_manual":
                                         st.session_state.force_select_family_name = target_family_name
                                         st.session_state.force_select_use_case_name = first_new_uc_name
                                         st.session_state.go_to_config_section = True
+                                        st.session_state.active_generated_prompt = "" # <--- AJOUTEZ CETTE LIGNE ICI
                                         st.rerun()
                                 if failed_injections:
                                     for fail_msg in failed_injections: 
