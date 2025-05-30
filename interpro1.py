@@ -795,7 +795,7 @@ elif st.session_state.view_mode == "select_family_for_library":
         st.session_state.view_mode = "accueil"
         st.rerun()
     st.header("📚 Explorer les prompts par métier")
-    st.markdown("Cliquez sur le nom d'un métier pour afficher les prompts qu'elle contient.")
+    st.markdown("Cliquez sur le nom d'un métier pour afficher les prompts associés.")
     st.markdown("---")
 
     available_families = list(st.session_state.editable_prompts.keys())
