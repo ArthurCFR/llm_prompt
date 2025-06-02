@@ -139,6 +139,64 @@ Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON.
 Assure-toi que le JSON que tu génères est valide. Les variables dans le template doivent correspondre exactement aux noms définis dans la section "variables". Le nom du cas d'usage (la clé principale du JSON) doit être le même que celui que tu as mis dans `suggested_use_case_name` à l'étape précédente (mais ici c'est la clé de l'objet).
 """
 
+# NOUVELLE CONSTANTE POUR L'AMÉLIORATION DE PROMPT
+META_PROMPT_FOR_LLM_AMELIORATION_TEMPLATE = """# MISSION
+Tu es un expert en ingénierie de prompts (Prompt Engineer) spécialisé dans l'amélioration, la structuration et la paramétrisation de prompts existants pour les rendre plus efficaces et intégrables dans une application de gestion de prompts.
+
+# CONTEXTE
+L'utilisateur t'a fourni un prompt existant qu'il souhaite améliorer et structurer. Le voici :
+--- PROMPT EXISTANT FOURNI PAR L'UTILISATEUR ---
+{prompt_existant}
+--- FIN DU PROMPT EXISTANT ---
+
+# TA TÂCHE
+En te basant sur le "PROMPT EXISTANT FOURNI PAR L'UTILISATEUR", tu dois :
+1.  **Analyser et Comprendre** : Détermine l'objectif principal du prompt, le public cible de sa réponse, et le type de tâche qu'il vise à accomplir.
+2.  **Améliorer le Contenu** :
+    * Réécris le prompt pour qu'il soit plus clair, concis, et actionnable par un modèle de langage avancé.
+    * Définis clairement le **rôle** que l'IA devrait adopter (ex: "Tu es un analyste financier expert...").
+    * Spécifie explicitement l'**objectif principal**.
+    * Si le prompt existant mentionne ou implique l'utilisation de documents sources, décris comment l'IA doit les utiliser.
+    * Identifie les **éléments spécifiques à extraire ou à générer** par le prompt final.
+    * Si un **format de sortie** est implicite ou souhaitable, décris-le. Le résultat du prompt amélioré doit être bien présenté.
+    * Inclus des instructions pour gérer les **ambiguïtés** ou le manque d'information.
+3.  **Identifier et Paramétrer les Variables** :
+    * Identifie dans le prompt amélioré les parties qui devraient être des variables (placeholders). Le nombre de variables devrait idéalement être entre 3 et 7.
+    * Dans le texte du prompt amélioré (le champ "template" du JSON final), ces variables DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}`. N'utilise PAS d'accolades simples.
+4.  **Générer la Configuration JSON** : Tu dois produire un unique objet JSON qui encapsule le prompt amélioré et sa configuration. Cet objet JSON DOIT suivre la structure décrite ci-dessous.
+
+# EXIGENCES POUR LE PROMPT AMÉLIORÉ (LE CHAMP "template" DANS LE JSON)
+Le prompt textuel amélioré que tu vas créer (qui ira dans le champ "template") DOIT respecter les points suivants (en plus de ceux mentionnés à l'étape "Améliorer le Contenu") :
+* Les titres des sections générées par le prompt amélioré doivent être précédés par deux signes # (exemple : ## Objectif Principal).
+* Le résultat obtenu par le prompt amélioré ne doit pas sembler avoir été généré par un LLM (éviter les phrases comme "basé sur l'input", "à partir des informations du prompt", etc.).
+
+# FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT D'AMÉLIORATION)
+Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON DOIT être structuré comme suit :
+
+```json
+{{
+  "Nom Suggéré Pour Le Cas D'Usage": {{  // Un nom concis (5-7 mots) que tu suggères pour ce prompt amélioré.
+    "template": "Le corps principal du 'Prompt Cible' AMÉLIORÉ que tu as conçu. Les variables comme {{ma_variable}} doivent être ici.",
+    "variables": [  // Liste des variables que tu as identifiées et paramétrées.
+      {{
+        "name": "nom_technique_variable", // ex: nom_du_client (correspond à {{nom_du_client}} dans le template)
+        "label": "Label descriptif pour l'utilisateur", // ex: "Nom du client"
+        "type": "text_input", // Choisis parmi: "text_input", "selectbox", "date_input", "number_input", "text_area"
+        "default": "valeur_par_defaut_suggeree", // Suggère une valeur par défaut pertinente. Pour les dates: "AAAA-MM-JJ".
+        "options": [], // (Optionnel, array of strings) Uniquement si type est "selectbox".
+        "min_value": null, "max_value": null, "step": null, // (Optionnel, number) Uniquement si type est "number_input".
+        "height": null // (Optionnel, number >= 68) Uniquement si type est "text_area".
+      }}
+      // ... autres variables si identifiées ...
+    ],
+    "tags": ["mot_cle1", "mot_cle2", "mot_cle3"] // Propose 3 à 5 mots-clés pertinents.
+  }}
+}}
+Assure-toi que le JSON généré est valide. Les variables dans le template doivent correspondre exactement aux noms définis dans la section "variables".
+Le "Nom Suggéré Pour Le Cas D'Usage" est la clé principale de l'objet JSON que tu retournes.
+Adapte les types de variables (type, default, options, min_value, etc.) en fonction de ce que tu déduis du prompt existant. Par exemple, si le prompt parle d'une "date de début", la variable devrait être de type date_input. Si le prompt demande un "pourcentage de remise", ce sera un number_input.
+"""
+
 ASSISTANT_FORM_VARIABLES = [
     {"name": "problematique", "label": "Décrivez le besoin ou la tâche que le prompt cible doit résoudre :", "type": "text_area", "default": "", "height": 100},
     {"name": "doc_source", "label": "Quel(s) types de document(s) sont nécessaire pour la réalisation de votre besoin ? (e.g. PDF, e-mail, texte brut -laisser vide si non pertinent-) :", "type": "text_input", "default": ""},
@@ -457,6 +515,12 @@ if 'assistant_form_values' not in st.session_state:
 if 'generated_meta_prompt_for_llm' not in st.session_state: 
     st.session_state.generated_meta_prompt_for_llm = ""
 
+# NOUVELLES CLÉS POUR L'ASSISTANT UNIFIÉ
+if 'assistant_mode' not in st.session_state:
+    st.session_state.assistant_mode = "creation"  # Modes possibles: "creation", "amelioration"
+if 'assistant_existing_prompt_value' not in st.session_state:
+    st.session_state.assistant_existing_prompt_value = ""
+
 # --- Sidebar Navigation with Tabs ---
 st.sidebar.header("Menu Principal")
 tab_bibliotheque, tab_edition_generation, tab_injection = st.sidebar.tabs([
@@ -738,16 +802,21 @@ with tab_bibliotheque:
 with tab_injection:
     st.subheader("Assistant & Injection")
     st.markdown("Utilisez l'assistant pour préparer un prompt système ou injectez des cas d'usage en format JSON.")
-    if st.button("✨ Créer un prompt système (Assistant)", key="start_assistant_creation_btn", use_container_width=True):
+    # MODIFICATION DU BOUTON EXISTANT
+    if st.button("✨ Assistant Prompt Système", key="start_assistant_unified_btn", use_container_width=True): # Nom du bouton mis à jour
         st.session_state.view_mode = "assistant_creation" 
-        st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES} 
-        st.session_state.generated_meta_prompt_for_llm = "" 
+        # Réinitialiser au mode "creation" par défaut et vider les champs des deux modes potentiels
+        st.session_state.assistant_mode = "creation" 
+        st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES}
+        st.session_state.assistant_existing_prompt_value = "" 
+        st.session_state.generated_meta_prompt_for_llm = "" # Le méta-prompt généré est commun
         st.rerun()
+    
     if st.button("💉 Injecter JSON Manuellement", key="start_manual_injection_btn", use_container_width=True):
         st.session_state.view_mode = "inject_manual" 
         st.session_state.injection_selected_family = None 
         st.session_state.injection_json_text = "" 
-        st.session_state.generated_meta_prompt_for_llm = "" 
+        st.session_state.generated_meta_prompt_for_llm = "" # Aussi réinitialiser ici
         st.rerun()
 
 # --- Main Display Area ---
@@ -1368,88 +1437,139 @@ elif st.session_state.view_mode == "inject_manual":
         else: 
             st.info("Veuillez sélectionner un métier de destination pour commencer l'injection.")
 
-elif st.session_state.view_mode == "assistant_creation":
-    if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_assistant"):
+elif st.session_state.view_mode == "assistant_creation": # Cette vue gère maintenant les deux modes
+    if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_assistant_unified"):
         st.session_state.view_mode = "accueil"
         st.rerun()
-    st.header("✨ Assistant de création de prompt système")
-    st.markdown("Cet assistant vous aide à préparer une **instruction détaillée**. Vous donnerez cette instruction à LaPoste GPT qui, en retour, générera les éléments clés de votre cas d'usage (le prompt système, les variables, les tags, etc.). Vous pourrez ensuite l'importer ici via le bouton [💉 Injecter JSON Manuellement], puis l'améliorer à votre guise.")
+    st.header("✨ Assistant Prompt Système")
 
-    with st.form(key="assistant_creation_form"):
-        current_form_input_values = {} 
+    # S'assurer que assistant_mode a une valeur initiale valide si elle n'est pas déjà définie
+    if 'assistant_mode' not in st.session_state:
+        st.session_state.assistant_mode = "creation"
 
-        for var_info in ASSISTANT_FORM_VARIABLES:
-            field_key = f"assistant_form_{var_info['name']}"
-            value_for_widget = st.session_state.assistant_form_values.get(var_info['name'], var_info['default'])
+    mode_options_labels = {
+        "creation": "🆕 Créer un nouveau prompt système",
+        "amelioration": "🚀 Améliorer un prompt existant"
+    }
+    
+    # Utiliser l'index pour que st.radio se souvienne de la sélection via st.session_state.assistant_mode
+    current_mode_index = 0 if st.session_state.assistant_mode == "creation" else 1
 
-            if var_info["type"] == "text_input":
-                current_form_input_values[var_info["name"]] = st.text_input(
-                    var_info["label"], 
-                    value=value_for_widget,
-                    key=field_key
-                )
-            elif var_info["type"] == "text_area":
-                current_form_input_values[var_info["name"]] = st.text_area(
-                    var_info["label"], 
-                    value=value_for_widget,
-                    height=var_info.get("height", 100), 
-                    key=field_key
-                )
-            elif var_info["type"] == "number_input":
-                try: 
-                    num_value_for_widget = float(value_for_widget)
-                except (ValueError, TypeError): 
-                    num_value_for_widget = float(var_info["default"])
+    selected_mode_key = st.radio(
+        "Que souhaitez-vous faire ?",
+        options=list(mode_options_labels.keys()),
+        format_func=lambda key: mode_options_labels[key],
+        index=current_mode_index,
+        key="assistant_mode_radio_selector" # Clé unique pour le widget radio
+    )
 
-                current_form_input_values[var_info["name"]] = st.number_input(
-                    var_info["label"], 
-                    value=num_value_for_widget,
-                    min_value=float(var_info.get("min_value", 0.0)) if var_info.get("min_value") is not None else None,
-                    max_value=float(var_info.get("max_value", 100.0)) if var_info.get("max_value") is not None else None,
-                    step=float(var_info.get("step", 1.0)), 
-                    key=field_key, 
-                    format="%g" 
-                )
+    # Si le mode sélectionné via le radio a changé, mettre à jour st.session_state et rerun pour rafraîchir le formulaire
+    if selected_mode_key != st.session_state.assistant_mode:
+        st.session_state.assistant_mode = selected_mode_key
+        st.session_state.generated_meta_prompt_for_llm = "" # Vider le prompt généré car le mode a changé
+        # Optionnel: vider les valeurs des formulaires lors du changement de mode pour éviter confusion
+        # st.session_state.assistant_form_values = {var['name']: var['default'] for var in ASSISTANT_FORM_VARIABLES}
+        # st.session_state.assistant_existing_prompt_value = ""
+        st.rerun()
 
-        submitted_assistant_form = st.form_submit_button("📝 Générer le prompt système")
+    if st.session_state.assistant_mode == "creation":
+        st.markdown("Décrivez votre besoin pour que l'assistant génère une instruction détaillée. Vous donnerez cette instruction à LaPoste GPT qui, en retour, produira les éléments de votre cas d'usage (prompt système, variables, etc.).")
+        with st.form(key="assistant_creation_form_std"):
+            # Initialiser current_form_input_values avec les valeurs de session_state ou les valeurs par défaut
+            # pour que les champs du formulaire soient pré-remplis correctement.
+            temp_form_values = {}
+            for var_info in ASSISTANT_FORM_VARIABLES:
+                field_key = f"assistant_form_{var_info['name']}"
+                # Utilise la valeur de session_state pour ce champ ou la valeur par défaut si non trouvée
+                value_for_widget = st.session_state.assistant_form_values.get(var_info['name'], var_info['default'])
 
-        if submitted_assistant_form:
-            st.session_state.assistant_form_values = current_form_input_values.copy()
+                if var_info["type"] == "text_input":
+                    temp_form_values[var_info["name"]] = st.text_input(
+                        var_info["label"], value=value_for_widget, key=field_key
+                    )
+                elif var_info["type"] == "text_area":
+                    temp_form_values[var_info["name"]] = st.text_area(
+                        var_info["label"], value=value_for_widget, height=var_info.get("height", 100), key=field_key
+                    )
+                elif var_info["type"] == "number_input": # Assurez-vous que ce cas est géré si vous l'avez
+                    try:
+                        num_value_for_widget = float(value_for_widget if value_for_widget else var_info["default"])
+                    except (ValueError, TypeError):
+                        num_value_for_widget = float(var_info["default"])
+                    temp_form_values[var_info["name"]] = st.number_input(
+                         var_info["label"],
+                         value=num_value_for_widget,
+                         min_value=float(var_info.get("min_value")) if var_info.get("min_value") is not None else None,
+                         max_value=float(var_info.get("max_value")) if var_info.get("max_value") is not None else None,
+                         step=float(var_info.get("step", 1.0)),
+                         key=field_key,
+                         format="%g" # ou un autre format si nécessaire
+                    )
+            submitted_assistant_form = st.form_submit_button("📝 Générer l'instruction de création")
 
-            try:
-                populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**st.session_state.assistant_form_values)
-                st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
-                st.success("Prompt système généré ! Vous pouvez le copier ci-dessous.")
-            except KeyError as e: # pragma: no cover
-                st.error(f"Erreur lors de la construction du prompt système. Clé de formatage manquante : {e}.")
-            except Exception as e: # pragma: no cover
-                st.error(f"Une erreur inattendue est survenue lors de la génération du prompt système : {e}")
+            if submitted_assistant_form:
+                st.session_state.assistant_form_values = temp_form_values.copy() # Sauvegarde les valeurs actuelles du formulaire
+                try:
+                    # Vérifier si tous les champs requis pour ce template sont remplis (si nécessaire)
+                    populated_meta_prompt = META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE.format(**st.session_state.assistant_form_values)
+                    st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt
+                    st.success("Instruction de création générée !")
+                except KeyError as e: 
+                    st.error(f"Erreur lors de la construction de l'instruction. Clé de formatage manquante : {e}.")
+                    st.session_state.generated_meta_prompt_for_llm = ""
+                except Exception as e: 
+                    st.error(f"Une erreur inattendue est survenue : {e}")
+                    st.session_state.generated_meta_prompt_for_llm = ""
 
+    elif st.session_state.assistant_mode == "amelioration":
+        st.markdown("Collez votre prompt existant. L'assistant générera une instruction pour LaPoste GPT afin de transformer votre prompt en un cas d'usage structuré et améliorable pour cette application.")
+        with st.form(key="assistant_amelioration_form_unified"):
+            # Utilise la valeur de session_state pour ce champ
+            prompt_existant_input_val = st.text_area(
+                "Collez votre prompt existant ici :",
+                value=st.session_state.assistant_existing_prompt_value, 
+                height=300,
+                key="assistant_form_prompt_existant_unified"
+            )
+            submitted_assistant_amelioration_form = st.form_submit_button("📝 Générer l'instruction d'amélioration")
+
+            if submitted_assistant_amelioration_form:
+                st.session_state.assistant_existing_prompt_value = prompt_existant_input_val # Sauvegarde la valeur soumise
+                if not prompt_existant_input_val.strip():
+                    st.error("Veuillez coller un prompt existant dans la zone de texte.")
+                    st.session_state.generated_meta_prompt_for_llm = ""
+                else:
+                    try:
+                        populated_meta_prompt_amelioration = META_PROMPT_FOR_LLM_AMELIORATION_TEMPLATE.format(
+                            prompt_existant=prompt_existant_input_val # Utiliser la valeur actuelle du champ
+                        )
+                        st.session_state.generated_meta_prompt_for_llm = populated_meta_prompt_amelioration
+                        st.success("Instruction d'amélioration générée !")
+                    except KeyError as e: 
+                        st.error(f"Erreur lors de la construction de l'instruction. Clé de formatage manquante : {e}.")
+                        st.session_state.generated_meta_prompt_for_llm = ""
+                    except Exception as e: 
+                        st.error(f"Une erreur inattendue est survenue : {e}")
+                        st.session_state.generated_meta_prompt_for_llm = ""
+
+    # Affichage commun du méta-prompt généré (qu'il vienne de la création ou de l'amélioration)
     if st.session_state.generated_meta_prompt_for_llm:
-        col_subheader_assist, col_indicator_assist = st.columns([0.85, 0.15]) # Ajustez les proportions si besoin
-
+        col_subheader_assist, col_indicator_assist = st.columns([0.85, 0.15])
         with col_subheader_assist:
-            st.subheader("📋 Prompt système Généré (à coller dans LaPosteGPT) :")
-        
+            st.subheader("📋 Instruction Générée (à coller dans LaPosteGPT) :")
         with col_indicator_assist:
-            # Ajout d'un peu de padding-top pour un meilleur alignement vertical avec le st.subheader
-            # Vous pourriez avoir besoin d'ajuster la valeur de padding-top.
             st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-top:1.9em;padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
-            
-        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
-        
-        # Cette caption est toujours utile pour indiquer comment utiliser l'icône de copie du bloc st.code
-        st.caption("<span style='color:gray; font-size:0.9em;'>Utilisez l'icône en haut à droite du bloc de code pour copier le prompt système.</span>", unsafe_allow_html=True)
 
+        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
+        st.caption("<span style='color:gray; font-size:0.9em;'>Utilisez l'icône en haut à droite du bloc de code pour copier l'instruction.</span>", unsafe_allow_html=True)
         st.markdown("---")
-        st.info("Une fois que LaPoste GPT (ou votre LLM externe) a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
-        if st.button("💉  Injecter JSON Manuellement", key="prepare_inject_from_assistant_btn", use_container_width=True, type="primary"):
+        st.info("Une fois que LaPoste GPT (ou votre LLM externe) a généré le JSON basé sur cette instruction, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" (disponible aussi dans l'onglet Assistant du menu) pour l'ajouter à votre atelier.")
+        if st.button("💉 Injecter JSON Manuellement", key="prepare_inject_from_assistant_unified_btn", use_container_width=True, type="primary"):
             st.session_state.view_mode = "inject_manual"
-            st.session_state.injection_selected_family = None # Réinitialiser pour une nouvelle injection
-            st.session_state.injection_json_text = ""      # Vider le champ pour le nouveau JSON
-            # Optionnel: message pour guider l'utilisateur
+            st.session_state.injection_selected_family = None
+            st.session_state.injection_json_text = ""
             st.toast("Collez le JSON généré par le LLM et sélectionnez un métier de destination.", icon="💡")
-            st.rerun()    
+            st.rerun()   
     if not any(st.session_state.editable_prompts.values()): # pragma: no cover
         st.warning("Aucun groupement de cas d'usage métier n'est configurée. Veuillez en créer une via l'onglet 'Édition' ou vérifier votre Gist.")
     elif st.session_state.view_mode not in ["library", "edit", "inject_manual", "assistant_creation"]: # pragma: no cover
