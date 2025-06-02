@@ -1281,7 +1281,7 @@ elif st.session_state.view_mode == "edit":
                         key=f"target_family_dup_select_{form_key_duplicate}"
                     )
 
-                    suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
+                    suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
                     suggested_new_name = suggested_new_name_base
                     temp_copy_count = 1
                     # La suggestion de nom initiale se base sur la famille de destination par défaut (l'originale).
