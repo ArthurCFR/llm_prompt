@@ -1258,7 +1258,7 @@ elif st.session_state.view_mode == "edit":
             st.markdown("---")
             st.subheader("Actions sur le Cas d'Usage")
 
-if st.session_state.duplicating_use_case_details and \
+            if st.session_state.duplicating_use_case_details and \
                st.session_state.duplicating_use_case_details["family"] == final_selected_family_edition and \
                st.session_state.duplicating_use_case_details["use_case"] == final_selected_use_case_edition:
 
