@@ -1023,8 +1023,6 @@ elif st.session_state.view_mode == "edit":
                     
                     if isinstance(v_val, date):
                         processed_values_for_template[k] = v_val.strftime("%d/%m/%Y")
-                    if isinstance(v_val, date):
-                        processed_values_for_template[k] = v_val.strftime("%d/%m/%Y")
                     elif isinstance(v_val, float): # On regroupe ici tous les traitements pour les floats
                         if v_val.is_integer(): # Si le float est un entier (ex: 50.0)
                             processed_values_for_template[k] = str(int(v_val)) # Convertir en "50"
