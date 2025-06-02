@@ -1258,7 +1258,7 @@ elif st.session_state.view_mode == "edit":
             st.markdown("---")
             st.subheader("Actions sur le Cas d'Usage")
 
-            if st.session_state.duplicating_use_case_details and \
+if st.session_state.duplicating_use_case_details and \
                st.session_state.duplicating_use_case_details["family"] == final_selected_family_edition and \
                st.session_state.duplicating_use_case_details["use_case"] == final_selected_use_case_edition:
 
@@ -1282,55 +1282,55 @@ elif st.session_state.view_mode == "edit":
                     )
 
                     suggested_new_name_base = f"{original_uc_name_for_dup_form} (copie)"
-                    suggested_new_name = suggested_new_name_base
-                    temp_copy_count = 1
+                    suggested_new_name = suggested_new_name_base # Ligne 1285 originale
+                    temp_copy_count = 1
                     # La suggestion de nom initiale se base sur la famille de destination par défaut (l'originale).
                     # L'utilisateur devra peut-être ajuster manuellement si une collision de nom se produit après avoir changé la famille de destination.
                     # La validation finale se fera avec la famille de destination réellement choisie.
-                    while suggested_new_name in st.session_state.editable_prompts.get(selected_target_family_for_duplicate, {}): # Vérifie la famille qui est sélectionnée par défaut
-                        suggested_new_name = f"{suggested_new_name_base} {temp_copy_count}"
-                        temp_copy_count += 1
+                    while suggested_new_name in st.session_state.editable_prompts.get(selected_target_family_for_duplicate, {}): # Vérifie la famille qui est sélectionnée par défaut
+                        suggested_new_name = f"{suggested_new_name_base} {temp_copy_count}"
+                        temp_copy_count += 1
 
-                    new_duplicated_uc_name_input = st.text_input(
-                        "Nouveau nom pour le cas d'usage dupliqué:", 
-                        value=suggested_new_name, # La valeur suggérée est basée sur la famille par défaut du selectbox
-                        key=f"new_dup_name_input_{form_key_duplicate}"
-                    )
+                    new_duplicated_uc_name_input = st.text_input(
+                        "Nouveau nom pour le cas d'usage dupliqué:",
+                        value=suggested_new_name, # La valeur suggérée est basée sur la famille par défaut du selectbox
+                        key=f"new_dup_name_input_{form_key_duplicate}"
+                    )
 
-                    submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
+                    submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
 
-                    if submitted_duplicate_form:
-                        new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
+                    if submitted_duplicate_form:
+                        new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
                         target_family_on_submit = selected_target_family_for_duplicate # Récupère la famille de destination choisie
 
-                        if not new_uc_name_val_from_form:
-                            st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
-                        elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(target_family_on_submit, {}): # Validation avec la famille de destination
-                            st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{target_family_on_submit}'.")
-                        else:
+                        if not new_uc_name_val_from_form:
+                            st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
+                        elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(target_family_on_submit, {}): # Validation avec la famille de destination
+                            st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{target_family_on_submit}'.")
+                        else:
                             # current_prompt_config est la config du cas d'usage original
-                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
-                            now_iso_dup_create, now_iso_dup_update = get_default_dates()
-                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["created_at"] = now_iso_dup_create
-                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
-                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["usage_count"] = 0
-                            save_editable_prompts_to_gist()
-                            st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{target_family_on_submit}'.")
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
+                            now_iso_dup_create, now_iso_dup_update = get_default_dates()
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["created_at"] = now_iso_dup_create
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["usage_count"] = 0
+                            save_editable_prompts_to_gist()
+                            st.success(f"Cas d'usage '{original_uc_name_for_dup_form}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{target_family_on_submit}'.")
 
-                            st.session_state.duplicating_use_case_details = None 
-                            st.session_state.force_select_family_name = target_family_on_submit # Navigation vers la nouvelle famille
-                            st.session_state.force_select_use_case_name = new_uc_name_val_from_form # Navigation vers le nouveau cas d'usage
-                            st.session_state.active_generated_prompt = ""
-                            st.session_state.variable_type_to_create = None
-                            st.session_state.editing_variable_info = None
-                            st.session_state.go_to_config_section = True
-                            st.rerun()
+                            st.session_state.duplicating_use_case_details = None
+                            st.session_state.force_select_family_name = target_family_on_submit # Navigation vers la nouvelle famille
+                            st.session_state.force_select_use_case_name = new_uc_name_val_from_form # Navigation vers le nouveau cas d'usage
+                            st.session_state.active_generated_prompt = ""
+                            st.session_state.variable_type_to_create = None
+                            st.session_state.editing_variable_info = None
+                            st.session_state.go_to_config_section = True
+                            st.rerun()
 
-                cancel_key_duplicate = f"cancel_dup_process_{original_family_name_for_dup.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
-                if st.button("❌ Annuler la Duplication", key=cancel_key_duplicate, use_container_width=True):
-                    st.session_state.duplicating_use_case_details = None
+                cancel_key_duplicate = f"cancel_dup_process_{original_family_name_for_dup.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
+                if st.button("❌ Annuler la Duplication", key=cancel_key_duplicate, use_container_width=True):
+                    st.session_state.duplicating_use_case_details = None
                     # st.session_state.go_to_config_section = True # On s'assure que l'expandeur reste ouvert même en annulant
-                    st.rerun()
+                    st.rerun()
             else: 
                 action_cols_manage = st.columns(2)
                 with action_cols_manage[0]: 
