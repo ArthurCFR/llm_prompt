@@ -954,12 +954,15 @@ elif st.session_state.view_mode == "edit":
                     
                     if isinstance(v_val, date):
                         processed_values_for_template[k] = v_val.strftime("%d/%m/%Y")
-                    elif isinstance(v_val, float) and v_val.is_integer():
-                        # Si c'est un float représentant un entier (ex: 50.0), convertir en int puis en str ("50")
-                        processed_values_for_template[k] = str(int(v_val))
-                    else:
-                        # Pour tous les autres types (str, float non entier, bool, etc.), convertir en str
-                        processed_values_for_template[k] = str(v_val)
+                    if isinstance(v_val, date):
+                        processed_values_for_template[k] = v_val.strftime("%d/%m/%Y")
+                    elif isinstance(v_val, float): # On regroupe ici tous les traitements pour les floats
+                        if v_val.is_integer(): # Si le float est un entier (ex: 50.0)
+                            processed_values_for_template[k] = str(int(v_val)) # Convertir en "50"
+                        else: # S'il s'agit d'un float avec des décimales (ex: 0.125000...)
+                            processed_values_for_template[k] = f"{v_val:.2f}" # Formater avec 2 décimales
+                    else: # Pour tous les autres types (str, bool, etc. qui ne sont ni date ni float)
+                        processed_values_for_template[k] = str(v_val)
                 
                 final_vals_for_prompt = processed_values_for_template # final_vals_for_prompt contient maintenant des chaînes
 
