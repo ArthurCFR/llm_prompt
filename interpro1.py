@@ -5,7 +5,7 @@ import json
 import requests
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
-st.set_page_config(layout="wide", page_title="🛠️ L'atelier des prompts IA", initial_sidebar_state="collapsed" )
+st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des prompts IA", initial_sidebar_state="collapsed" )
 
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
