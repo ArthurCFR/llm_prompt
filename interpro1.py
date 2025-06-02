@@ -1440,7 +1440,7 @@ elif st.session_state.view_mode == "assistant_creation":
 
         st.markdown("---")
         st.info("Une fois que LaPoste GPT (ou votre LLM externe) a généré le JSON basé sur ce prompt système, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" dans la barre latérale pour l'ajouter à votre atelier.")
-        if st.button("💉 Préparer l'injection du JSON obtenu", key="prepare_inject_from_assistant_btn", use_container_width=True, type="primary"):
+        if st.button("💉  Injecter JSON Manuellement", key="prepare_inject_from_assistant_btn", use_container_width=True, type="primary"):
             st.session_state.view_mode = "inject_manual"
             st.session_state.injection_selected_family = None # Réinitialiser pour une nouvelle injection
             st.session_state.injection_json_text = ""      # Vider le champ pour le nouveau JSON
