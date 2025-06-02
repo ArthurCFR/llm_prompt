@@ -1267,7 +1267,7 @@ elif st.session_state.view_mode == "edit":
                 st.markdown(f"#### Dupliquer '{original_uc_name_for_dup_form}' (depuis: {original_family_name_for_dup})")
 
                 form_key_duplicate = f"form_duplicate_name_{original_family_name_for_dup.replace(' ','_')}_{original_uc_name_for_dup_form.replace(' ','_')}"
-                with st.form(key=form_key_duplicate):
+                with st.form(key=form_key_duplicate):
                     available_families_list = list(st.session_state.editable_prompts.keys())
                     try:
                         default_family_idx = available_families_list.index(original_family_name_for_dup)
