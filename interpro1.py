@@ -5,7 +5,7 @@ import json
 import requests
 
 # --- PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
-st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des prompts IA", initial_sidebar_state="collapsed" )
+st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts IA", initial_sidebar_state="collapsed" )
 
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
@@ -826,7 +826,7 @@ library_family_to_display = st.session_state.get('library_selected_family_for_di
 
 # NOUVELLE SECTION POUR LA PAGE D'ACCUEIL
 if st.session_state.view_mode == "accueil":
-    st.header("Bienvenue dans votre laboratoire de prompts IA ! 💡")
+    st.header("Bienvenue dans votre laboratoire des prompts IA ! 💡")
     st.caption(f"Créé par le pôle Data / IA")
     st.markdown("""
         Vous êtes au bon endroit pour maîtriser l'art de "parler" aux Intelligences Artificielles (IA) et obtenir d'elles exactement ce dont vous avez besoin !
