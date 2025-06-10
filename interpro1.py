@@ -675,7 +675,7 @@ with tab_edition_generation:
                 st.warning(f"Supprimer '{current_selected_family_for_edit_logic}' et tous ses cas d'usage ? Action irréversible.")
 
                 _text_confirm_delete = f"Oui, supprimer définitivement '{current_selected_family_for_edit_logic}'"
-                if st.button(button_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
+                if st.button(_text_confirm_delete, type="primary", key=f"confirm_del_fam_sb_{current_selected_family_for_edit_logic}", use_container_width=True):
                     deleted_fam_name = current_selected_family_for_edit_logic 
                     del st.session_state.editable_prompts[current_selected_family_for_edit_logic]
                     save_editable_prompts_to_gist()
