@@ -940,9 +940,9 @@ elif st.session_state.view_mode == "library":
                     with col_btn_lib1:
                         if st.button(f"✍️ Utiliser ce prompt", key=f"main_lib_use_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
                             st.session_state.view_mode = "edit"; st.session_state.force_select_family_name = library_family_to_display; st.session_state.force_select_use_case_name = use_case_name_display; st.session_state.go_to_config_section = False; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.session_state.confirming_delete_details = None; st.rerun()
-                    with col_btn_lib2:
-                        if st.button(f"⚙️ Éditer ce prompt", key=f"main_lib_edit_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
-                            st.session_state.view_mode = "edit"; st.session_state.force_select_family_name = library_family_to_display; st.session_state.force_select_use_case_name = use_case_name_display; st.session_state.go_to_config_section = True; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.session_state.confirming_delete_details = None; st.rerun()
+                    # with col_btn_lib2:
+                        # if st.button(f"⚙️ Éditer ce prompt", key=f"main_lib_edit_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
+                            # st.session_state.view_mode = "edit"; st.session_state.force_select_family_name = library_family_to_display; st.session_state.force_select_use_case_name = use_case_name_display; st.session_state.go_to_config_section = True; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.session_state.confirming_delete_details = None; st.rerun()
     else: 
         st.info("Aucun métier n'est actuellement sélectionnée dans la bibliothèque ou le métier sélectionné n'existe plus.")
         available_families_check = list(st.session_state.editable_prompts.keys())
@@ -970,7 +970,7 @@ elif st.session_state.view_mode == "edit":
                 <li><strong>Cliquez sur "🚀 Générer Prompt" :</strong> L'application prendra le modèle de base de ce prompt et y insérera les informations que vous avez fournies.</li>
                 <li><strong>Utilisez votre prompt :</strong> Le prompt complet et personnalisé apparaîtra plus bas. Vous pourrez le copier pour l'utiliser avec l'outil d'IA de votre choix.</li>
             </ol>
-            <p>💡 <strong>Bon à savoir :</strong> Le modèle de base de ce prompt (le "template") ainsi que la liste des variables demandées sont entièrement personnalisables ! Vous pouvez les modifier dans la section "<strong>⚙️ Paramétrage du Prompt</strong>" qui se trouve plus bas sur cette même page (dans le menu déroulant).</p>
+            <!-- <p>💡 <strong>Bon à savoir :</strong> Le modèle de base de ce prompt (le "template") ainsi que la liste des variables demandées sont entièrement personnalisables ! Vous pouvez les modifier dans la section "<strong>⚙️ Paramétrage du Prompt</strong>" qui se trouve plus bas sur cette même page (dans le menu déroulant).</p> -->
         </div>
         """, unsafe_allow_html=True)
         gen_form_values = {}
