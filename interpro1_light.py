@@ -702,6 +702,98 @@ elif st.session_state.view_mode == "library":
             if not use_cases_in_family_display: st.info(f"Le métier '{library_family_to_display}' ne contient actuellement aucun prompt.")
             else: st.info("Aucun prompt ne correspond à vos critères de recherche/filtre dans cette métier.")
         else:
+            # Gestion de la duplication de cas d'usage
+            if st.session_state.duplicating_use_case_details and \
+               st.session_state.duplicating_use_case_details["family"] == library_family_to_display:
+                
+                original_uc_name_for_dup = st.session_state.duplicating_use_case_details["use_case"]
+                original_family_name_for_dup = st.session_state.duplicating_use_case_details["family"]
+                
+                st.markdown(f"### 📋 Dupliquer '{original_uc_name_for_dup}' (depuis: {original_family_name_for_dup})")
+                
+                form_key_duplicate = f"form_duplicate_lib_{original_family_name_for_dup.replace(' ','_')}_{original_uc_name_for_dup.replace(' ','_')}"
+                with st.form(key=form_key_duplicate):
+                    available_families_list = list(st.session_state.editable_prompts.keys())
+                    try:
+                        default_family_idx = available_families_list.index(original_family_name_for_dup)
+                    except ValueError:
+                        default_family_idx = 0
+                    
+                    selected_target_family_for_duplicate = st.selectbox(
+                        "Choisir la famille de destination pour la copie :",
+                        options=available_families_list,
+                        index=default_family_idx,
+                        key=f"target_family_dup_select_{form_key_duplicate}"
+                    )
+                    
+                    suggested_new_name_base = f"{original_uc_name_for_dup} (copie)"
+                    suggested_new_name = suggested_new_name_base
+                    temp_copy_count = 1
+                    while suggested_new_name in st.session_state.editable_prompts.get(selected_target_family_for_duplicate, {}):
+                        suggested_new_name = f"{suggested_new_name_base} {temp_copy_count}"
+                        temp_copy_count += 1
+                    
+                    new_duplicated_uc_name_input = st.text_input(
+                        "Nouveau nom pour le cas d'usage dupliqué:",
+                        value=suggested_new_name,
+                        key=f"new_dup_name_input_{form_key_duplicate}"
+                    )
+                    
+                    submitted_duplicate_form = st.form_submit_button("✅ Confirmer la Duplication", use_container_width=True)
+                    
+                    if submitted_duplicate_form:
+                        new_uc_name_val_from_form = new_duplicated_uc_name_input.strip()
+                        target_family_on_submit = selected_target_family_for_duplicate
+                        
+                        if not new_uc_name_val_from_form:
+                            st.error("Le nom du nouveau cas d'usage ne peut pas être vide.")
+                        elif new_uc_name_val_from_form in st.session_state.editable_prompts.get(target_family_on_submit, {}):
+                            st.error(f"Un cas d'usage nommé '{new_uc_name_val_from_form}' existe déjà dans la famille '{target_family_on_submit}'.")
+                        else:
+                            current_prompt_config = st.session_state.editable_prompts[original_family_name_for_dup][original_uc_name_for_dup]
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form] = copy.deepcopy(current_prompt_config)
+                            now_iso_dup_create, now_iso_dup_update = get_default_dates()
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["created_at"] = now_iso_dup_create
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["updated_at"] = now_iso_dup_update
+                            st.session_state.editable_prompts[target_family_on_submit][new_uc_name_val_from_form]["usage_count"] = 0
+                            save_editable_prompts_to_gist()
+                            st.success(f"Cas d'usage '{original_uc_name_for_dup}' dupliqué en '{new_uc_name_val_from_form}' dans la famille '{target_family_on_submit}'.")
+                            
+                            st.session_state.duplicating_use_case_details = None
+                            if target_family_on_submit != library_family_to_display:
+                                st.session_state.library_selected_family_for_display = target_family_on_submit
+                            st.rerun()
+                
+                cancel_key_duplicate = f"cancel_dup_process_lib_{original_family_name_for_dup.replace(' ','_')}_{original_uc_name_for_dup.replace(' ','_')}"
+                if st.button("❌ Annuler la Duplication", key=cancel_key_duplicate, use_container_width=True):
+                    st.session_state.duplicating_use_case_details = None
+                    st.rerun()
+                
+                st.markdown("---")
+            
+            # Gestion de la suppression de cas d'usage
+            if st.session_state.confirming_delete_details and \
+               st.session_state.confirming_delete_details["family"] == library_family_to_display:
+                
+                details = st.session_state.confirming_delete_details
+                st.warning(f"⚠️ Supprimer '{details['use_case']}' de '{details['family']}' ? Action irréversible.")
+                
+                c1_del_uc, c2_del_uc, _ = st.columns([1,1,3])
+                if c1_del_uc.button(f"Oui, supprimer '{details['use_case']}'", key=f"del_yes_lib_{details['family']}_{details['use_case']}", type="primary"):
+                    deleted_uc_name_for_msg = details['use_case']
+                    deleted_uc_fam_for_msg = details['family']
+                    del st.session_state.editable_prompts[details["family"]][details["use_case"]]
+                    save_editable_prompts_to_gist()
+                    st.success(f"'{deleted_uc_name_for_msg}' supprimé de '{deleted_uc_fam_for_msg}'.")
+                    st.session_state.confirming_delete_details = None
+                    st.rerun()
+                
+                if c2_del_uc.button("Non, annuler", key=f"del_no_lib_{details['family']}_{details['use_case']}"):
+                    st.session_state.confirming_delete_details = None
+                    st.rerun()
+                
+                st.markdown("---")
+            
             sorted_use_cases_display = sorted(list(filtered_use_cases.keys()))
             for use_case_name_display in sorted_use_cases_display:
                 prompt_config_display = filtered_use_cases[use_case_name_display]
@@ -722,12 +814,18 @@ elif st.session_state.view_mode == "library":
                             st.session_state.view_mode = "generator"; st.session_state.generator_selected_family = library_family_to_display; st.session_state.generator_selected_use_case = use_case_name_display; st.session_state.active_generated_prompt = ""; st.rerun()
                     with col_btn_lib2:
                         if st.button(f"📋 Dupliquer ce Cas d'Usage", key=f"main_lib_duplicate_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
-                            # Logic to duplicate the use case will be implemented
-                            st.info(f"Fonctionnalité de duplication pour '{use_case_name_display}' à implémenter")
+                            st.session_state.duplicating_use_case_details = {
+                                "family": library_family_to_display,
+                                "use_case": use_case_name_display
+                            }
+                            st.rerun()
                     with col_btn_lib3:
                         if st.button(f"🗑️ Supprimer ce Cas d'Usage", key=f"main_lib_delete_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
-                            # Logic to delete the use case will be implemented
-                            st.warning(f"Fonctionnalité de suppression pour '{use_case_name_display}' à implémenter")
+                            st.session_state.confirming_delete_details = {
+                                "family": library_family_to_display,
+                                "use_case": use_case_name_display
+                            }
+                            st.rerun()
     else: 
         st.info("Aucun métier n'est actuellement sélectionnée dans la bibliothèque ou le métier sélectionné n'existe plus.")
         available_families_check = list(st.session_state.editable_prompts.keys())
