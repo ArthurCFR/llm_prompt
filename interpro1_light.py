@@ -505,6 +505,10 @@ if 'active_generated_prompt' not in st.session_state: st.session_state.active_ge
 if 'duplicating_use_case_details' not in st.session_state: st.session_state.duplicating_use_case_details = None
 if 'go_to_config_section' not in st.session_state: st.session_state.go_to_config_section = False
 
+# Generator session state variables
+if 'generator_selected_family' not in st.session_state: st.session_state.generator_selected_family = None
+if 'generator_selected_use_case' not in st.session_state: st.session_state.generator_selected_use_case = None
+
 if 'injection_selected_family' not in st.session_state:
     st.session_state.injection_selected_family = None
 if 'injection_json_text' not in st.session_state:
@@ -715,7 +719,7 @@ elif st.session_state.view_mode == "library":
                     col_btn_lib1, col_btn_lib2, col_btn_lib3 = st.columns(3)
                     with col_btn_lib1:
                         if st.button(f"✍️ Utiliser ce prompt", key=f"main_lib_use_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
-                            st.session_state.view_mode = "edit"; st.session_state.force_select_family_name = library_family_to_display; st.session_state.force_select_use_case_name = use_case_name_display; st.session_state.go_to_config_section = False; st.session_state.active_generated_prompt = ""; st.session_state.variable_type_to_create = None; st.session_state.editing_variable_info = None; st.session_state.confirming_delete_details = None; st.rerun()
+                            st.session_state.view_mode = "generator"; st.session_state.generator_selected_family = library_family_to_display; st.session_state.generator_selected_use_case = use_case_name_display; st.session_state.active_generated_prompt = ""; st.rerun()
                     with col_btn_lib2:
                         if st.button(f"📋 Dupliquer ce Cas d'Usage", key=f"main_lib_duplicate_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
                             # Logic to duplicate the use case will be implemented
@@ -876,6 +880,184 @@ elif st.session_state.view_mode == "edit":
         else: 
             st.warning(f"Le cas d'usage '{final_selected_use_case_edition}' dans le métier '{final_selected_family_edition}' semble introuvable. Il a peut-être été supprimé. Veuillez vérifier vos sélections.")
             st.session_state.use_case_selector_edition = None # pragma: no cover
+
+elif st.session_state.view_mode == "generator":
+    generator_family = st.session_state.get('generator_selected_family')
+    generator_use_case = st.session_state.get('generator_selected_use_case')
+    
+    if st.button(f"⬅️ Retour à la bibliothèque ({generator_family or 'Métier'})", key="back_to_library_from_generator"):
+        if generator_family:
+            st.session_state.library_selected_family_for_display = generator_family
+        st.session_state.view_mode = "library"
+        st.rerun()
+    
+    if not generator_family or not generator_use_case:
+        st.info("Sélection de prompt invalide. Retournez à la bibliothèque pour choisir un prompt.")
+    elif generator_family not in st.session_state.editable_prompts or generator_use_case not in st.session_state.editable_prompts[generator_family]:
+        st.warning("Le prompt sélectionné n'existe plus. Retournez à la bibliothèque pour en choisir un autre.")
+    else:
+        current_prompt_config = st.session_state.editable_prompts[generator_family][generator_use_case]
+        st.header(f"Générateur de Prompt: {generator_use_case}")
+        created_at_str_gen = current_prompt_config.get('created_at', get_default_dates()[0])
+        updated_at_str_gen = current_prompt_config.get('updated_at', get_default_dates()[1])
+        st.caption(f"Métier : {generator_family} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_gen).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_gen).strftime('%d/%m/%Y')}")
+        
+        gen_form_values = {}
+        with st.form(key=f"gen_form_{generator_family}_{generator_use_case}"):
+            if not current_prompt_config.get("variables"):
+                st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
+            
+            variables_for_form = current_prompt_config.get("variables", [])
+            if not isinstance(variables_for_form, list):
+                variables_for_form = []
+            
+            cols_per_row = 2 if len(variables_for_form) > 1 else 1
+            var_chunks = [variables_for_form[i:i + cols_per_row] for i in range(0, len(variables_for_form), cols_per_row)]
+            
+            for chunk in var_chunks:
+                cols = st.columns(len(chunk))
+                for i, var_info in enumerate(chunk):
+                    with cols[i]:
+                        widget_key = f"gen_input_{generator_family}_{generator_use_case}_{var_info['name']}"
+                        field_default = var_info.get("default")
+                        var_type = var_info.get("type")
+                        
+                        if var_type == "text_input":
+                            gen_form_values[var_info["name"]] = st.text_input(
+                                var_info["label"], 
+                                value=str(field_default or ""), 
+                                key=widget_key
+                            )
+                        elif var_type == "selectbox":
+                            opts = var_info.get("options", [])
+                            idx = 0
+                            if opts:
+                                try:
+                                    idx = opts.index(field_default) if field_default in opts else 0
+                                except ValueError:
+                                    idx = 0
+                            gen_form_values[var_info["name"]] = st.selectbox(
+                                var_info["label"], 
+                                options=opts, 
+                                index=idx, 
+                                key=widget_key
+                            )
+                        elif var_type == "date_input":
+                            val_date = field_default if isinstance(field_default, date) else datetime.now().date()
+                            gen_form_values[var_info["name"]] = st.date_input(
+                                var_info["label"], 
+                                value=val_date, 
+                                key=widget_key
+                            )
+                        elif var_type == "number_input":
+                            current_value_default_gen = var_info.get("default")
+                            min_val_config_gen = var_info.get("min_value")
+                            max_val_config_gen = var_info.get("max_value")
+                            step_config_gen = var_info.get("step")
+                            val_num_gen = float(current_value_default_gen) if isinstance(current_value_default_gen, (int, float)) else 0.0
+                            min_val_gen = float(min_val_config_gen) if min_val_config_gen is not None else None
+                            max_val_gen = float(max_val_config_gen) if max_val_config_gen is not None else None
+                            step_val_gen = float(step_config_gen) if step_config_gen is not None else 1.0
+                            if min_val_gen is not None and val_num_gen < min_val_gen:
+                                val_num_gen = min_val_gen
+                            if max_val_gen is not None and val_num_gen > max_val_gen:
+                                val_num_gen = max_val_gen
+                            gen_form_values[var_info["name"]] = st.number_input(
+                                var_info["label"], 
+                                value=val_num_gen, 
+                                min_value=min_val_gen,
+                                max_value=max_val_gen, 
+                                step=step_val_gen, 
+                                key=widget_key, 
+                                format="%.2f"
+                            )
+                        elif var_type == "text_area":
+                            height_val = var_info.get("height")
+                            final_height = None
+                            if height_val is not None:
+                                try:
+                                    h = int(height_val)
+                                    if h >= 68:
+                                        final_height = h
+                                    else:
+                                        final_height = 68
+                                except (ValueError, TypeError):
+                                    final_height = None
+                            else:
+                                final_height = None
+                            gen_form_values[var_info["name"]] = st.text_area(
+                                var_info["label"], 
+                                value=str(field_default or ""), 
+                                height=final_height, 
+                                key=widget_key
+                            )
+            
+            if st.form_submit_button("🚀 Générer Prompt"):
+                processed_values_for_template = {}
+                for k, v_val in gen_form_values.items():
+                    if v_val is None:
+                        continue
+                    
+                    if isinstance(v_val, date):
+                        processed_values_for_template[k] = v_val.strftime("%d/%m/%Y")
+                    elif isinstance(v_val, float):
+                        if v_val.is_integer():
+                            processed_values_for_template[k] = str(int(v_val))
+                        else:
+                            processed_values_for_template[k] = f"{v_val:.2f}"
+                    else:
+                        processed_values_for_template[k] = str(v_val)
+                
+                final_vals_for_prompt = processed_values_for_template
+                
+                try:
+                    prompt_template_content = current_prompt_config.get("template", "")
+                    processed_template = prompt_template_content
+                    
+                    sorted_vars_for_formatting = sorted(final_vals_for_prompt.items(), key=lambda item: len(item[0]), reverse=True)
+                    
+                    for var_name, var_value in sorted_vars_for_formatting:
+                        placeholder_streamlit = f"{{{var_name}}}"
+                        processed_template = processed_template.replace(placeholder_streamlit, str(var_value))
+                    
+                    formatted_template_content = processed_template.replace("{{", "{").replace("}}", "}")
+                    
+                    use_case_title = generator_use_case
+                    generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
+                    st.session_state.active_generated_prompt = generated_prompt
+                    st.success("Prompt généré avec succès!")
+                    st.balloons()
+                    current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
+                    current_prompt_config["updated_at"] = datetime.now().isoformat()
+                    save_editable_prompts_to_gist()
+                    
+                except Exception as e:
+                    st.error(f"Erreur inattendue lors de la génération du prompt : {e}")
+                    st.session_state.active_generated_prompt = f"ERREUR INATTENDUE - TEMPLATE ORIGINAL :\n---\n{prompt_template_content}"
+        
+        st.markdown("---")
+        if st.session_state.active_generated_prompt:
+            st.subheader("✅ Prompt Généré (éditable):")
+            edited_prompt_value = st.text_area(
+                "Prompt:", 
+                value=st.session_state.active_generated_prompt, 
+                height=200, 
+                key=f"editable_generated_prompt_output_{generator_family}_{generator_use_case}", 
+                label_visibility="collapsed"
+            )
+            if edited_prompt_value != st.session_state.active_generated_prompt:
+                st.session_state.active_generated_prompt = edited_prompt_value
+            
+            col_caption, col_indicator = st.columns([1.8, 0.2])
+            with col_caption:
+                st.caption("Prompt généré (pour relecture et copie manuelle) :")
+            with col_indicator:
+                st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
+            
+            if st.session_state.active_generated_prompt:
+                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+            else:
+                st.markdown("*Aucun prompt généré à afficher.*")
 
 elif st.session_state.view_mode == "inject_manual": 
     if st.button("⬅️ Retour à l'accueil", key="back_to_accueil_from_inject"):
