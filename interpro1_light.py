@@ -1070,21 +1070,37 @@ elif st.session_state.view_mode == "edit":
             edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
             if edited_prompt_value != st.session_state.active_generated_prompt: 
                 st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
-            col_caption, col_indicator = st.columns([1.8, 0.2]) # Ajustez les proportions si nécessaire
-            with col_caption:
-                st.caption("Prompt généré (pour relecture et copie manuelle) :")
-            with col_indicator:
-                st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
-    
 
+            # Section d'affichage et de copie du prompt
             if st.session_state.active_generated_prompt:
-                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                col_header, col_copy_btn = st.columns([0.7, 0.3])
+                with col_header:
+                    st.caption("Prompt généré (pour relecture et copie) :")
+                with col_copy_btn:
+                    copy_btn_key = f"copy_prompt_btn_{final_selected_family_edition}_{final_selected_use_case_edition}"
+                    if st.button("📋 Copier le prompt", key=copy_btn_key, use_container_width=True, type="primary"):
+                        # Utiliser st.toast pour donner un feedback immédiat
+                        st.toast("✅ Prompt copié dans le presse-papiers !", icon="📋")
+                        # Ajouter du JavaScript pour copier dans le presse-papiers
+                        prompt_text_escaped = st.session_state.active_generated_prompt.replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
+                        st.markdown(f"""
+                        <script>
+                        navigator.clipboard.writeText(`{prompt_text_escaped}`).then(function() {{
+                            console.log('Texte copié avec succès');
+                        }}).catch(function(err) {{
+                            console.error('Erreur lors de la copie: ', err);
+                        }});
+                        </script>
+                        """, unsafe_allow_html=True)
+                
+                # Affichage du prompt avec mise en forme
+                st.markdown("""
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; background-color: #f8f9fa; margin: 10px 0;">
+                    <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; line-height: 1.4; margin: 0; max-height: 400px; overflow-y: auto;">{}</pre>
+                </div>
+                """.format(st.session_state.active_generated_prompt.replace('<', '&lt;').replace('>', '&gt;')), unsafe_allow_html=True)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
-        
-                st.markdown("---") # Un petit séparateur
-
-                prompt_text_escaped_for_js = json.dumps(st.session_state.active_generated_prompt)
 
         
         if st.session_state.confirming_delete_details and st.session_state.confirming_delete_details["family"] == final_selected_family_edition and st.session_state.confirming_delete_details["use_case"] == final_selected_use_case_edition:
@@ -1574,14 +1590,35 @@ elif st.session_state.view_mode == "assistant_creation": # Cette vue gère maint
 
     # Affichage commun du méta-prompt généré (qu'il vienne de la création ou de l'amélioration)
     if st.session_state.generated_meta_prompt_for_llm:
-        col_subheader_assist, col_indicator_assist = st.columns([0.85, 0.15])
-        with col_subheader_assist:
-            st.subheader("📋 Instruction Générée (à coller dans LaPosteGPT) :")
-        with col_indicator_assist:
-            st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-top:1.9em;padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
-
-        st.code(st.session_state.generated_meta_prompt_for_llm, language='markdown', line_numbers=True)
-        st.caption("<span style='color:gray; font-size:0.9em;'>Utilisez l'icône en haut à droite du bloc de code pour copier l'instruction.</span>", unsafe_allow_html=True)
+        st.subheader("📋 Instruction Générée (à coller dans LaPosteGPT) :")
+        
+        # Section d'affichage et de copie de l'instruction
+        col_header_assist, col_copy_btn_assist = st.columns([0.7, 0.3])
+        with col_header_assist:
+            st.caption("Instruction générée pour le LLM :")
+        with col_copy_btn_assist:
+            copy_instruction_btn_key = "copy_instruction_btn_assistant"
+            if st.button("📋 Copier l'instruction", key=copy_instruction_btn_key, use_container_width=True, type="primary"):
+                # Utiliser st.toast pour donner un feedback immédiat
+                st.toast("✅ Instruction copiée dans le presse-papiers !", icon="📋")
+                # Ajouter du JavaScript pour copier dans le presse-papiers
+                instruction_text_escaped = st.session_state.generated_meta_prompt_for_llm.replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
+                st.markdown(f"""
+                <script>
+                navigator.clipboard.writeText(`{instruction_text_escaped}`).then(function() {{
+                    console.log('Instruction copiée avec succès');
+                }}).catch(function(err) {{
+                    console.error('Erreur lors de la copie: ', err);
+                }});
+                </script>
+                """, unsafe_allow_html=True)
+        
+        # Affichage de l'instruction avec mise en forme
+        st.markdown("""
+        <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; background-color: #f8f9fa; margin: 10px 0;">
+            <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; font-size: 0.85em; line-height: 1.4; margin: 0; max-height: 500px; overflow-y: auto;">{}</pre>
+        </div>
+        """.format(st.session_state.generated_meta_prompt_for_llm.replace('<', '&lt;').replace('>', '&gt;')), unsafe_allow_html=True)
         st.markdown("---")
         st.info("Une fois que LaPoste GPT (ou votre LLM externe) a généré le JSON basé sur cette instruction, copiez ce JSON et utilisez le bouton \"💉 Injecter JSON Manuellement\" (disponible aussi dans l'onglet Assistant du menu) pour l'ajouter à votre atelier.")
         if st.button("💉 Injecter JSON Manuellement", key="prepare_inject_from_assistant_unified_btn", use_container_width=True, type="primary"):
