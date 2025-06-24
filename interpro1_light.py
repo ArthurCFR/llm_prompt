@@ -50,28 +50,10 @@ st.markdown("""
             max-height: 100% !important; 
             overflow-y: auto !important;
         }
-                /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
+                /* === RÈGLES SIMPLIFIÉES POUR L'ICÔNE DE COPIE DE ST.CODE === */
         button[data-testid="stCodeCopyButton"] {
-            opacity: 0.85 !important;
-            visibility: visible !important;
-            background-color: #f0f2f6 !important;
-            border: 1px solid #cccccc !important;
-            border-radius: 4px !important;
-            padding: 3px 5px !important;
-            transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
-            /* top: 2px !important; */
-            /* right: 2px !important; */
-        }
-
-        button[data-testid="stCodeCopyButton"]:hover {
             opacity: 1 !important;
-            background-color: #e6e8eb !important;
-            border-color: #b0b0b0 !important;
-        }
-
-        button[data-testid="stCodeCopyButton"] svg {
-            transform: scale(1.2); 
-            vertical-align: middle;
+            visibility: visible !important;
         }
         
     <style>
