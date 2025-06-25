@@ -136,6 +136,26 @@ st.markdown("""
             }
         }
         
+        /* === RÈGLES SPÉCIFIQUES POUR PROMPT GÉNÉRÉ === */
+        /* Forcer la compression sur les text_area et code blocks */
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stTextArea"],
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"],
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main div[data-testid="stTextArea"],
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main div[data-testid="stCodeBlock"] {
+            max-width: calc(100vw - 31.5rem) !important;
+            width: calc(100vw - 31.5rem) !important;
+        }
+        
+        /* Forcer aussi sur les conteneurs de ces éléments */
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stTextArea"] > div,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"] > div,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stTextArea"] textarea,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"] pre {
+            max-width: calc(100vw - 31.5rem) !important;
+            width: calc(100vw - 31.5rem) !important;
+            box-sizing: border-box !important;
+        }
+        
     </style>
     <script>
         // Force la détection de l'état de la sidebar
