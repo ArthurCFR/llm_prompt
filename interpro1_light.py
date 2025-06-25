@@ -962,8 +962,8 @@ elif st.session_state.view_mode == "edit":
                     use_case_title = final_selected_use_case_edition 
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt
-                    st.success("Prompt généré avec succès!")
-                    st.balloons()
+                    # st.success("Prompt généré avec succès!")
+                    # st.balloons()
                     current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
                     current_prompt_config["updated_at"] = datetime.now().isoformat()
                     save_editable_prompts_to_gist()
@@ -974,7 +974,7 @@ elif st.session_state.view_mode == "edit":
         st.markdown("---")
         if st.session_state.active_generated_prompt:
             st.subheader("✅ Prompt Généré (éditable):")
-            edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
+            # edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
             if edited_prompt_value != st.session_state.active_generated_prompt: 
                 st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
             col_caption, col_indicator = st.columns([1.8, 0.2]) # Ajustez les proportions si nécessaire
@@ -985,7 +985,8 @@ elif st.session_state.view_mode == "edit":
     
 
             if st.session_state.active_generated_prompt:
-                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                # st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                st.write("PROMPT GÉNÉRÉ:", st.session_state.active_generated_prompt)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
         
@@ -1158,8 +1159,8 @@ elif st.session_state.view_mode == "generator":
                     use_case_title = generator_use_case
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt
-                    st.success("Prompt généré avec succès!")
-                    st.balloons()
+                    # st.success("Prompt généré avec succès!")
+                    # st.balloons()
                     current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
                     current_prompt_config["updated_at"] = datetime.now().isoformat()
                     save_editable_prompts_to_gist()
@@ -1188,7 +1189,8 @@ elif st.session_state.view_mode == "generator":
                 st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
             
             if st.session_state.active_generated_prompt:
-                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                # st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                st.write("PROMPT GÉNÉRÉ:", st.session_state.active_generated_prompt)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
 
