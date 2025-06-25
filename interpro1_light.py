@@ -10,33 +10,31 @@ st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
     <style>
-        /* REDUCTION MODEREE DE L'ESPACE BLANC EN HAUT */
-        /* Conteneur principal scrollable - réduction modérée */
+        /* PADDING NORMAL POUR TOUTES LES PAGES (éviter empiètement header) */
         .main .block-container {
-            padding-top: 1rem !important;
+            padding-top: 3rem !important;
             margin-top: 0rem !important;
         }
         
-        /* Zone de contenu principal - légère réduction */
         [data-testid="stMainBlockContainer"] {
-            padding-top: 1rem !important;
+            padding-top: 3rem !important;
         }
         
-        /* Premier élément de contenu - petit espace */
-        .element-container:first-child {
-            padding-top: 0.5rem !important;
-            margin-top: 0rem !important;
+        .css-1d391kg, .css-18e3th9 {
+            padding-top: 3rem !important;
         }
         
-        /* Premier header - réduction modérée */
-        h1:first-of-type {
-            margin-top: 0.5rem !important;
+        /* REDUCTION SPECIFIQUE POUR LA PAGE D'ACCUEIL UNIQUEMENT */
+        /* Cible spécifiquement le header de bienvenue sur la page d'accueil */
+        h1[data-testid="stHeading"]:first-of-type {
+            margin-top: -2rem !important;
             padding-top: 0rem !important;
         }
         
-        /* Classes CSS communes de Streamlit - réduction modérée */
-        .css-1d391kg, .css-18e3th9 {
-            padding-top: 1rem !important;
+        /* Alternative: cible le texte spécifique de bienvenue */
+        h1:contains("Bienvenue dans votre laboratoire") {
+            margin-top: -2rem !important;
+            padding-top: 0rem !important;
         }
         
         /* Cible le bouton spécifique que vous avez identifié */
