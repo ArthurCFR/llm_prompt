@@ -77,9 +77,9 @@ st.markdown("""
         /* === SOLUTION POUR COMPRESSION LATERALE DE LA SIDEBAR === */
         /* Force le contenu principal à se comprimer au lieu d'être décalé */
         section[data-testid="stSidebar"] {
-            width: 21rem !important;
-            min-width: 21rem !important;
-            max-width: 21rem !important;
+            width: 31.5rem !important;
+            min-width: 31.5rem !important;
+            max-width: 31.5rem !important;
         }
         
         /* RÉDUIRE LA SIDEBAR QUAND FERMÉE */
@@ -92,8 +92,8 @@ st.markdown("""
         
         /* Ajustement du conteneur principal pour la compression SEULEMENT quand sidebar ouverte */
         section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
-            max-width: calc(100vw - 21rem) !important;
-            width: calc(100vw - 21rem) !important;
+            max-width: calc(100vw - 31.5rem) !important;
+            width: calc(100vw - 31.5rem) !important;
         }
         
         /* Par défaut et quand la sidebar est fermée, prendre toute la largeur */
@@ -146,8 +146,8 @@ st.markdown("""
                 const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
                 
                 if (isExpanded) {
-                    mainContent.style.maxWidth = 'calc(100vw - 21rem)';
-                    mainContent.style.width = 'calc(100vw - 21rem)';
+                    mainContent.style.maxWidth = 'calc(100vw - 31.5rem)';
+                    mainContent.style.width = 'calc(100vw - 31.5rem)';
                 } else {
                     mainContent.style.maxWidth = '100vw';
                     mainContent.style.width = '100vw';
