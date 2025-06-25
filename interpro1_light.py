@@ -10,62 +10,33 @@ st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
     <style>
-        /* SUPPRESSION COMPLETE DE TOUS LES ESPACES BLANCS EN HAUT */
-        /* Conteneur principal de l'app */
-        .stApp {
-            padding-top: 0rem !important;
-            margin-top: 0rem !important;
-        }
-        
-        /* Conteneur principal scrollable */
+        /* REDUCTION MODEREE DE L'ESPACE BLANC EN HAUT */
+        /* Conteneur principal scrollable - réduction modérée */
         .main .block-container {
-            padding-top: 0rem !important;
+            padding-top: 1rem !important;
             margin-top: 0rem !important;
         }
         
-        /* Zone de contenu principal */
-        [data-testid="stAppViewContainer"] {
-            padding-top: 0rem !important;
-            margin-top: 0rem !important;
-        }
-        
-        /* Conteneur de la zone de contenu */
+        /* Zone de contenu principal - légère réduction */
         [data-testid="stMainBlockContainer"] {
-            padding-top: 0rem !important;
-            margin-top: 0rem !important;
+            padding-top: 1rem !important;
         }
         
-        /* Header Streamlit */
-        [data-testid="stHeader"] {
-            height: 0rem !important;
-            background-color: transparent !important;
-            padding: 0rem !important;
-            margin: 0rem !important;
-        }
-        
-        /* Toolbar */
-        [data-testid="stToolbar"] {
-            height: 0rem !important;
-            padding: 0rem !important;
-            margin: 0rem !important;
-        }
-        
-        /* Premier élément de contenu */
+        /* Premier élément de contenu - petit espace */
         .element-container:first-child {
-            padding-top: 0rem !important;
+            padding-top: 0.5rem !important;
             margin-top: 0rem !important;
         }
         
-        /* Premier header */
+        /* Premier header - réduction modérée */
         h1:first-of-type {
-            margin-top: 0rem !important;
+            margin-top: 0.5rem !important;
             padding-top: 0rem !important;
         }
         
-        /* Classes CSS communes de Streamlit */
-        .css-1d391kg, .css-18e3th9, .css-k1vhr4, .css-1n76uvr {
-            padding-top: 0rem !important;
-            margin-top: 0rem !important;
+        /* Classes CSS communes de Streamlit - réduction modérée */
+        .css-1d391kg, .css-18e3th9 {
+            padding-top: 1rem !important;
         }
         
         /* Cible le bouton spécifique que vous avez identifié */
