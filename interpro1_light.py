@@ -10,28 +10,6 @@ st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
     <style>
-        /* PADDING NORMAL POUR TOUTES LES PAGES (éviter empiètement header) - TEST */
-        [data-testid="stMainBlockContainer"] {
-            padding-top: 3rem !important;
-        }
-        
-        .css-1d391kg, .css-18e3th9 {
-            padding-top: 3rem !important;
-        }
-        
-        /* REDUCTION SPECIFIQUE POUR LA PAGE D'ACCUEIL UNIQUEMENT */
-        /* Cible spécifiquement le header de bienvenue sur la page d'accueil */
-        h1[data-testid="stHeading"]:first-of-type {
-            margin-top: -2rem !important;
-            padding-top: 0rem !important;
-        }
-        
-        /* Alternative: cible le texte spécifique de bienvenue */
-        h1:contains("Bienvenue dans votre laboratoire") {
-            margin-top: -2rem !important;
-            padding-top: 0rem !important;
-        }
-        
         /* Cible le bouton spécifique que vous avez identifié */
         button[data-testid="stBaseButton-headerNoPadding"]::after {
             content: " Menu";      /* Le texte à ajouter */
@@ -120,8 +98,26 @@ st.markdown("""
         /* Alternative pour cibler via l'état collapsed */
         .main .block-container {
             transition: width 0.3s ease, max-width 0.3s ease !important;
+        }
+        
+        /* PADDING SPECIFIQUE POUR INTERPRO1_LIGHT */
+        [data-testid="stMainBlockContainer"] {
             padding-top: 3rem !important;
-            margin-top: 0rem !important;
+        }
+        
+        .css-1d391kg, .css-18e3th9 {
+            padding-top: 3rem !important;
+        }
+        
+        /* REDUCTION SPECIFIQUE POUR LA PAGE D'ACCUEIL UNIQUEMENT */
+        h1[data-testid="stHeading"]:first-of-type {
+            margin-top: -2rem !important;
+            padding-top: 0rem !important;
+        }
+        
+        h1:contains("Bienvenue dans votre laboratoire") {
+            margin-top: -2rem !important;
+            padding-top: 0rem !important;
         }
         
         /* Responsive: sur petits écrans, garder le comportement normal */
