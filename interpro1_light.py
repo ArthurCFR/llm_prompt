@@ -91,19 +91,31 @@ st.markdown("""
         }
         
         /* Ajustement du conteneur principal pour la compression SEULEMENT quand sidebar ouverte */
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container > div,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container > *,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main > div,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ main .block-container {
             max-width: calc(100vw - 31.5rem) !important;
             width: calc(100vw - 31.5rem) !important;
         }
         
         /* Par défaut et quand la sidebar est fermée, prendre toute la largeur */
-        .main .block-container {
+        .main .block-container,
+        .main .block-container > div,
+        .main .block-container > * {
             max-width: 100vw !important;
             width: 100vw !important;
         }
         
-        /* Alternative pour cibler via l'état collapsed */
-        .main .block-container {
+        /* RENFORCER pour tout contenu dynamique */
+        .main .block-container,
+        .main > div,
+        main .block-container,
+        [data-testid="stMainBlockContainer"],
+        .stMainBlockContainer {
+            max-width: 100vw !important;
+            width: 100vw !important;
             transition: width 0.3s ease, max-width 0.3s ease !important;
         }
         
@@ -140,18 +152,20 @@ st.markdown("""
         // Force la détection de l'état de la sidebar
         function checkSidebarState() {
             const sidebar = document.querySelector('section[data-testid="stSidebar"]');
-            const mainContent = document.querySelector('.main .block-container');
+            const mainContainers = document.querySelectorAll('.main .block-container, .main > div, main .block-container, [data-testid="stMainBlockContainer"]');
             
-            if (sidebar && mainContent) {
+            if (sidebar && mainContainers.length > 0) {
                 const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
                 
-                if (isExpanded) {
-                    mainContent.style.maxWidth = 'calc(100vw - 31.5rem)';
-                    mainContent.style.width = 'calc(100vw - 31.5rem)';
-                } else {
-                    mainContent.style.maxWidth = '100vw';
-                    mainContent.style.width = '100vw';
-                }
+                mainContainers.forEach(container => {
+                    if (isExpanded) {
+                        container.style.maxWidth = 'calc(100vw - 31.5rem)';
+                        container.style.width = 'calc(100vw - 31.5rem)';
+                    } else {
+                        container.style.maxWidth = '100vw';
+                        container.style.width = '100vw';
+                    }
+                });
             }
         }
         
