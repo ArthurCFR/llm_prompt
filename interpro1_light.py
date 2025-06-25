@@ -104,8 +104,8 @@ st.markdown("""
             max-width: 21rem !important;
         }
         
-        /* Ajustement du conteneur principal pour la compression */
-        .main .block-container {
+        /* COMPRESSION SEULEMENT quand sidebar est ouverte */
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
             max-width: calc(100vw - 21rem) !important;
             width: calc(100vw - 21rem) !important;
         }
