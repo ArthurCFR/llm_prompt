@@ -90,32 +90,21 @@ st.markdown("""
             overflow: hidden !important;
         }
         
-        /* Ajustement du conteneur principal pour la compression SEULEMENT quand sidebar ouverte */
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container,
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container > div,
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container > *,
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main > div,
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ main .block-container {
+        /* Ajustement du conteneur principal pour la compression */
+        .main .block-container {
             max-width: calc(100vw - 31.5rem) !important;
             width: calc(100vw - 31.5rem) !important;
         }
         
-        /* Par défaut et quand la sidebar est fermée, prendre toute la largeur */
-        .main .block-container,
-        .main .block-container > div,
-        .main .block-container > * {
+        /* Quand la sidebar est fermée, reprendre toute la largeur */
+        section[data-testid="stSidebar"][aria-expanded="false"] ~ .main .block-container,
+        section[data-testid="stSidebar"]:not([aria-expanded="true"]) ~ .main .block-container {
             max-width: 100vw !important;
             width: 100vw !important;
         }
         
-        /* RENFORCER pour tout contenu dynamique */
-        .main .block-container,
-        .main > div,
-        main .block-container,
-        [data-testid="stMainBlockContainer"],
-        .stMainBlockContainer {
-            max-width: 100vw !important;
-            width: 100vw !important;
+        /* Alternative pour cibler via l'état collapsed */
+        .main .block-container {
             transition: width 0.3s ease, max-width 0.3s ease !important;
         }
         
@@ -152,20 +141,18 @@ st.markdown("""
         // Force la détection de l'état de la sidebar
         function checkSidebarState() {
             const sidebar = document.querySelector('section[data-testid="stSidebar"]');
-            const mainContainers = document.querySelectorAll('.main .block-container, .main > div, main .block-container, [data-testid="stMainBlockContainer"]');
+            const mainContent = document.querySelector('.main .block-container');
             
-            if (sidebar && mainContainers.length > 0) {
+            if (sidebar && mainContent) {
                 const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
                 
-                mainContainers.forEach(container => {
-                    if (isExpanded) {
-                        container.style.maxWidth = 'calc(100vw - 31.5rem)';
-                        container.style.width = 'calc(100vw - 31.5rem)';
-                    } else {
-                        container.style.maxWidth = '100vw';
-                        container.style.width = '100vw';
-                    }
-                });
+                if (isExpanded) {
+                    mainContent.style.maxWidth = 'calc(100vw - 31.5rem)';
+                    mainContent.style.width = 'calc(100vw - 31.5rem)';
+                } else {
+                    mainContent.style.maxWidth = '100vw';
+                    mainContent.style.width = '100vw';
+                }
             }
         }
         
@@ -179,6 +166,24 @@ st.markdown("""
                 observer.observe(sidebar, { attributes: true, attributeFilter: ['aria-expanded'] });
             }
             checkSidebarState(); // Check initial state
+        });
+        
+        // Observer pour changements DOM (génération de contenu)
+        const contentObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    // Du nouveau contenu a été ajouté, re-vérifier l'état
+                    setTimeout(checkSidebarState, 100);
+                }
+            });
+        });
+        
+        // Observer le conteneur principal pour changements
+        document.addEventListener('DOMContentLoaded', function() {
+            const main = document.querySelector('.main');
+            if (main) {
+                contentObserver.observe(main, { childList: true, subtree: true });
+            }
         });
         
         // Fallback: check périodique
