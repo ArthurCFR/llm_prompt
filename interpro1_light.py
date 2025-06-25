@@ -108,121 +108,22 @@ st.markdown("""
 CURRENT_YEAR = datetime.now().year
 GIST_DATA_FILENAME = "prompt_templates_data_v3.json"
 
-META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE = """# MISSION
-Tu es un expert en conception de prompts (Prompt Engineer) spécialisé dans la création de prompts systèmes pour des modèles de langage avancés. Ta mission est de générer un "Prompt Cible" hautement efficace, structuré et réutilisable, ainsi que sa configuration JSON pour une application de gestion de prompts. Ce "Prompt Cible" sera ensuite utilisé par un utilisateur final pour réaliser une tâche spécifique.
+# --- Function to load prompt templates from files ---
+def load_prompt_template(filename):
+    """Load prompt template from file, with fallback to basic template if file not found."""
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        st.warning(f"Fichier de template '{filename}' non trouvé. Utilisation d'un template de base.")
+        return "# MISSION\nVous êtes un assistant IA. Veuillez traiter la demande suivante: {problematique}"
+    except Exception as e:
+        st.error(f"Erreur lors du chargement du template '{filename}': {e}")
+        return "# MISSION\nVous êtes un assistant IA. Veuillez traiter la demande suivante: {problematique}"
 
-# CONTEXTE DE LA DEMANDE UTILISATEUR
-L'utilisateur souhaite obtenir un "Prompt Cible" capable d'adresser la problématique suivante : `{problematique}`.
-Par exemple, si la problématique est "résumer un texte de loi et lister les contraintes financières attenantes", le "Prompt Cible" généré devra guider un LLM pour effectuer cette tâche sur un document pertinent.
-
-# EXIGENCES POUR LE "PROMPT CIBLE" ET SA CONFIGURATION JSON
-Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
-
-## Pour le "Prompt Cible" (le template textuel) :
-1.  **Définir clairement le rôle** de l'IA qui exécutera le prompt (par exemple, "Tu es un analyste juridique et financier expert...").
-2.  **Spécifier l'objectif principal** de manière concise, basé sur la problematique.
-3.  **Seulement si spécifié ici `{doc_source}`: Indiquer explicitement le type de document source qui sera fourni avec toute requête du prompt cible. Tu considérera donc dans la construction de ton prompt qu'un document externe est intégré dans le corps du prompt, et que l'IA doit être capable de le traiter : `{doc_source}`. Si `{doc_source}` est vide ou non pertinent, n'en fais pas mention.**
-4.  **Guider l'IA sur les informations spécifiques à extraire.** Ces informations sont : `{elements_specifiques_a_extraire}`.
-5.  **Seulement si spécifié ici `{format_sortie_desire}` : Indiquer le format de sortie désiré pour le résultat du prompt cible : `{format_sortie_desire}`. Le résultat obtenu après l'utilisation du prompt cible doit être pensé pour être agréable à lire, harmonieusement présenté, utilisant les styles de texte à bon escient (ex : gras, italique, souligné) "**
-6.  **Inclure des instructions pour gérer les ambiguïtés** ou le manque d'information (par exemple, demander des clarifications ou indiquer les limites).
-7.  **Être paramétrable via des variables claires et explicites.** Le nombre de variables doit être compris entre 3 et 7. Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}` ou `{{detail_du_produit}}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
-8.  **Seulement si spécifié ici `{public_cible_reponse}` : Le public cible du résultat de ce prompt est le suivant : `{public_cible_reponse}`.L'indiquer au sein du prompt. Si plusieurs réponses sont données, le prompt cible doit avoir une variable à choix multiple pour indiquer le public cible.**
-9.  **Afin d'être identifiés par la fonctionalité MarkDown, les titres des parties générées par le prompt cible doivent être précédés par deux signes # (exemple : ##Objectif Principal)**
-10.  **Faire en sorte que le résultat obtenu par le prompt cible n'ai pas l'air d'avoir été généré à partir d'un LLM, en évitant des appartées contextuelles telles que des phrases : 'basée sur l'input', 'a partir des informations du prompt', etc..**
-
-## Pour la configuration JSON (qui encapsule le "Prompt Cible") :
-1.  **Suggérer un nom pour le cas d'usage** (`suggested_use_case_name`) : descriptif et concis (max 5-7 mots).
-2.  **Inclure le "Prompt Cible" textuel** dans le champ `"template"` du JSON.
-3.  **Lister et décrire chaque variable** utilisée dans le champ `"variables"` du JSON. Chaque objet variable doit avoir :
-    * `"name"`: (string) Le nom technique de la variable (ex: `nom_du_client` si le placeholder dans le template est `{{nom_du_client}}`), sans espaces ni caractères spéciaux autres que underscore.
-    * `"label"`: (string) Le label descriptif pour l'utilisateur (ex: "Nom du client").
-    * `"type"`: (string) Choisis parmi : `"text_input"`, `"selectbox"`, `"date_input"`, `"number_input"`, `"text_area"`.
-    * `"default"`: (string, number, or boolean) La valeur par défaut. Pour les dates, utilise le format "AAAA-MM-JJ". Si le type est number, la valeur par défaut doit être un nombre.
-    * `"options"`: (array of strings, optionnel) Uniquement si `type` est `"selectbox"`. Liste des options.
-    * `"min_value"`, `"max_value"`, `"step"`: (number, optionnel) Uniquement si `type` est `"number_input"`. `step` doit être positif.
-    * `"height"`: (number, optionnel) Uniquement si `type` est `"text_area"`. Assure-toi que c'est un entier >= 68.
-4.  **Proposer une liste de 3 à 5 mots-clés pertinents** (`"tags"`) pour le "Prompt Cible".
-
-# FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT)
-Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON DOIT être structuré comme suit, où la clé principale est le nom suggéré pour le cas d'usage, et la valeur est un objet contenant le template, les variables et les tags :
-
-```json
-{{
-  "Nom Suggéré Pour Le Cas D'Usage": {{
-    "template": "Le corps principal du 'Prompt Cible' que tu as conçu. Les variables comme {{ma_variable}} doivent être ici.",
-    "variables": [
-      {{
-        "name": "ma_variable",
-        "label": "Label descriptif pour ma_variable",
-        "type": "text_input",
-        "default": "valeur_par_defaut_pour_ma_variable"
-      }}
-      // ... autres variables si définies ...
-    ],
-    "tags": ["mot_cle1", "mot_cle2", "mot_cle3"]
-  }}
-}}
-```
-Assure-toi que le JSON que tu génères est valide. Les variables dans le template doivent correspondre exactement aux noms définis dans la section "variables". Le nom du cas d'usage (la clé principale du JSON) doit être le même que celui que tu as mis dans `suggested_use_case_name` à l'étape précédente (mais ici c'est la clé de l'objet).
-"""
-
-# NOUVELLE CONSTANTE POUR L'AMÉLIORATION DE PROMPT
-META_PROMPT_FOR_LLM_AMELIORATION_TEMPLATE = """# MISSION
-Tu es un expert en ingénierie de prompts (Prompt Engineer) spécialisé dans l'amélioration, la structuration et la paramétrisation de prompts existants pour les rendre plus efficaces et intégrables dans une application de gestion de prompts.
-
-# CONTEXTE
-L'utilisateur t'a fourni un prompt existant qu'il souhaite améliorer et structurer. Le voici :
---- PROMPT EXISTANT FOURNI PAR L'UTILISATEUR ---
-{prompt_existant}
---- FIN DU PROMPT EXISTANT ---
-
-# TA TÂCHE
-En te basant sur le "PROMPT EXISTANT FOURNI PAR L'UTILISATEUR", tu dois :
-1.  **Analyser et Comprendre** : Détermine l'objectif principal du prompt, le public cible de sa réponse, et le type de tâche qu'il vise à accomplir.
-2.  **Améliorer le Contenu** :
-    * Réécris le prompt pour qu'il soit plus clair, concis, et actionnable par un modèle de langage avancé.
-    * Définis clairement le **rôle** que l'IA devrait adopter (ex: "Tu es un analyste financier expert...").
-    * Spécifie explicitement l'**objectif principal**.
-    * Si le prompt existant mentionne ou implique l'utilisation de documents sources, décris comment l'IA doit les utiliser.
-    * Identifie les **éléments spécifiques à extraire ou à générer** par le prompt final.
-    * Si un **format de sortie** est implicite ou souhaitable, décris-le. Le résultat du prompt amélioré doit être bien présenté.
-    * Inclus des instructions pour gérer les **ambiguïtés** ou le manque d'information.
-3.  **Identifier et Paramétrer les Variables** :
-    * Identifie dans le prompt amélioré les parties qui devraient être des variables (placeholders). Le nombre de variables devrait idéalement être entre 3 et 7.
-    * Dans le texte du prompt amélioré (le champ "template" du JSON final), ces variables DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}`. N'utilise PAS d'accolades simples.
-4.  **Générer la Configuration JSON** : Tu dois produire un unique objet JSON qui encapsule le prompt amélioré et sa configuration. Cet objet JSON DOIT suivre la structure décrite ci-dessous.
-
-# EXIGENCES POUR LE PROMPT AMÉLIORÉ (LE CHAMP "template" DANS LE JSON)
-Le prompt textuel amélioré que tu vas créer (qui ira dans le champ "template") DOIT respecter les points suivants (en plus de ceux mentionnés à l'étape "Améliorer le Contenu") :
-* Les titres des sections générées par le prompt amélioré doivent être précédés par deux signes # (exemple : ## Objectif Principal).
-* Le résultat obtenu par le prompt amélioré ne doit pas sembler avoir été généré par un LLM (éviter les phrases comme "basé sur l'input", "à partir des informations du prompt", etc.).
-
-# FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT D'AMÉLIORATION)
-Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON DOIT être structuré comme suit :
-
-```json
-{{
-  "Nom Suggéré Pour Le Cas D'Usage": {{  // Un nom concis (5-7 mots) que tu suggères pour ce prompt amélioré.
-    "template": "Le corps principal du 'Prompt Cible' AMÉLIORÉ que tu as conçu. Les variables comme {{ma_variable}} doivent être ici.",
-    "variables": [  // Liste des variables que tu as identifiées et paramétrées.
-      {{
-        "name": "nom_technique_variable", // ex: nom_du_client (correspond à {{nom_du_client}} dans le template)
-        "label": "Label descriptif pour l'utilisateur", // ex: "Nom du client"
-        "type": "text_input", // Choisis parmi: "text_input", "selectbox", "date_input", "number_input", "text_area"
-        "default": "valeur_par_defaut_suggeree", // Suggère une valeur par défaut pertinente. Pour les dates: "AAAA-MM-JJ".
-        "options": [], // (Optionnel, array of strings) Uniquement si type est "selectbox".
-        "min_value": null, "max_value": null, "step": null, // (Optionnel, number) Uniquement si type est "number_input".
-        "height": null // (Optionnel, number >= 68) Uniquement si type est "text_area".
-      }}
-      // ... autres variables si identifiées ...
-    ],
-    "tags": ["mot_cle1", "mot_cle2", "mot_cle3"] // Propose 3 à 5 mots-clés pertinents.
-  }}
-}}
-Assure-toi que le JSON généré est valide. Les variables dans le template doivent correspondre exactement aux noms définis dans la section "variables".
-Le "Nom Suggéré Pour Le Cas D'Usage" est la clé principale de l'objet JSON que tu retournes.
-Adapte les types de variables (type, default, options, min_value, etc.) en fonction de ce que tu déduis du prompt existant. Par exemple, si le prompt parle d'une "date de début", la variable devrait être de type date_input. Si le prompt demande un "pourcentage de remise", ce sera un number_input.
-"""
+# Load prompt templates from external files
+META_PROMPT_FOR_EXTERNAL_LLM_TEMPLATE = load_prompt_template("prompt_creation_template.md")
+META_PROMPT_FOR_LLM_AMELIORATION_TEMPLATE = load_prompt_template("prompt_improvement_template.md")
 
 ASSISTANT_FORM_VARIABLES = [
     {"name": "problematique", "label": "Décrivez le besoin ou la tâche que le prompt cible doit résoudre :", "type": "text_area", "default": "", "height": 100},
