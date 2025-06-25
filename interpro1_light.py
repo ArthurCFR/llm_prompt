@@ -10,7 +10,7 @@ st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
     <style>
-        /* PADDING NORMAL POUR TOUTES LES PAGES (éviter empiètement header) */
+        /* PADDING NORMAL POUR TOUTES LES PAGES (éviter empiètement header) - TEST */
         [data-testid="stMainBlockContainer"] {
             padding-top: 3rem !important;
         }
