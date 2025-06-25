@@ -840,14 +840,14 @@ elif st.session_state.view_mode == "library":
                         if st.button(f"✍️ Utiliser ce prompt", key=f"main_lib_use_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
                             st.session_state.view_mode = "generator"; st.session_state.generator_selected_family = library_family_to_display; st.session_state.generator_selected_use_case = use_case_name_display; st.session_state.active_generated_prompt = ""; st.rerun()
                     with col_btn_lib2:
-                        if st.button(f"📋 Dupliquer ce Cas d'Usage", key=f"main_lib_duplicate_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
+                        if st.button(f"📋 Dupliquer ce prompt", key=f"main_lib_duplicate_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
                             st.session_state.duplicating_use_case_details = {
                                 "family": library_family_to_display,
                                 "use_case": use_case_name_display
                             }
                             st.rerun()
                     with col_btn_lib3:
-                        if st.button(f"🗑️ Supprimer ce Cas d'Usage", key=f"main_lib_delete_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
+                        if st.button(f"🗑️ Supprimer ce prompt", key=f"main_lib_delete_{library_family_to_display.replace(' ', '_')}_{use_case_name_display.replace(' ', '_')}", use_container_width=True):
                             st.session_state.confirming_delete_details = {
                                 "family": library_family_to_display,
                                 "use_case": use_case_name_display
