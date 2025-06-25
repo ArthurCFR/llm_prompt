@@ -11,12 +11,6 @@ st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts
 st.markdown("""
     <style>
         /* PADDING NORMAL POUR TOUTES LES PAGES (éviter empiètement header) */
-        .main .block-container {
-            padding-top: 3rem !important;
-            margin-top: 0rem !important;
-            /* Largeur gérée par la section sidebar plus bas */
-        }
-        
         [data-testid="stMainBlockContainer"] {
             padding-top: 3rem !important;
         }
@@ -110,25 +104,29 @@ st.markdown("""
             max-width: 21rem !important;
         }
         
-        /* Transition fluide pour tous les états */
+        /* Ajustement du conteneur principal pour la compression */
         .main .block-container {
-            transition: width 0.3s ease, max-width 0.3s ease !important;
-        }
-        
-        /* SEULEMENT quand la sidebar est explicitement ouverte */
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
             max-width: calc(100vw - 21rem) !important;
             width: calc(100vw - 21rem) !important;
+        }
+        
+        /* Quand la sidebar est fermée, reprendre toute la largeur */
+        section[data-testid="stSidebar"][aria-expanded="false"] ~ .main .block-container,
+        section[data-testid="stSidebar"]:not([aria-expanded="true"]) ~ .main .block-container {
+            max-width: 100vw !important;
+            width: 100vw !important;
+        }
+        
+        /* Alternative pour cibler via l'état collapsed */
+        .main .block-container {
+            transition: width 0.3s ease, max-width 0.3s ease !important;
+            padding-top: 3rem !important;
+            margin-top: 0rem !important;
         }
         
         /* Responsive: sur petits écrans, garder le comportement normal */
         @media (max-width: 768px) {
             .main .block-container {
-                max-width: 100vw !important;
-                width: 100vw !important;
-            }
-            
-            section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
                 max-width: 100vw !important;
                 width: 100vw !important;
             }
