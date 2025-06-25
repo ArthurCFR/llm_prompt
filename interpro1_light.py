@@ -606,7 +606,7 @@ library_family_to_display = st.session_state.get('library_selected_family_for_di
 
 # NOUVELLE SECTION POUR LA PAGE D'ACCUEIL
 if st.session_state.view_mode == "accueil":
-    st.header("Bienvenue à tous dans votre laboratoire des prompts IA ! 💡")
+    st.header("Bienvenue dans votre laboratoire des prompts IA ! 💡")
     st.caption(f"Créé par le pôle Data / IA")
     st.markdown("""
         Vous êtes au bon endroit pour maîtriser l'art de "parler" aux Intelligences Artificielles (IA) et obtenir d'elles exactement ce dont vous avez besoin !
