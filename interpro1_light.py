@@ -82,15 +82,22 @@ st.markdown("""
             max-width: 21rem !important;
         }
         
-        /* Ajustement du conteneur principal pour la compression */
-        .main .block-container {
+        /* RÉDUIRE LA SIDEBAR QUAND FERMÉE */
+        section[data-testid="stSidebar"][aria-expanded="false"] {
+            width: 0rem !important;
+            min-width: 0rem !important;
+            max-width: 0rem !important;
+            overflow: hidden !important;
+        }
+        
+        /* Ajustement du conteneur principal pour la compression SEULEMENT quand sidebar ouverte */
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
             max-width: calc(100vw - 21rem) !important;
             width: calc(100vw - 21rem) !important;
         }
         
-        /* Quand la sidebar est fermée, reprendre toute la largeur */
-        section[data-testid="stSidebar"][aria-expanded="false"] ~ .main .block-container,
-        section[data-testid="stSidebar"]:not([aria-expanded="true"]) ~ .main .block-container {
+        /* Par défaut et quand la sidebar est fermée, prendre toute la largeur */
+        .main .block-container {
             max-width: 100vw !important;
             width: 100vw !important;
         }
