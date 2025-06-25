@@ -974,8 +974,8 @@ elif st.session_state.view_mode == "edit":
         st.markdown("---")
         if st.session_state.active_generated_prompt:
             st.subheader("✅ Prompt Généré (éditable):")
-            # edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
-            st.write("DEBUG: Prompt généré sans UI")
+            edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
+            st.write("DEBUG: Zone de texte activée")
             if edited_prompt_value != st.session_state.active_generated_prompt: 
                 st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
             col_caption, col_indicator = st.columns([1.8, 0.2]) # Ajustez les proportions si nécessaire
