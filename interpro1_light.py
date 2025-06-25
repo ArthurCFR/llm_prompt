@@ -986,8 +986,7 @@ elif st.session_state.view_mode == "edit":
     
 
             if st.session_state.active_generated_prompt:
-                # st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
-                pass
+                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
         
@@ -1190,8 +1189,7 @@ elif st.session_state.view_mode == "generator":
                 st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
             
             if st.session_state.active_generated_prompt:
-                # st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
-                pass
+                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
 
