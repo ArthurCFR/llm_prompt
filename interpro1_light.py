@@ -101,6 +101,40 @@ st.markdown("""
             vertical-align: middle;
         }
         
+        /* === SOLUTION POUR COMPRESSION LATERALE DE LA SIDEBAR === */
+        /* Force le contenu principal à se comprimer au lieu d'être décalé */
+        section[data-testid="stSidebar"] {
+            width: 21rem !important;
+            min-width: 21rem !important;
+            max-width: 21rem !important;
+        }
+        
+        /* Ajustement du conteneur principal pour la compression */
+        .main .block-container {
+            max-width: calc(100vw - 21rem) !important;
+            width: calc(100vw - 21rem) !important;
+        }
+        
+        /* Quand la sidebar est fermée, reprendre toute la largeur */
+        section[data-testid="stSidebar"][aria-expanded="false"] ~ .main .block-container,
+        section[data-testid="stSidebar"]:not([aria-expanded="true"]) ~ .main .block-container {
+            max-width: 100vw !important;
+            width: 100vw !important;
+        }
+        
+        /* Alternative pour cibler via l'état collapsed */
+        .main .block-container {
+            transition: width 0.3s ease, max-width 0.3s ease !important;
+        }
+        
+        /* Responsive: sur petits écrans, garder le comportement normal */
+        @media (max-width: 768px) {
+            .main .block-container {
+                max-width: 100vw !important;
+                width: 100vw !important;
+            }
+        }
+        
     <style>
 """, unsafe_allow_html=True)
 
