@@ -128,7 +128,41 @@ st.markdown("""
             }
         }
         
-    <style>
+    </style>
+    <script>
+        // Force la détection de l'état de la sidebar
+        function checkSidebarState() {
+            const sidebar = document.querySelector('section[data-testid="stSidebar"]');
+            const mainContent = document.querySelector('.main .block-container');
+            
+            if (sidebar && mainContent) {
+                const isExpanded = sidebar.getAttribute('aria-expanded') === 'true';
+                
+                if (isExpanded) {
+                    mainContent.style.maxWidth = 'calc(100vw - 21rem)';
+                    mainContent.style.width = 'calc(100vw - 21rem)';
+                } else {
+                    mainContent.style.maxWidth = '100vw';
+                    mainContent.style.width = '100vw';
+                }
+            }
+        }
+        
+        // Observer les changements
+        const observer = new MutationObserver(checkSidebarState);
+        
+        // Démarrer l'observation quand le DOM est prêt
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('section[data-testid="stSidebar"]');
+            if (sidebar) {
+                observer.observe(sidebar, { attributes: true, attributeFilter: ['aria-expanded'] });
+            }
+            checkSidebarState(); // Check initial state
+        });
+        
+        // Fallback: check périodique
+        setInterval(checkSidebarState, 500);
+    </script>
 """, unsafe_allow_html=True)
 
 # --- Initial Data Structure & Constants ---
