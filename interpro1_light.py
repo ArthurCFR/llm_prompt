@@ -10,6 +10,64 @@ st.set_page_config(layout="wide", page_title="🛠️ Le laboratoire des Prompts
 # --- CUSTOM CSS FOR SIDEBAR TOGGLE TEXT ---
 st.markdown("""
     <style>
+        /* SUPPRESSION COMPLETE DE TOUS LES ESPACES BLANCS EN HAUT */
+        /* Conteneur principal de l'app */
+        .stApp {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+        }
+        
+        /* Conteneur principal scrollable */
+        .main .block-container {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+        }
+        
+        /* Zone de contenu principal */
+        [data-testid="stAppViewContainer"] {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+        }
+        
+        /* Conteneur de la zone de contenu */
+        [data-testid="stMainBlockContainer"] {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+        }
+        
+        /* Header Streamlit */
+        [data-testid="stHeader"] {
+            height: 0rem !important;
+            background-color: transparent !important;
+            padding: 0rem !important;
+            margin: 0rem !important;
+        }
+        
+        /* Toolbar */
+        [data-testid="stToolbar"] {
+            height: 0rem !important;
+            padding: 0rem !important;
+            margin: 0rem !important;
+        }
+        
+        /* Premier élément de contenu */
+        .element-container:first-child {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+        }
+        
+        /* Premier header */
+        h1:first-of-type {
+            margin-top: 0rem !important;
+            padding-top: 0rem !important;
+        }
+        
+        /* Classes CSS communes de Streamlit */
+        .css-1d391kg, .css-18e3th9, .css-k1vhr4, .css-1n76uvr {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+        }
+        
         /* Cible le bouton spécifique que vous avez identifié */
         button[data-testid="stBaseButton-headerNoPadding"]::after {
             content: " Menu";      /* Le texte à ajouter */
