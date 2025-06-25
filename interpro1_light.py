@@ -190,6 +190,35 @@ st.markdown("""
                     mainContent.style.width = '100vw';
                 }
             }
+            
+            // FORCE SPÉCIAL POUR st.code() - Le vrai problème
+            const codeBlocks = document.querySelectorAll('[data-testid="stCodeBlock"], div[data-testid="stCodeBlock"], .stCodeBlock');
+            codeBlocks.forEach(block => {
+                if (sidebar && sidebar.getAttribute('aria-expanded') === 'true') {
+                    // Sidebar ouverte - compresser
+                    block.style.maxWidth = 'calc(100vw - 31.5rem)';
+                    block.style.width = 'calc(100vw - 31.5rem)';
+                    block.style.boxSizing = 'border-box';
+                    
+                    // Forcer aussi sur les éléments internes
+                    const innerElements = block.querySelectorAll('div, pre, code');
+                    innerElements.forEach(inner => {
+                        inner.style.maxWidth = '100%';
+                        inner.style.width = '100%';
+                        inner.style.overflowX = 'auto';
+                    });
+                } else {
+                    // Sidebar fermée - pleine largeur
+                    block.style.maxWidth = '100vw';
+                    block.style.width = '100vw';
+                    
+                    const innerElements = block.querySelectorAll('div, pre, code');
+                    innerElements.forEach(inner => {
+                        inner.style.maxWidth = '100%';
+                        inner.style.width = '100%';
+                    });
+                }
+            });
         }
         
         // Observer les changements
