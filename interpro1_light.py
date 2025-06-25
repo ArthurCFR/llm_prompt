@@ -136,24 +136,40 @@ st.markdown("""
             }
         }
         
-        /* === RÈGLES SPÉCIFIQUES POUR PROMPT GÉNÉRÉ === */
-        /* Forcer la compression sur les text_area et code blocks */
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stTextArea"],
+        /* === RÈGLES SPÉCIFIQUES POUR st.code() QUI CAUSE LE PROBLÈME === */
+        /* Forcer la compression sur TOUS les blocs de code */
+        [data-testid="stCodeBlock"],
+        div[data-testid="stCodeBlock"],
+        .stCodeBlock {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* Quand sidebar ouverte, compresser les blocs de code */
         section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"],
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main div[data-testid="stTextArea"],
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main div[data-testid="stCodeBlock"] {
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main div[data-testid="stCodeBlock"],
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .stCodeBlock {
             max-width: calc(100vw - 31.5rem) !important;
             width: calc(100vw - 31.5rem) !important;
         }
         
-        /* Forcer aussi sur les conteneurs de ces éléments */
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stTextArea"] > div,
+        /* Forcer sur les éléments internes du code block */
+        [data-testid="stCodeBlock"] > div,
+        [data-testid="stCodeBlock"] pre,
+        [data-testid="stCodeBlock"] code {
+            max-width: 100% !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-x: auto !important;
+        }
+        
+        /* Quand sidebar ouverte, aussi sur les éléments internes */
         section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"] > div,
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stTextArea"] textarea,
-        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"] pre {
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"] pre,
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main [data-testid="stCodeBlock"] code {
             max-width: calc(100vw - 31.5rem) !important;
             width: calc(100vw - 31.5rem) !important;
-            box-sizing: border-box !important;
         }
         
     </style>
@@ -975,7 +991,6 @@ elif st.session_state.view_mode == "edit":
         if st.session_state.active_generated_prompt:
             st.subheader("✅ Prompt Généré (éditable):")
             edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
-            st.write("DEBUG: Zone de texte activée")
             if edited_prompt_value != st.session_state.active_generated_prompt: 
                 st.session_state.active_generated_prompt = edited_prompt_value # pragma: no cover
             col_caption, col_indicator = st.columns([1.8, 0.2]) # Ajustez les proportions si nécessaire
