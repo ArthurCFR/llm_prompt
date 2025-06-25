@@ -963,7 +963,7 @@ elif st.session_state.view_mode == "edit":
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt
                     st.success("Prompt généré avec succès!")
-                    # st.balloons()
+                    st.balloons()
                     current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
                     current_prompt_config["updated_at"] = datetime.now().isoformat()
                     save_editable_prompts_to_gist()
@@ -1161,7 +1161,7 @@ elif st.session_state.view_mode == "generator":
                     generated_prompt = f"Sujet : {use_case_title}\n{formatted_template_content}"
                     st.session_state.active_generated_prompt = generated_prompt
                     st.success("Prompt généré avec succès!")
-                    # st.balloons()
+                    st.balloons()
                     current_prompt_config["usage_count"] = current_prompt_config.get("usage_count", 0) + 1
                     current_prompt_config["updated_at"] = datetime.now().isoformat()
                     save_editable_prompts_to_gist()
