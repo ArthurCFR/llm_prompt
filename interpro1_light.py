@@ -973,7 +973,7 @@ elif st.session_state.view_mode == "edit":
                     st.session_state.active_generated_prompt = f"ERREUR INATTENDUE - TEMPLATE ORIGINAL :\n---\n{prompt_template_content}" # pragma: no cover
         st.markdown("---")
         if st.session_state.active_generated_prompt:
-            # st.subheader("✅ Prompt Généré (éditable):")
+            st.subheader("✅ Prompt Généré (éditable):")
             # edited_prompt_value = st.text_area("Prompt:", value=st.session_state.active_generated_prompt, height=200, key=f"editable_generated_prompt_output_{final_selected_family_edition}_{final_selected_use_case_edition}", label_visibility="collapsed")
             st.write("DEBUG: Prompt généré sans UI")
             if edited_prompt_value != st.session_state.active_generated_prompt: 
