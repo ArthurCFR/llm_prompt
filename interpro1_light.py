@@ -51,6 +51,7 @@ st.markdown("""
             overflow-y: auto !important;
         }
                 /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
+        /* TEMPORAIREMENT DÉSACTIVÉ POUR TEST
         button[data-testid="stCodeCopyButton"] {
             opacity: 0.85 !important;
             visibility: visible !important;
@@ -59,8 +60,6 @@ st.markdown("""
             border-radius: 4px !important;
             padding: 3px 5px !important;
             transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
-            /* top: 2px !important; */
-            /* right: 2px !important; */
         }
 
         button[data-testid="stCodeCopyButton"]:hover {
@@ -73,6 +72,7 @@ st.markdown("""
             transform: scale(1.2); 
             vertical-align: middle;
         }
+        */
         
         /* === SOLUTION POUR COMPRESSION LATERALE DE LA SIDEBAR === */
         /* Force le contenu principal à se comprimer au lieu d'être décalé */
