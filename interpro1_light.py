@@ -51,7 +51,6 @@ st.markdown("""
             overflow-y: auto !important;
         }
                 /* === NOUVELLES RÈGLES POUR L'ICÔNE DE COPIE DE ST.CODE === */
-        /* TEMPORAIREMENT DÉSACTIVÉ POUR TEST
         button[data-testid="stCodeCopyButton"] {
             opacity: 0.85 !important;
             visibility: visible !important;
@@ -60,6 +59,8 @@ st.markdown("""
             border-radius: 4px !important;
             padding: 3px 5px !important;
             transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out;
+            /* top: 2px !important; */
+            /* right: 2px !important; */
         }
 
         button[data-testid="stCodeCopyButton"]:hover {
@@ -72,7 +73,6 @@ st.markdown("""
             transform: scale(1.2); 
             vertical-align: middle;
         }
-        */
         
         /* === SOLUTION POUR COMPRESSION LATERALE DE LA SIDEBAR === */
         /* Force le contenu principal à se comprimer au lieu d'être décalé */
@@ -524,8 +524,7 @@ def save_editable_prompts_to_gist():
         try:
             json_string = json.dumps(data_to_save, indent=4, ensure_ascii=False)
             if update_gist_content(GIST_ID, GITHUB_PAT, json_string):
-                 # st.toast("💾 Données sauvegardées sur Gist!", icon="☁️") # Feedback - TEMPORAIREMENT DÉSACTIVÉ
-                 pass
+                 st.toast("💾 Données sauvegardées sur Gist!", icon="☁️") # Feedback
             else: 
                 st.warning("Sauvegarde Gist échouée.") 
         except Exception as e: # pragma: no cover
@@ -1031,7 +1030,16 @@ elif st.session_state.view_mode == "edit":
     
 
             if st.session_state.active_generated_prompt:
-                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                # Alternative à st.code() qui pose problème avec la sidebar
+                st.markdown("**Prompt généré (copie manuelle) :**")
+                st.text_area(
+                    "Code", 
+                    value=st.session_state.active_generated_prompt, 
+                    height=300, 
+                    key=f"code_alternative_{hash(st.session_state.active_generated_prompt)}", 
+                    label_visibility="collapsed",
+                    disabled=True
+                )
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
         
@@ -1234,7 +1242,16 @@ elif st.session_state.view_mode == "generator":
                 st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
             
             if st.session_state.active_generated_prompt:
-                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
+                # Alternative à st.code() qui pose problème avec la sidebar
+                st.markdown("**Prompt généré (copie manuelle) :**")
+                st.text_area(
+                    "Code", 
+                    value=st.session_state.active_generated_prompt, 
+                    height=300, 
+                    key=f"code_alternative_{hash(st.session_state.active_generated_prompt)}", 
+                    label_visibility="collapsed",
+                    disabled=True
+                )
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
 
