@@ -524,7 +524,7 @@ def save_editable_prompts_to_gist():
         try:
             json_string = json.dumps(data_to_save, indent=4, ensure_ascii=False)
             if update_gist_content(GIST_ID, GITHUB_PAT, json_string):
-                 st.toast("💾 Données sauvegardées sur Gist!", icon="☁️") # Feedback
+                 # st.toast("💾 Données sauvegardées sur Gist!", icon="☁️") # Feedback - TEMPORAIREMENT DÉSACTIVÉ
             else: 
                 st.warning("Sauvegarde Gist échouée.") 
         except Exception as e: # pragma: no cover
