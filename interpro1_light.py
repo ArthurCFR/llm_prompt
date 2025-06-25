@@ -36,8 +36,8 @@ st.markdown("""
 
         /* Cible le div conteneur direct à l'intérieur de stCodeBlock s'il existe et gère le scroll */
         div[data-testid="stCodeBlock"] > div:first-child {
-            height: 120px !important; /* Doit correspondre à la valeur ci-dessus */
-            max-height: 120px !important;
+            /* height: 120px !important; - SUPPRIMÉ : causait des problèmes de layout */
+            max-height: 520px !important; /* Correspond à la valeur du pre ci-dessus */
             overflow-y: auto !important;
              display: block !important;
             visibility: visible !important;
@@ -1030,16 +1030,7 @@ elif st.session_state.view_mode == "edit":
     
 
             if st.session_state.active_generated_prompt:
-                # Alternative à st.code() qui pose problème avec la sidebar
-                st.markdown("**Prompt généré (copie manuelle) :**")
-                st.text_area(
-                    "Code", 
-                    value=st.session_state.active_generated_prompt, 
-                    height=300, 
-                    key=f"code_alternative_{hash(st.session_state.active_generated_prompt)}", 
-                    label_visibility="collapsed",
-                    disabled=True
-                )
+                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
         
@@ -1242,16 +1233,7 @@ elif st.session_state.view_mode == "generator":
                 st.markdown("<div style='color:red; text-align:right; font-size:0.9em; padding-right:0.9em;'>Copier ici : 👇</div>", unsafe_allow_html=True)
             
             if st.session_state.active_generated_prompt:
-                # Alternative à st.code() qui pose problème avec la sidebar
-                st.markdown("**Prompt généré (copie manuelle) :**")
-                st.text_area(
-                    "Code", 
-                    value=st.session_state.active_generated_prompt, 
-                    height=300, 
-                    key=f"code_alternative_{hash(st.session_state.active_generated_prompt)}", 
-                    label_visibility="collapsed",
-                    disabled=True
-                )
+                st.code(st.session_state.active_generated_prompt, language='markdown', line_numbers=True)
             else:
                 st.markdown("*Aucun prompt généré à afficher.*")
 
