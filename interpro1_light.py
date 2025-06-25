@@ -110,27 +110,25 @@ st.markdown("""
             max-width: 21rem !important;
         }
         
-        /* Ajustement du conteneur principal pour la compression */
-        .main .block-container {
-            max-width: calc(100vw - 21rem) !important;
-            width: calc(100vw - 21rem) !important;
-        }
-        
-        /* Quand la sidebar est fermée, reprendre toute la largeur */
-        section[data-testid="stSidebar"][aria-expanded="false"] ~ .main .block-container,
-        section[data-testid="stSidebar"]:not([aria-expanded="true"]) ~ .main .block-container {
-            max-width: 100vw !important;
-            width: 100vw !important;
-        }
-        
-        /* Alternative pour cibler via l'état collapsed */
+        /* Transition fluide pour tous les états */
         .main .block-container {
             transition: width 0.3s ease, max-width 0.3s ease !important;
+        }
+        
+        /* SEULEMENT quand la sidebar est explicitement ouverte */
+        section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
+            max-width: calc(100vw - 21rem) !important;
+            width: calc(100vw - 21rem) !important;
         }
         
         /* Responsive: sur petits écrans, garder le comportement normal */
         @media (max-width: 768px) {
             .main .block-container {
+                max-width: 100vw !important;
+                width: 100vw !important;
+            }
+            
+            section[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
                 max-width: 100vw !important;
                 width: 100vw !important;
             }
