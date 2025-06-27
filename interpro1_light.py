@@ -942,7 +942,6 @@ elif st.session_state.view_mode == "edit":
         description = current_prompt_config.get("description", "").strip()
         if description:
             st.markdown(f"*{description}*")
-            st.markdown("---")
         gen_form_values = {}
         with st.form(key=f"gen_form_{final_selected_family_edition}_{final_selected_use_case_edition}"):
             if not current_prompt_config.get("variables"): st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
