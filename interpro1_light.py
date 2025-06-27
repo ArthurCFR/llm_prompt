@@ -1094,7 +1094,7 @@ elif st.session_state.view_mode == "generator":
     else:
         # Boîte verte centrée pour "Générateur de Prompt"
         st.markdown("""
-        <div style="background-color: #28a745; padding: 10px; border-radius: 4px; text-align: center; margin-bottom: 10px;">
+        <div style="background-color: #28a745; padding: 60px; border-radius: 5px; text-align: center; margin-bottom: 10px;">
             <h5 style="color: white; margin: 0; font-weight: bold; text-transform: uppercase;">GÉNÉRATEUR DE PROMPT</h5>
         </div>
         """, unsafe_allow_html=True)
