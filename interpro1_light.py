@@ -1092,8 +1092,15 @@ elif st.session_state.view_mode == "generator":
     elif generator_family not in st.session_state.editable_prompts or generator_use_case not in st.session_state.editable_prompts[generator_family]:
         st.warning("Le prompt sélectionné n'existe plus. Retournez à la bibliothèque pour en choisir un autre.")
     else:
+        # Boîte verte centrée pour "Générateur de Prompt"
+        st.markdown("""
+        <div style="background-color: #28a745; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+            <h2 style="color: white; margin: 0; font-weight: bold; text-transform: uppercase;">GÉNÉRATEUR DE PROMPT</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
         current_prompt_config = st.session_state.editable_prompts[generator_family][generator_use_case]
-        st.header(f"Générateur de Prompt: {generator_use_case}")
+        st.header(f"{generator_use_case}")
         created_at_str_gen = current_prompt_config.get('created_at', get_default_dates()[0])
         updated_at_str_gen = current_prompt_config.get('updated_at', get_default_dates()[1])
         st.caption(f"Métier : {generator_family} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé le : {datetime.fromisoformat(created_at_str_gen).strftime('%d/%m/%Y')}, Modifié le : {datetime.fromisoformat(updated_at_str_gen).strftime('%d/%m/%Y')}")
