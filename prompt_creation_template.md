@@ -24,8 +24,9 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
 
 ## Pour la configuration JSON (qui encapsule le "Prompt Cible") :
 1.  **Suggérer un nom pour le cas d'usage** (`suggested_use_case_name`) : descriptif et concis (max 5-7 mots).
-2.  **Inclure le "Prompt Cible" textuel** dans le champ `"template"` du JSON.
-3.  **Lister et décrire chaque variable** utilisée dans le champ `"variables"` du JSON. Chaque objet variable doit avoir :
+2.  **Créer une description explicative** (`"description"`) : un texte de maximum 3 phrases expliquant de manière concise ce que réalise le prompt. Cette description doit être pratique et informative pour l'utilisateur final. Si le prompt nécessite l'ajout d'un document spécifique, la description DOIT inclure une instruction du type "N'oubliez pas d'ajouter le {nom du document} à votre conversation avec l'IA". Cette description sera affichée en italique au-dessus du questionnaire de génération.
+3.  **Inclure le "Prompt Cible" textuel** dans le champ `"template"` du JSON.
+4.  **Lister et décrire chaque variable** utilisée dans le champ `"variables"` du JSON. Chaque objet variable doit avoir :
     * `"name"`: (string) Le nom technique de la variable (ex: `nom_du_client` si le placeholder dans le template est `{{nom_du_client}}`), sans espaces ni caractères spéciaux autres que underscore.
     * `"label"`: (string) Le label descriptif pour l'utilisateur (ex: "Nom du client").
     * `"type"`: (string) Choisis parmi : `"text_input"`, `"selectbox"`, `"date_input"`, `"number_input"`, `"text_area"`.
@@ -33,7 +34,7 @@ Le "Prompt Cible" et sa configuration JSON que tu vas générer DOIVENT :
     * `"options"`: (array of strings, optionnel) Uniquement si `type` est `"selectbox"`. Liste des options.
     * `"min_value"`, `"max_value"`, `"step"`: (number, optionnel) Uniquement si `type` est `"number_input"`. `step` doit être positif.
     * `"height"`: (number, optionnel) Uniquement si `type` est `"text_area"`. Assure-toi que c'est un entier >= 68.
-4.  **Proposer une liste de 3 à 5 mots-clés pertinents** (`"tags"`) pour le "Prompt Cible".
+5.  **Proposer une liste de 3 à 5 mots-clés pertinents** (`"tags"`) pour le "Prompt Cible".
 
 # FORMAT DE SORTIE ATTENDU DE TA PART (CE MÉTA-PROMPT)
 Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON. Cet objet JSON DOIT être structuré comme suit, où la clé principale est le nom suggéré pour le cas d'usage, et la valeur est un objet contenant le template, les variables et les tags :
@@ -41,6 +42,7 @@ Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON.
 ```json
 {{
   "Nom Suggéré Pour Le Cas D'Usage": {{
+    "description": "Ce prompt vous aide à réaliser [description de la tâche]. [Si nécessaire: N'oubliez pas d'ajouter le [nom du document] à votre conversation avec l'IA.]",
     "template": "Le corps principal du 'Prompt Cible' que tu as conçu. Les variables comme {{ma_variable}} doivent être ici.",
     "variables": [
       {{
