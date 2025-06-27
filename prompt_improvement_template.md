@@ -14,7 +14,7 @@ En te basant sur le "PROMPT EXISTANT FOURNI PAR L'UTILISATEUR", tu dois :
     * Réécris le prompt pour qu'il soit plus clair, concis, et actionnable par un modèle de langage avancé.
     * Définis clairement le **rôle** que l'IA devrait adopter (ex: "Tu es un analyste financier expert...").
     * Spécifie explicitement l'**objectif principal**.
-    * Si le prompt existant mentionne ou implique l'utilisation de documents sources, décris comment l'IA doit les utiliser.
+    * Si le prompt existant mentionne ou implique l'utilisation de documents sources, décris comment l'IA doit les utiliser. IMPORTANT : si tu comprends que le prompt dois se baser sur un doc source, alors le prompt doit vérifier s'il a bien recu le doc source, et le cas échéant demander le doc source nécessaire si on ne lui a pas donné, avant de réaliser sa tâche.
     * Identifie les **éléments spécifiques à extraire ou à générer** par le prompt final.
     * Si un **format de sortie** est implicite ou souhaitable, décris-le. Le résultat du prompt amélioré doit être bien présenté.
     * Inclus des instructions pour gérer les **ambiguïtés** ou le manque d'information.
