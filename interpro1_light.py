@@ -439,6 +439,10 @@ def _prepare_newly_injected_use_case_config(uc_config_from_json):
         prepared_config["template"] = "" 
         st.warning(f"Cas d'usage injecté '{uc_config_from_json.get('name', 'INCONNU')}' sans template valide. Template initialisé à vide.")
 
+    # Ensure description field exists
+    if "description" not in prepared_config or not isinstance(prepared_config["description"], str):
+        prepared_config["description"] = ""
+
     if not isinstance(prepared_config.get("variables"), list):
         prepared_config["variables"] = []
 
@@ -934,6 +938,13 @@ elif st.session_state.view_mode == "edit":
         st.header(f"Cas d'usage: {final_selected_use_case_edition}")
         created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0]); updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
         st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
+        
+        # Afficher la description si elle existe
+        description = current_prompt_config.get("description", "").strip()
+        if description:
+            st.markdown(f"*{description}*")
+            st.markdown("---")
+        
         gen_form_values = {}
         with st.form(key=f"gen_form_{final_selected_family_edition}_{final_selected_use_case_edition}"):
             if not current_prompt_config.get("variables"): st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
@@ -1088,6 +1099,12 @@ elif st.session_state.view_mode == "generator":
         created_at_str_gen = current_prompt_config.get('created_at', get_default_dates()[0])
         updated_at_str_gen = current_prompt_config.get('updated_at', get_default_dates()[1])
         st.caption(f"Métier : {generator_family} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_gen).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_gen).strftime('%d/%m/%Y')}")
+        
+        # Afficher la description si elle existe
+        description = current_prompt_config.get("description", "").strip()
+        if description:
+            st.markdown(f"*{description}*")
+            st.markdown("---")
         
         gen_form_values = {}
         with st.form(key=f"gen_form_{generator_family}_{generator_use_case}"):
@@ -1255,6 +1272,7 @@ elif st.session_state.view_mode == "inject_manual":
     st.caption("Exemple de structure pour un cas d'usage :")
     json_example_string = """{
   "Nom de Mon Nouveau Cas d'Usage": {
+    "description": "Ce prompt vous aide à réaliser une tâche spécifique. N'oubliez pas d'ajouter le document nécessaire à votre conversation avec l'IA.",
     "template": "Ceci est le {variable_exemple} pour mon prompt.",
     "variables": [
       {
