@@ -899,7 +899,7 @@ elif st.session_state.view_mode == "library":
                     if tags_display: st.markdown(f"**Tags :** {', '.join([f'`{tag}`' for tag in tags_display])}")
                     created_at_str = prompt_config_display.get('created_at', get_default_dates()[0])
                     updated_at_str = prompt_config_display.get('updated_at', get_default_dates()[1])
-                    st.caption(f"Créé le: {datetime.fromisoformat(created_at_str).strftime('%d/%m/%Y %H:%M')} | Modifié le: {datetime.fromisoformat(updated_at_str).strftime('%d/%m/%Y %H:%M')}")
+                    st.caption(f"Créé le : {datetime.fromisoformat(created_at_str).strftime('%d/%m/%Y %H:%M')} | Modifié le : {datetime.fromisoformat(updated_at_str).strftime('%d/%m/%Y %H:%M')}")
 
                     col_btn_lib1, col_btn_lib2, col_btn_lib3 = st.columns(3)
                     with col_btn_lib1:
@@ -937,7 +937,7 @@ elif st.session_state.view_mode == "edit":
         current_prompt_config = st.session_state.editable_prompts[final_selected_family_edition][final_selected_use_case_edition]
         st.header(f"Cas d'usage: {final_selected_use_case_edition}")
         created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0]); updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
-        st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé le: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
+        st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé le : {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié le : {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
         # Afficher la description si elle existe
         description = current_prompt_config.get("description", "").strip()
         if description:
@@ -1095,12 +1095,11 @@ elif st.session_state.view_mode == "generator":
         st.header(f"Générateur de Prompt: {generator_use_case}")
         created_at_str_gen = current_prompt_config.get('created_at', get_default_dates()[0])
         updated_at_str_gen = current_prompt_config.get('updated_at', get_default_dates()[1])
-        st.caption(f"Métier : {generator_family} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé le: {datetime.fromisoformat(created_at_str_gen).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_gen).strftime('%d/%m/%Y')}")
+        st.caption(f"Métier : {generator_family} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé le : {datetime.fromisoformat(created_at_str_gen).strftime('%d/%m/%Y')}, Modifié le : {datetime.fromisoformat(updated_at_str_gen).strftime('%d/%m/%Y')}")
         # Afficher la description si elle existe
         description = current_prompt_config.get("description", "").strip()
         if description:
             st.markdown(f"*{description}*")
-            st.markdown("---")
         gen_form_values = {}
         with st.form(key=f"gen_form_{generator_family}_{generator_use_case}"):
             if not current_prompt_config.get("variables"):
