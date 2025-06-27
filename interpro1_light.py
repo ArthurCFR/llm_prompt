@@ -1114,7 +1114,7 @@ elif st.session_state.view_mode == "generator":
         
         # Container avec hauteur limitée
         st.markdown('<div class="banner-container">', unsafe_allow_html=True)
-        st.image("ChatGPT Image Jun 27, 2025, 03_45_48 PM.png", use_container_width=True)
+        st.image("BandeauGener.png", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         current_prompt_config = st.session_state.editable_prompts[generator_family][generator_use_case]
