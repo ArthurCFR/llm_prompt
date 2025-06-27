@@ -19,9 +19,12 @@ En te basant sur le "PROMPT EXISTANT FOURNI PAR L'UTILISATEUR", tu dois :
     * Si un **format de sortie** est implicite ou souhaitable, décris-le. Le résultat du prompt amélioré doit être bien présenté.
     * Inclus des instructions pour gérer les **ambiguïtés** ou le manque d'information.
 3.  **Identifier et Paramétrer les Variables** :
-    *Être paramétrable via des variables claires et explicites.* Le nombre de variables doit être compris entre 3 et 7. Les variables doivent impérativement ajouter un contexte pertinent lors de l'usage de ce prompt. Le but de ces variables est d'améliorer grandement la précision du prompt en fournissant le MEILLEUR CONTEXTE POSSIBLE. Elles doivent aider le prompt dans la réalisation précise de sa tâche. Par exemple, si l'usage est 'l'écriture d'un mail de refus post entretien', une variable pertinente serais `{{points_forts_candidat}}` qui indiquent au prompt les points forts du candidats lors de l'entretien.
+   *Être paramétrable via des variables claires et explicites.* Le nombre de variables doit être compris entre 3 et 7. Les variables doivent impérativement ajouter un contexte pertinent lors de l'usage de ce prompt. Le but de ces variables est d'améliorer grandement la précision du prompt en fournissant le MEILLEUR CONTEXTE POSSIBLE. Elles doivent aider le prompt dans la réalisation précise de sa tâche. Par exemple, si l'usage est 'l'écriture d'un mail de refus post entretien', une variable pertinente serais `{{points_forts_candidat}}` qui indiquent au prompt les points forts du candidats lors de l'entretien.
     *Format des variables.* Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}` ou `{{detail_du_produit}}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
-5.  **Générer la Configuration JSON** : Tu dois produire un unique objet JSON qui encapsule le prompt amélioré et sa configuration. Cet objet JSON DOIT suivre la structure décrite ci-dessous.
+5.  **Langue de sortie** Il faut IMPERATIVEMENT que le résultat généré par le prompt cible soit donné en français.
+6.  **Générer la Configuration JSON** : Tu dois produire un unique objet JSON qui encapsule le prompt amélioré et sa configuration. Cet objet JSON DOIT suivre la structure décrite ci-dessous.
+    
+
 
 # EXIGENCES POUR LE PROMPT AMÉLIORÉ (LE CHAMP "template" DANS LE JSON)
 Le prompt textuel amélioré que tu vas créer (qui ira dans le champ "template") DOIT respecter les points suivants (en plus de ceux mentionnés à l'étape "Améliorer le Contenu") :
