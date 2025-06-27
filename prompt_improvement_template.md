@@ -23,7 +23,7 @@ En te basant sur le "PROMPT EXISTANT FOURNI PAR L'UTILISATEUR", tu dois :
     *Exceptions sur les variables* IMPORTANT : la variable ne sera JAMAIS un document externe, donc ne créé jamais une variable du type : "Téléchargez le CV du candidat (fichier PDF)". La variable de type 'Prénom de la personne, nom du document' n'est souvent pas pertinente, évite la. 
     *Format des variables.* Toutes les variables (placeholders) DANS LE TEXTE du "Prompt Cible" que tu génères (celles qui seront remplies par l'utilisateur final du "Prompt Cible") DOIVENT être encadrées par des **DOUBLES ACCOLADES**, par exemple : `{{nom_du_client}}` ou `{{detail_du_produit}}`. N'utilise PAS d'accolades simples pour ces placeholders internes au "Prompt Cible".
 5.  **Langue de sortie** Il faut IMPERATIVEMENT que le résultat généré par le prompt cible soit donné en français.
-6.  **Créer une description explicative** : Tu dois créer une description de maximum 3 phrases expliquant de manière concise ce que réalise le prompt amélioré. Cette description doit être pratique et informative pour l'utilisateur final. Si le prompt nécessite l'ajout d'un document spécifique, la description DOIT inclure une instruction du type "N'oubliez pas d'ajouter le {nom du document} à votre conversation avec l'IA". Cette description sera affichée en italique au-dessus du questionnaire de génération.
+6.  **Créer une description explicative** : Tu dois créer une description de maximum 3 phrases expliquant de manière concise ce que réalise le prompt amélioré. Cette description doit être pratique et informative pour l'utilisateur final. Si le prompt nécessite l'ajout d'un document spécifique, la description DOIT inclure une instruction du type "N'oubliez pas d'ajouter le document nécessaire à votre conversation avec l'IA". Cette description sera affichée en italique au-dessus du questionnaire de génération.
 7.  **Générer la Configuration JSON** : Tu dois produire un unique objet JSON qui encapsule le prompt amélioré et sa configuration. Cet objet JSON DOIT suivre la structure décrite ci-dessous.
     
 
@@ -39,7 +39,7 @@ Tu dois IMPERATIVEMENT fournir ta réponse sous la forme d'un unique objet JSON.
 ```json
 {{
   "Nom Suggéré Pour Le Cas D'Usage": {{  // Un nom concis (5-7 mots) que tu suggères pour ce prompt amélioré.
-    "description": "Ce prompt amélioré vous aide à [description de la tâche]. [Si nécessaire: N'oubliez pas d'ajouter le [nom du document] à votre conversation avec l'IA.]",
+    "description": "Ce prompt amélioré vous aide à [description de la tâche]. [Si nécessaire: N'oubliez pas d'ajouter le document nécessaire à votre conversation avec l'IA.]",
     "template": "Le corps principal du 'Prompt Cible' AMÉLIORÉ que tu as conçu. Les variables comme {{ma_variable}} doivent être ici.",
     "variables": [  // Liste des variables que tu as identifiées et paramétrées.
       {{
