@@ -944,6 +944,7 @@ elif st.session_state.view_mode == "edit":
             st.markdown(f"*{description}*")
         gen_form_values = {}
         with st.form(key=f"gen_form_{final_selected_family_edition}_{final_selected_use_case_edition}"):
+            st.markdown("**Remplissez le formulaire ci-dessous pour ajouter du contexte à votre prompt :**")
             if not current_prompt_config.get("variables"): st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
             variables_for_form = current_prompt_config.get("variables", [])
             if not isinstance(variables_for_form, list): variables_for_form = [] 
@@ -1102,6 +1103,7 @@ elif st.session_state.view_mode == "generator":
             st.markdown(f"*{description}*")
         gen_form_values = {}
         with st.form(key=f"gen_form_{generator_family}_{generator_use_case}"):
+            st.markdown("**Remplissez le formulaire ci-dessous pour ajouter du contexte à votre prompt :**")
             if not current_prompt_config.get("variables"):
                 st.info("Ce cas d'usage n'a pas de variables configurées pour la génération.")
             
