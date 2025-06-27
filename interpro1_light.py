@@ -680,6 +680,15 @@ with tab_injection:
         st.rerun()
 
 # --- Main Display Area ---
+# Handle force selection after injection
+if st.session_state.get('force_select_family_name'):
+    st.session_state.family_selector_edition = st.session_state.force_select_family_name
+    st.session_state.force_select_family_name = None
+    
+if st.session_state.get('force_select_use_case_name'):
+    st.session_state.use_case_selector_edition = st.session_state.force_select_use_case_name
+    st.session_state.force_select_use_case_name = None
+
 final_selected_family_edition = st.session_state.get('family_selector_edition')
 final_selected_use_case_edition = st.session_state.get('use_case_selector_edition')
 library_family_to_display = st.session_state.get('library_selected_family_for_display')
