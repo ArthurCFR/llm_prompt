@@ -1092,12 +1092,30 @@ elif st.session_state.view_mode == "generator":
     elif generator_family not in st.session_state.editable_prompts or generator_use_case not in st.session_state.editable_prompts[generator_family]:
         st.warning("Le prompt sélectionné n'existe plus. Retournez à la bibliothèque pour en choisir un autre.")
     else:
-        # Bandeau image pour "Générateur de Prompt" dans une boîte de 40px
+        # Bandeau image pour "Générateur de Prompt"
         st.markdown("""
-        <div style="height: 40px; overflow: hidden; margin-bottom: 20px; text-align: center; border-radius: 5px;">
-            <img src="./ChatGPT Image Jun 27, 2025, 03_45_48 PM.png" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
+        <style>
+        .banner-container {
+            height: 40px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .banner-container img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+        </style>
         """, unsafe_allow_html=True)
+        
+        # Container avec hauteur limitée
+        st.markdown('<div class="banner-container">', unsafe_allow_html=True)
+        st.image("ChatGPT Image Jun 27, 2025, 03_45_48 PM.png", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
         current_prompt_config = st.session_state.editable_prompts[generator_family][generator_use_case]
         st.header(f"{generator_use_case}")
