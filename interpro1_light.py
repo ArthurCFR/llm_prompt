@@ -938,7 +938,6 @@ elif st.session_state.view_mode == "edit":
         st.header(f"Cas d'usage: {final_selected_use_case_edition}")
         created_at_str_edit = current_prompt_config.get('created_at', get_default_dates()[0]); updated_at_str_edit = current_prompt_config.get('updated_at', get_default_dates()[1])
         st.caption(f"Métier : {final_selected_family_edition} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_edit).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_edit).strftime('%d/%m/%Y')}")
-        
         # Afficher la description si elle existe
         description = current_prompt_config.get("description", "").strip()
         if description:
@@ -1098,7 +1097,6 @@ elif st.session_state.view_mode == "generator":
         created_at_str_gen = current_prompt_config.get('created_at', get_default_dates()[0])
         updated_at_str_gen = current_prompt_config.get('updated_at', get_default_dates()[1])
         st.caption(f"Métier : {generator_family} | Utilisé {current_prompt_config.get('usage_count', 0)} fois. Créé: {datetime.fromisoformat(created_at_str_gen).strftime('%d/%m/%Y')}, Modifié: {datetime.fromisoformat(updated_at_str_gen).strftime('%d/%m/%Y')}")
-        
         # Afficher la description si elle existe
         description = current_prompt_config.get("description", "").strip()
         if description:
